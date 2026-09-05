@@ -1,16 +1,27 @@
 .add-button {
     background-color: #202020;
     margin-left: 10px;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    overflow: hidden;
+    border-radius: 15px 0 15px 15px;
+    transition: transform .2s ease;
+}
+
+.add-button:hover {
+    background-color: #202020;
 }
 
 .add {
     fill: #FFFFFF;
     border: 2px solid #FFFFFF;
     background: none;
-    border-radius: 15px 0 15px 15px;
+    border-radius: inherit;
+    transition: background-color .2s ease, fill .2s ease;
 }
 
-.add:hover {
+.add-button:hover .add {
     background: #FFFFFF;
     fill: #202020;
 }

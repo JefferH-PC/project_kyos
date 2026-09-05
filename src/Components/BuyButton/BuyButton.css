@@ -1,5 +1,10 @@
 .buy-button {
-    background-color: #202020;
+    background-color: transparent;
+    padding: 0;
+    border: 0;
+    cursor: pointer;
+    overflow: hidden;
+    border-radius: 0 0 15px 15px;
 }
 
 .buy {

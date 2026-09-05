@@ -20,6 +20,40 @@
     margin-bottom: 20px;
 }
 
+.expense-form {
+    width: calc(100% - 20px);
+    flex: 0 0 auto;
+    margin: 0 10px 8px;
+    padding: 8px;
+    display: grid;
+    gap: 6px;
+    border: 1px solid #ffffff;
+    border-radius: 10px;
+    background: #202020;
+    animation: reveal .2s ease both;
+}
+
+.expense-form input,
+.expense-form button {
+    width: 100%;
+    min-width: 0;
+    padding: 6px;
+    border: 1px solid #ffffff;
+    border-radius: 6px;
+    background: #202020;
+    color: #ffffff;
+    font: inherit;
+}
+
+.expense-form button {
+    cursor: pointer;
+}
+
+.expense-form button:hover {
+    background: #ffffff;
+    color: #202020;
+}
+
 .expense-area {
     display: flex;
     align-items: self-start;
@@ -42,6 +76,9 @@
     background-color: #202020;
     padding: 0 10px;
     width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
 }
 
 .total {

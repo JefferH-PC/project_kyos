@@ -6,6 +6,8 @@
     border: 0;
     padding: 0;
     cursor: pointer;
+    overflow: hidden;
+    border-radius: 15px;
 }
 
 .section-button h2 {
@@ -14,6 +16,7 @@
     border: 2px solid #FFFFFF;
     border-radius: 15px;
     width: auto;
+    transition: background-color .2s ease, color .2s ease;
 }
 
 .section-button:hover h2,

@@ -5,12 +5,12 @@ import './ExpenseSlot.css';
 
 const ExpenseSlot = (props) => {
     return (
-        <div className='expense-slot'>
+        <div className={`expense-slot ${props.position || ''}`}>
             <h3>{props.expenseName} - R${props.price}</h3>
             <div className='buttons-action'>
-                <RemoveButton></RemoveButton>
-                <UpdateButton></UpdateButton>
-                <BuyButton></BuyButton>
+                <RemoveButton onClick={props.onRemove}></RemoveButton>
+                <UpdateButton onClick={props.onUpdate}></UpdateButton>
+                <BuyButton onClick={props.onBuy}></BuyButton>
             </div>
         </div>
     );

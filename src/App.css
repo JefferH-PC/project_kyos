@@ -6,6 +6,26 @@
     box-sizing: border-box;
 }
 
+button,
+input,
+select,
+.summary-card,
+.middle-summary,
+.balance-view,
+.investments-view,
+.time-area,
+.expense-slot,
+.expense-slot-ready,
+.expense-slot-processing,
+.expense-slot-recovery {
+    transition: background-color .2s ease, color .2s ease, border-color .2s ease, transform .2s ease;
+}
+
+@keyframes reveal {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 .app {
     height: 100vh;
     overflow: hidden;
@@ -398,6 +418,108 @@
     background: #b8373d;
 }
 
+.light-theme {
+    background-color: #f2f0eb;
+    color: #202020;
+}
+
+.light-theme,
+.light-theme * {
+    color: #202020;
+}
+
+.light-theme .header-actions button,
+.light-theme .time-area,
+.light-theme .middle-summary,
+.light-theme .summary-card,
+.light-theme .balance-view,
+.light-theme .balance-card,
+.light-theme .balance-chart-card,
+.light-theme .investments-view,
+.light-theme .investment-summary-card,
+.light-theme .assets-panel,
+.light-theme .asset-card,
+.light-theme .middle-net-worth,
+.light-theme .middle-milestone,
+.light-theme .section-button h2,
+.light-theme .expense-slot,
+.light-theme .expense-slot-ready,
+.light-theme .expense-slot-processing,
+.light-theme .expense-slot-recovery,
+.light-theme .processing-area,
+.light-theme .total,
+.light-theme .total h3 {
+    background-color: #ffffff;
+    color: #202020;
+}
+
+.light-theme .header-actions button,
+.light-theme .time-area,
+.light-theme .middle-summary,
+.light-theme .summary-card,
+.light-theme .balance-view,
+.light-theme .balance-card,
+.light-theme .balance-chart-card,
+.light-theme .investments-view,
+.light-theme .investment-summary-card,
+.light-theme .assets-panel,
+.light-theme .asset-card,
+.light-theme .middle-net-worth,
+.light-theme .middle-milestone,
+.light-theme .section-button h2,
+.light-theme .total h3 {
+    border-color: #202020;
+}
+
+.light-theme .section-button.active h2,
+.light-theme .section-button:hover h2 {
+    background-color: #202020;
+    color: #ffffff;
+}
+
+.light-theme .coin-icon {
+    fill: #202020;
+}
+
+.light-theme .add {
+    fill: #202020;
+    border-color: #202020;
+}
+
+.light-theme .header-actions button:hover {
+    background-color: #202020;
+    color: #ffffff;
+}
+
+.light-theme .add-button,
+.light-theme .remove-button,
+.light-theme .update-button,
+.light-theme .buy-button,
+.light-theme .processing-area,
+.light-theme .total,
+.light-theme .top,
+.light-theme .expense-area {
+    background-color: transparent;
+}
+
+.light-theme .balance-donut::after {
+    background-color: #ffffff;
+    border-color: #202020;
+}
+
+.light-theme .middle-net-worth h2,
+.light-theme .middle-milestone h2,
+.light-theme .expense-slot h3,
+.light-theme .expense-slot-ready h3,
+.light-theme .expense-slot-processing h3,
+.light-theme .expense-slot-recovery h3,
+.light-theme .buttons-action > div,
+.light-theme .processing-area,
+.light-theme .total {
+    background-color: #ffffff;
+    color: #202020;
+}
+
 .time-area .expense-slot,
 .time-area .expense-slot-ready,
 .time-area .expense-slot-recovery,
@@ -433,10 +555,38 @@
     background: transparent;
 }
 
+.time-area .buttons-action > button {
+    width: 28px;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    overflow: hidden;
+}
+
 .time-area .buttons-action svg {
     display: block;
     width: 28px;
     height: 24px;
+}
+
+.time-area .slot-first,
+.time-area .slot-single {
+    border-radius: 15px 15px 0 0;
+}
+
+.time-area .slot-last,
+.time-area .slot-single {
+    border-radius: 0 0 15px 15px;
+}
+
+.time-area .slot-single {
+    border-radius: 15px;
+}
+
+.time-area .slot-middle {
+    border-radius: 0;
 }
 
 @media (max-width: 900px) {

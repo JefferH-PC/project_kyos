@@ -11,6 +11,7 @@ import RemoveButton from './Components/RemoveButton/RemoveButton';
 
 function App() {
   const [activeSection, setActiveSection] = useState('Net Worth');
+  const [isLightTheme, setIsLightTheme] = useState(false);
 
   const renderMiddleContent = () => {
     if (activeSection === 'Investments') {
@@ -123,8 +124,8 @@ function App() {
   };
 
   return (
-    <div className='app'>
-      <Header></Header>
+    <div className={`app ${isLightTheme ? 'light-theme' : ''}`}>
+      <Header isLightTheme={isLightTheme} onToggleTheme={() => setIsLightTheme((current) => !current)}></Header>
       <div className='app-areas'>
         <TimeArea title='Wishlist' total={179.99} className='wishlist'></TimeArea>
         <div className='middle'>

@@ -20,3 +20,11 @@
     min-width: 0;
     overflow-wrap: anywhere;
 }
+
+.expense-slot-recovery .remove {
+    border-radius: 15px;
+}
+
+.expense-slot-recovery .remove-button {
+    border-radius: 15px;
+}

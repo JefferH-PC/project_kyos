@@ -1,7 +1,7 @@
 import './Header.css';
 import coin from './Coin.svg'
 
-const Header = () => {
+const Header = (props) => {
     return (
         <div className='header'> 
             <div className='logo'>
@@ -11,7 +11,7 @@ const Header = () => {
             <div className='header-actions'>
                 <button aria-label='Show or hide values'>◉</button>
                 <button aria-label='Select language'>◎ English</button>
-                <button aria-label='Toggle theme'>☼</button>
+                <button aria-label='Toggle theme' onClick={props.onToggleTheme}>{props.isLightTheme ? '☾' : '☼'}</button>
             </div>
         </div>
     )
