@@ -1,5 +1,4 @@
 import './Header.css';
-import coin from './Coin.svg'
 
 const Header = (props) => {
     return (

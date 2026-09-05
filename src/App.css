@@ -72,6 +72,11 @@ select,
     white-space: nowrap;
 }
 
+.section-buttons .section-button h2 {
+    padding: 7px 10px;
+    font-size: 19px;
+}
+
 .middle-summary {
     display: grid;
     grid-template-columns: minmax(0, 1.7fr) minmax(130px, .9fr);
@@ -312,6 +317,98 @@ select,
     line-height: 1;
 }
 
+.database-view {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 14px;
+    border: 1px solid #ffffff;
+    border-radius: 12px;
+    background: #202020;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.database-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    background: transparent;
+}
+
+.database-heading h2,
+.database-heading span {
+    background: none;
+}
+
+.database-heading h2 {
+    font-size: 28px;
+}
+
+.database-heading span {
+    font-size: 14px;
+}
+
+.database-view textarea {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    resize: none;
+    padding: 12px;
+    border: 1px solid #ffffff;
+    border-radius: 8px;
+    background: #0d0d0d;
+    color: #ffffff;
+    font: 13px/1.4 Consolas, monospace;
+}
+
+.database-save {
+    align-self: flex-end;
+    padding: 8px 14px;
+    border: 1px solid #ffffff;
+    border-radius: 8px;
+    background: #202020;
+    color: #ffffff;
+    cursor: pointer;
+}
+
+.database-save:hover {
+    background: #ffffff;
+    color: #202020;
+}
+
+.asset-form {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr auto;
+    gap: 6px;
+    padding: 8px;
+    border: 1px solid #ffffff;
+    border-radius: 8px;
+    background: #202020;
+    animation: reveal .2s ease both;
+}
+
+.asset-form input,
+.asset-form button {
+    min-width: 0;
+    padding: 6px;
+    border: 1px solid #ffffff;
+    border-radius: 6px;
+    background: #202020;
+    color: #ffffff;
+    font: inherit;
+}
+
+.asset-form button {
+    cursor: pointer;
+}
+
+.asset-form button:hover {
+    background: #ffffff;
+    color: #202020;
+}
+
 .balance-year-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -370,7 +467,7 @@ select,
     aspect-ratio: 1;
     border: 1px solid #ffffff;
     border-radius: 50%;
-    background: conic-gradient(#4da52d 0 82%, #b8373d 82% 100%);
+    background: conic-gradient(#b8373d 0 var(--spent-ratio, 0%), #4da52d var(--spent-ratio, 0%) 100%);
     position: relative;
     flex: 0 0 auto;
 }
@@ -518,6 +615,14 @@ select,
 .light-theme .total {
     background-color: #ffffff;
     color: #202020;
+}
+
+.light-theme .database-view,
+.light-theme .database-view textarea,
+.light-theme .database-save {
+    background-color: #ffffff;
+    color: #202020;
+    border-color: #202020;
 }
 
 .time-area .expense-slot,

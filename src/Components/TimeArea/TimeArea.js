@@ -11,27 +11,22 @@ const TimeArea = (props) => {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [expenseName, setExpenseName] = useState('');
     const [price, setPrice] = useState('');
-    const [slots, setSlots] = useState([
-        ...(isRecoveryArea ? [] : [
-            { id: 'expense-default', type: 'expense', expenseName: 'Resonance: A Plague Tale Legacy', price: 179.99 },
-            { id: 'ready-default', type: 'ready', expenseName: 'Resonance: A Plague Tale Legacy', price: 179.99 }
-        ]),
-        ...(isRecoveryArea ? [{ id: 'recovery-default', type: 'recovery', isProcessing: true, expenseName: 'Resonance: A Plague Tale Legacy', price: 179.99 }] : [])
-    ]);
+    const slots = props.slots || [];
 
     const addSlot = (event) => {
         event.preventDefault();
         if (!expenseName.trim() || !price) return;
 
-        setSlots((currentSlots) => [
-            ...currentSlots,
-            {
-                id: `${Date.now()}-${Math.random()}`,
-                type: isRecoveryArea ? 'recovery' : 'expense',
-                isProcessing: isRecoveryArea && !currentSlots.some((slot) => slot.type === 'recovery' && slot.isProcessing),
-                expenseName: expenseName.trim(),
-                price: Number(price)
-            }
+        const newSlot = {
+            id: `${Date.now()}-${Math.random()}`,
+            type: isRecoveryArea ? 'recovery' : 'expense',
+            isProcessing: isRecoveryArea && !slots.some((slot) => slot.type === 'recovery' && slot.isProcessing),
+            expenseName: expenseName.trim(),
+            price: Number(price)
+        };
+        props.onSlotsChange([
+            ...slots,
+            newSlot
         ]);
         setExpenseName('');
         setPrice('');
@@ -39,15 +34,14 @@ const TimeArea = (props) => {
     };
 
     const removeSlot = (id) => {
-        setSlots((currentSlots) => {
-            const removedSlot = currentSlots.find((slot) => slot.id === id);
-            const remainingSlots = currentSlots.filter((slot) => slot.id !== id);
-            if (isRecoveryArea && removedSlot?.isProcessing) {
-                const nextRecovery = remainingSlots.find((slot) => slot.type === 'recovery');
-                return remainingSlots.map((slot) => slot.id === nextRecovery?.id ? { ...slot, isProcessing: true } : slot);
-            }
-            return remainingSlots;
-        });
+        const removedSlot = slots.find((slot) => slot.id === id);
+        const remainingSlots = slots.filter((slot) => slot.id !== id);
+        if (isRecoveryArea && removedSlot?.isProcessing) {
+            const nextRecovery = remainingSlots.find((slot) => slot.type === 'recovery');
+            props.onSlotsChange(remainingSlots.map((slot) => slot.id === nextRecovery?.id ? { ...slot, isProcessing: true } : slot));
+            return;
+        }
+        props.onSlotsChange(remainingSlots);
     };
 
     const completeSlot = (id) => {
@@ -56,16 +50,14 @@ const TimeArea = (props) => {
 
     const returnFromProcessing = (id) => {
         if (isRecoveryArea) return;
-        setSlots((currentSlots) => currentSlots.map((slot) => (
+        props.onSlotsChange(slots.map((slot) => (
             slot.id === id ? { ...slot, type: 'expense' } : slot
         )));
     };
 
     const moveToProcessing = (id) => {
-        setSlots((currentSlots) => {
-            if (currentSlots.some((slot) => slot.type === 'processing')) return currentSlots;
-            return currentSlots.map((slot) => slot.id === id ? { ...slot, type: 'processing' } : slot);
-        });
+        if (slots.some((slot) => slot.type === 'processing')) return;
+        props.onSlotsChange(slots.map((slot) => slot.id === id ? { ...slot, type: 'processing' } : slot));
     };
 
     const renderSlot = (slot, index, list) => {
