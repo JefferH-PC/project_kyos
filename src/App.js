@@ -1,23 +1,17 @@
-import logo from './logo.svg';
 import './App.css';
+import ExpenseSlot from './Components/ExpenseSlot/ExpenseSlot';
+import Header from './Components/Header/Header';
+import TimeArea from './Components/TimeArea/TimeArea';
+
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className='app'>
+      <Header></Header>
+      <div className='app-areas'>
+        <TimeArea title='Wishlist' total={179.99}></TimeArea>
+        <TimeArea title='Recovery' total={0}></TimeArea>
+      </div>
     </div>
   );
 }

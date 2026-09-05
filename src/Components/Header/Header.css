@@ -1,0 +1,22 @@
+.coin-icon {
+    fill: #FFFFFF;
+    transform: scale(1.5);
+    background: none;
+}
+
+.header {
+    display: flex;
+    margin: 10px 20px;
+    align-items: center;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+}
+
+.logo h1 {
+    margin-left: 5px;
+     font-size: 50px;
+}
+

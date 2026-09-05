@@ -1,0 +1,14 @@
+.return-button {
+    background-color: #202020;
+}
+
+.return {
+    fill: #30549E;
+    background: none;
+    border: 2px solid #30549E;
+}
+
+.return:hover {
+    fill: #202020;
+    background: #30549E;
+}

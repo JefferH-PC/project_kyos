@@ -1,0 +1,49 @@
+.time-area{
+    margin: 0px 10px;
+    max-width: 350px;
+    width: 350px;
+    max-height: 560px;
+    height: 560px;
+    border: 2px solid #FFFFFF;
+    padding: 20px 0;
+    display: flex;
+    background-color: #202020;
+    border-radius: 15px;
+    flex-direction:column;
+    align-items: center;
+}
+.time-area h2 {
+    background: none;
+    font-size: 35px;
+    margin-bottom: 20px;
+}
+
+.expense-area {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: none;
+}
+
+.processing-area {
+    margin-top: 130px;
+    background-color: #202020;
+}
+
+.total {
+    margin: 15px;
+    margin-right: auto;
+    display: flex;
+    background: #202020;
+}
+
+.total h3 {
+    background: #202020;
+    border: 2px solid #FFFFFF;
+    padding: 10px;
+    border-radius: 15px;
+}
+
+.top {
+    background-color: #202020;
+}

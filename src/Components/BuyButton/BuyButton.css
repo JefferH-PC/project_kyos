@@ -1,0 +1,15 @@
+.buy-button {
+    background-color: #202020;
+}
+
+.buy {
+    fill: #4D9E30;
+    border: 2px solid #4D9E30;
+    background: none;
+    border-radius: 0 0 15px 15px;
+}
+
+.buy:hover {
+    background: #4D9E30;
+    fill: #202020;
+}

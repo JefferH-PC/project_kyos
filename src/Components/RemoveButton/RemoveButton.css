@@ -1,0 +1,15 @@
+.remove-button {
+    background-color: #202020;
+}
+
+.remove {
+    fill: #9E3030;
+    border: 2px solid #9E3030;
+    background: none;
+    border-radius: 15px 15px 0 0;
+}
+
+.remove:hover {
+    background: #9E3030;
+    fill: #202020;
+}
