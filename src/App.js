@@ -9,10 +9,10 @@ import AddMoreButton from './Components/AddMoreButton/AddMoreButton';
 import RemoveButton from './Components/RemoveButton/RemoveButton';
 import { formatDecimal, formatMoney } from './utils/formatters';
 
-const CDI_RATE = 10.5;
+const CDI_RATE = 0.051660;
 const CDI_API_URL = 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados/ultimos/1?formato=json';
-const BUSINESS_DAYS_PER_YEAR = 252;
-const DATABASE_VERSION = 3;
+const DATABASE_VERSION = 9;
+const toFiniteNumber = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
 
 const getDateKey = (date) => {
   const year = date.getFullYear();
@@ -21,9 +21,21 @@ const getDateKey = (date) => {
   return `${year}-${month}-${day}`;
 };
 
+const formatDateBrazilian = (dateKey) => {
+  const [year, month, day] = dateKey.split('-');
+  return `${day}/${month}/${year}`;
+};
+
 const parseDateKey = (dateKey) => {
   const [year, month, day] = dateKey.split('-').map(Number);
   return new Date(year, month - 1, day);
+};
+
+const isValidDateKey = (dateKey) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return false;
+  const [year, month, day] = dateKey.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
 };
 
 const shiftDate = (date, amount) => {
@@ -32,8 +44,61 @@ const shiftDate = (date, amount) => {
   return shiftedDate;
 };
 
-const isWeekday = (date) => date.getDay() !== 0 && date.getDay() !== 6;
-const getDailyAssetIncome = (asset, cdiRate) => Number(asset.investedAmount || 0) * (Number(asset.yieldRate || 0) / 100) * (cdiRate / 100) / BUSINESS_DAYS_PER_YEAR;
+const getEasterSunday = (year) => {
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31);
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(year, month - 1, day);
+};
+
+const getBrazilianNationalHolidays = (year) => {
+  const easter = getEasterSunday(year);
+  return new Set([
+    `${year}-01-01`,
+    getDateKey(shiftDate(easter, -2)),
+    `${year}-04-21`,
+    `${year}-05-01`,
+    `${year}-09-07`,
+    `${year}-10-12`,
+    `${year}-11-02`,
+    `${year}-11-15`,
+    `${year}-11-20`,
+    `${year}-12-25`
+  ]);
+};
+
+const getDailyAssetIncome = (asset, cdiRate) => Number(asset.investedAmount || 0) * (Number(asset.yieldRate || 0) / 100) * (cdiRate / 100);
+const getIncomeDaysInYear = (year) => {
+  const holidays = getBrazilianNationalHolidays(year);
+  let incomeDays = 0;
+  for (let date = new Date(year, 0, 1); date.getFullYear() === year; date = shiftDate(date, 1)) {
+    if (date.getDay() !== 0 && date.getDay() !== 6 && !holidays.has(getDateKey(date))) incomeDays += 1;
+  }
+  return incomeDays;
+};
+const rebuildIncomeHistory = (assets) => assets.reduce((history, asset) => {
+  Object.entries(asset.incomeHistory || {}).forEach(([date, income]) => {
+    history[date] = Number(history[date] || 0) + Number(income || 0);
+  });
+  return history;
+}, {});
+
+const normalizeIncomeHistory = (incomeHistory) => Object.entries(incomeHistory || {}).reduce((history, [date, income]) => {
+  const numericIncome = Number(income);
+  if (isValidDateKey(date) && Number.isFinite(numericIncome) && numericIncome >= 0) history[date] = numericIncome;
+  return history;
+}, {});
 
 const defaultDatabase = {
   schemaVersion: DATABASE_VERSION,
@@ -46,31 +111,53 @@ const defaultDatabase = {
   incomeHistory: {}
 };
 
+const normalizeDatabase = (parsedDatabase, resetIncome = false) => {
+  const preAddedSlotIds = ['expense-default', 'ready-default', 'recovery-default'];
+  const preAddedAssetIds = ['asset-1', 'asset-2', 'asset-3'];
+  const parsedDate = typeof parsedDatabase.simulatedDate === 'string' && isValidDateKey(parsedDatabase.simulatedDate)
+    ? parsedDatabase.simulatedDate
+    : getDateKey(new Date());
+  const assets = Array.isArray(parsedDatabase.assets) ? parsedDatabase.assets
+    .filter((asset) => asset && typeof asset === 'object' && !preAddedAssetIds.includes(asset.id))
+    .map((asset) => {
+      const investedValue = Number(asset.investedAmount ?? asset.totalIncome ?? 0);
+      const totalIncomeValue = Number(asset.totalIncome || 0);
+      const initialValue = Number(asset.initialInvestedAmount ?? investedValue - totalIncomeValue);
+      const investedAmount = Number.isFinite(investedValue) ? investedValue : 0;
+      const totalIncome = Number.isFinite(totalIncomeValue) ? totalIncomeValue : 0;
+      const baseAmount = Number.isFinite(initialValue) ? Math.max(initialValue, 0) : 0;
+      const creationDate = typeof asset.creationDate === 'string' && isValidDateKey(asset.creationDate) ? asset.creationDate : parsedDate;
+      return {
+        ...asset,
+        name: String(asset.name || 'Unnamed asset'),
+        yieldRate: Number.isFinite(Number(asset.yieldRate)) ? Math.max(Number(asset.yieldRate), 0) : 0,
+        investedAmount: resetIncome ? baseAmount : Math.max(investedAmount, 0),
+        initialInvestedAmount: baseAmount,
+        totalIncome: resetIncome ? 0 : Math.max(totalIncome, 0),
+        incomeHistory: resetIncome ? {} : normalizeIncomeHistory(asset.incomeHistory),
+        creationDate
+      };
+    }) : [];
+  return {
+    ...defaultDatabase,
+    ...parsedDatabase,
+    schemaVersion: DATABASE_VERSION,
+    wishlistSlots: Array.isArray(parsedDatabase.wishlistSlots) ? parsedDatabase.wishlistSlots.filter((slot) => slot && typeof slot === 'object' && !preAddedSlotIds.includes(slot.id)) : [],
+    recoverySlots: Array.isArray(parsedDatabase.recoverySlots) ? parsedDatabase.recoverySlots.filter((slot) => slot && typeof slot === 'object' && !preAddedSlotIds.includes(slot.id)) : [],
+    assets,
+    milestone: { ...defaultDatabase.milestone, ...(parsedDatabase.milestone || {}), target: Math.max(toFiniteNumber(parsedDatabase.milestone?.target), 0) },
+    purchasedTotal: Math.max(toFiniteNumber(parsedDatabase.purchasedTotal), 0),
+    simulatedDate: resetIncome ? getDateKey(new Date()) : parsedDate,
+    incomeHistory: rebuildIncomeHistory(assets)
+  };
+};
+
 const readDatabase = () => {
   try {
     const savedDatabase = window.localStorage.getItem('kyos-database');
     if (!savedDatabase) return defaultDatabase;
     const parsedDatabase = JSON.parse(savedDatabase);
-    if (parsedDatabase.schemaVersion !== DATABASE_VERSION) return defaultDatabase;
-    const preAddedSlotIds = ['expense-default', 'ready-default', 'recovery-default'];
-    const preAddedAssetIds = ['asset-1', 'asset-2', 'asset-3'];
-    return {
-      ...defaultDatabase,
-      ...parsedDatabase,
-      wishlistSlots: Array.isArray(parsedDatabase.wishlistSlots) ? parsedDatabase.wishlistSlots.filter((slot) => !preAddedSlotIds.includes(slot.id)) : defaultDatabase.wishlistSlots,
-      recoverySlots: Array.isArray(parsedDatabase.recoverySlots) ? parsedDatabase.recoverySlots.filter((slot) => !preAddedSlotIds.includes(slot.id)) : defaultDatabase.recoverySlots,
-      assets: Array.isArray(parsedDatabase.assets) ? parsedDatabase.assets.filter((asset) => !preAddedAssetIds.includes(asset.id)).map((asset) => ({
-        ...asset,
-        investedAmount: Number(asset.investedAmount ?? asset.totalIncome ?? 0),
-        totalIncome: Number(asset.totalIncome || 0),
-        incomeHistory: asset.incomeHistory && typeof asset.incomeHistory === 'object' ? asset.incomeHistory : {},
-        creationDate: asset.creationDate || parsedDatabase.simulatedDate || defaultDatabase.simulatedDate
-      })) : defaultDatabase.assets,
-      milestone: { ...defaultDatabase.milestone, ...(parsedDatabase.milestone || {}) },
-      purchasedTotal: Number(parsedDatabase.purchasedTotal || 0),
-      simulatedDate: parsedDatabase.simulatedDate || defaultDatabase.simulatedDate,
-      incomeHistory: parsedDatabase.incomeHistory && typeof parsedDatabase.incomeHistory === 'object' ? parsedDatabase.incomeHistory : defaultDatabase.incomeHistory
-    };
+    return normalizeDatabase(parsedDatabase, parsedDatabase.schemaVersion !== DATABASE_VERSION);
   } catch {
     return defaultDatabase;
   }
@@ -102,7 +189,7 @@ function App() {
       .then((data) => {
         const dailyRate = Number(String(data[0]?.valor || '').replace(',', '.'));
         if (!isCancelled && Number.isFinite(dailyRate)) {
-          setCdiRate(((1 + dailyRate / 100) ** BUSINESS_DAYS_PER_YEAR - 1) * 100);
+          setCdiRate(dailyRate);
         }
       })
       .catch(() => {
@@ -111,11 +198,12 @@ function App() {
     return () => { isCancelled = true; };
   }, []);
 
-  const wishlistTotal = database.wishlistSlots.reduce((total, slot) => total + Number(slot.price || 0), 0);
-  const recoveryTotal = database.recoverySlots.reduce((total, slot) => total + Number(slot.price || 0), 0);
-  const investedTotal = database.assets.reduce((total, asset) => total + Number(asset.investedAmount || 0), 0);
-  const topInvestment = database.assets.reduce((top, asset) => Number(asset.investedAmount) > Number(top.investedAmount) ? asset : top, { name: 'None', investedAmount: 0 });
+  const wishlistTotal = database.wishlistSlots.reduce((total, slot) => total + Math.max(toFiniteNumber(slot.price), 0), 0);
+  const recoveryTotal = database.recoverySlots.reduce((total, slot) => total + Math.max(toFiniteNumber(slot.price), 0), 0);
+  const investedTotal = database.assets.reduce((total, asset) => total + Math.max(toFiniteNumber(asset.investedAmount), 0), 0);
+  const topInvestment = database.assets.reduce((top, asset) => toFiniteNumber(asset.investedAmount) > toFiniteNumber(top.investedAmount) ? asset : top, { name: 'None', investedAmount: 0 });
   const simulatedDate = parseDateKey(database.simulatedDate);
+  const annualCdiRate = ((1 + cdiRate / 100) ** getIncomeDaysInYear(simulatedDate.getFullYear()) - 1) * 100;
   const getIncomeForDate = (date) => {
     return database.assets.reduce((total, asset) => total + Number(asset.incomeHistory?.[getDateKey(date)] || 0), 0);
   };
@@ -144,7 +232,7 @@ function App() {
   const yearIncome = getIncomeBetween(startOfYear, simulatedDate);
   const previousYearIncome = getIncomeBetween(previousYearStart, previousYearEnd);
   const netWorthTotal = investedTotal;
-  const spentTotal = recoveryTotal + Number(database.purchasedTotal || 0);
+  const spentTotal = recoveryTotal + Math.max(toFiniteNumber(database.purchasedTotal), 0);
   const milestoneRemaining = Math.max(Number(database.milestone.target) - netWorthTotal, 0);
   const displayMoney = (value) => areValuesVisible ? formatMoney(value) : '****';
   const getTrend = (current, previous) => current === previous
@@ -169,9 +257,10 @@ function App() {
         name: assetForm.name.trim(),
         yieldRate: Number(assetForm.yieldRate || 0),
         investedAmount: Number(assetForm.investedAmount),
+        initialInvestedAmount: Number(assetForm.investedAmount),
         totalIncome: 0,
         incomeHistory: {},
-        creationDate: database.simulatedDate
+        creationDate: current.simulatedDate
       }]
     }));
     setAssetForm({ name: '', yieldRate: '', investedAmount: '' });
@@ -179,39 +268,54 @@ function App() {
   };
 
   const removeAsset = (id) => {
-    setDatabase((current) => ({ ...current, assets: current.assets.filter((asset) => asset.id !== id) }));
+    setDatabase((current) => {
+      const assets = current.assets.filter((asset) => asset.id !== id);
+      return { ...current, assets, incomeHistory: rebuildIncomeHistory(assets) };
+    });
   };
 
-  const simulateDay = () => {
+  const simulateDays = (direction) => {
     setDatabase((current) => {
       const days = Math.max(1, Math.floor(Number(daysToSimulate) || 1));
       let nextDate = parseDateKey(current.simulatedDate);
       let assets = current.assets;
-      let incomeHistory = current.incomeHistory;
 
       for (let day = 0; day < days; day += 1) {
-        nextDate = shiftDate(nextDate, 1);
+        nextDate = shiftDate(nextDate, direction);
         const simulationDate = nextDate;
         const nextDateKey = getDateKey(simulationDate);
-        assets = assets.map((asset) => {
-          if (!isWeekday(simulationDate) || !asset.creationDate || parseDateKey(asset.creationDate) > simulationDate) return asset;
-          const dailyIncome = getDailyAssetIncome(asset, cdiRate);
-          return {
-            ...asset,
-            investedAmount: Number(asset.investedAmount || 0) + dailyIncome,
-            totalIncome: Number(asset.totalIncome || 0) + dailyIncome,
-            incomeHistory: { ...(asset.incomeHistory || {}), [nextDateKey]: dailyIncome }
-          };
-        });
-        const dailyIncome = assets.reduce((total, asset) => total + Number(asset.incomeHistory?.[nextDateKey] || 0), 0);
-        incomeHistory = { ...incomeHistory, [nextDateKey]: dailyIncome };
+        if (direction > 0) {
+          assets = assets.map((asset) => {
+            const dailyIncome = getDailyAssetIncome(asset, cdiRate);
+            const previousIncome = Number(asset.incomeHistory?.[nextDateKey] || 0);
+            return {
+              ...asset,
+              investedAmount: Number(asset.investedAmount || 0) + dailyIncome,
+              totalIncome: Number(asset.totalIncome || 0) + dailyIncome,
+              incomeHistory: { ...(asset.incomeHistory || {}), [nextDateKey]: previousIncome + dailyIncome }
+            };
+          });
+        } else {
+          assets = assets.map((asset) => {
+            const dailyIncome = Number(asset.incomeHistory?.[nextDateKey] || getDailyAssetIncome(asset, cdiRate));
+            const { [nextDateKey]: removedIncome, ...remainingIncomeHistory } = asset.incomeHistory || {};
+            const availableIncome = Math.max(toFiniteNumber(asset.totalIncome), 0);
+            const incomeReduction = Math.min(Math.max(dailyIncome, 0), availableIncome);
+            return {
+              ...asset,
+              investedAmount: Math.max(toFiniteNumber(asset.investedAmount) - incomeReduction, 0),
+              totalIncome: availableIncome - incomeReduction,
+              incomeHistory: remainingIncomeHistory
+            };
+          });
+        }
       }
 
       return {
         ...current,
         assets,
         simulatedDate: getDateKey(nextDate),
-        incomeHistory
+        incomeHistory: rebuildIncomeHistory(assets)
       };
     });
   };
@@ -229,7 +333,7 @@ function App() {
     try {
       const parsedDraft = JSON.parse(databaseDraft);
       if (!Array.isArray(parsedDraft.wishlistSlots) || !Array.isArray(parsedDraft.recoverySlots) || !Array.isArray(parsedDraft.assets)) return;
-      setDatabase({ ...defaultDatabase, ...parsedDraft, milestone: { ...defaultDatabase.milestone, ...(parsedDraft.milestone || {}) } });
+      setDatabase(normalizeDatabase(parsedDraft, parsedDraft.schemaVersion !== DATABASE_VERSION));
     } catch {
       return;
     }
@@ -259,16 +363,18 @@ function App() {
             </div>
             <div className='investment-summary-card cdi-investment-card'>
               <h2>CDI</h2>
-              <strong>{formatDecimal(cdiRate)}%</strong>
+              <strong>{formatDecimal(annualCdiRate)}%</strong>
             </div>
           </div>
           <div className='assets-panel'>
             <div className='assets-heading'>
               <h2>Assets</h2>
               <AddMoreButton onClick={() => setIsAssetFormOpen((current) => !current)}></AddMoreButton>
+              <span className='simulated-date'>Date: {formatDateBrazilian(database.simulatedDate)}</span>
               <div className='simulate-days-control'>
                 <input className='simulate-days-input' type='number' min='1' step='1' value={daysToSimulate} onChange={(event) => setDaysToSimulate(event.target.value)} aria-label='Days to simulate' />
-                <button className='simulate-day-button' type='button' onClick={simulateDay}>Simulate days</button>
+                <button className='simulate-day-button' type='button' onClick={() => simulateDays(-1)}>Decrease days</button>
+                <button className='simulate-day-button' type='button' onClick={() => simulateDays(1)}>Increase days</button>
               </div>
             </div>
             {isAssetFormOpen && (
@@ -342,7 +448,7 @@ function App() {
             </div>
             <div className='summary-card cdi-card'>
               <h2>CDI</h2>
-              <strong>{formatDecimal(cdiRate)}%</strong>
+              <strong>{formatDecimal(annualCdiRate)}%</strong>
             </div>
           </div>
         </div>

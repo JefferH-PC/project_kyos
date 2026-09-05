@@ -276,6 +276,12 @@ select,
     line-height: 1;
 }
 
+.simulated-date {
+    font-size: 12px;
+    white-space: nowrap;
+    background: transparent;
+}
+
 .assets-heading .add-button {
     margin-left: auto;
     background: transparent;
@@ -325,6 +331,8 @@ select,
     align-items: center;
     gap: 6px;
     background: transparent;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 .simulate-days-input {
