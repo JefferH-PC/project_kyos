@@ -1,6 +1,7 @@
 import './Header.css';
 
 const Header = (props) => {
+    const visibilityLabel = props.areValuesVisible ? props.labelSet.hideMoneyValues : props.labelSet.showMoneyValues;
     return (
         <div className='header'> 
             <div className='logo'>
@@ -8,7 +9,7 @@ const Header = (props) => {
             <h1>Kyos</h1>
             </div>
             <div className='header-actions'>
-                <button className='visibility-button' aria-label={props.areValuesVisible ? 'Hide money values' : 'Show money values'} aria-pressed={!props.areValuesVisible} onClick={props.onToggleValues} type='button'>
+                <button className='visibility-button' aria-label={visibilityLabel} aria-pressed={!props.areValuesVisible} onClick={props.onToggleValues} type='button'>
                     <svg aria-hidden='true' xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 256 256' fill='currentColor'>
                         {props.areValuesVisible ? (
                             <path d='M128 56C63.3 56 16 128 16 128s47.3 72 112 72 112-72 112-72S192.7 56 128 56Zm0 120c-25.4 0-46-21.5-46-48s20.6-48 46-48 46 21.5 46 48-20.6 48-46 48Zm0-72a24 24 0 1 0 0 48 24 24 0 0 0 0-48Z'/>
@@ -17,8 +18,13 @@ const Header = (props) => {
                         )}
                     </svg>
                 </button>
-                <button aria-label='Select language'>◎ English</button>
-                <button aria-label='Toggle theme' onClick={props.onToggleTheme}>{props.isLightTheme ? '☾' : '☼'}</button>
+                <label className='language-select-wrap' aria-label={props.locale === 'pt' ? 'Selecionar idioma' : 'Select language'}>
+                    <select className='language-select' value={props.locale} onChange={(event) => props.onChangeLocale?.(event.target.value)} aria-label={props.locale === 'pt' ? 'Selecionar idioma' : 'Select language'}>
+                        <option value='en'>English</option>
+                        <option value='pt'>Português</option>
+                    </select>
+                </label>
+                <button aria-label={props.labelSet.toggleTheme} onClick={props.onToggleTheme}>{props.isLightTheme ? '☾' : '☼'}</button>
             </div>
         </div>
     )

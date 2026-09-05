@@ -25,9 +25,11 @@
     display: flex;
     gap: 8px;
     background: none;
+    align-items: center;
 }
 
-.header-actions button {
+.header-actions button,
+.header-actions .language-select {
     color: #ffffff;
     background: #202020;
     border: 2px solid #ffffff;
@@ -36,6 +38,17 @@
     font-size: 16px;
     cursor: pointer;
     transition: background-color .2s ease, color .2s ease;
+}
+
+.language-select-wrap {
+    display: inline-flex;
+    align-items: center;
+}
+
+.language-select {
+    appearance: none;
+    min-width: 120px;
+    text-align: center;
 }
 
 .header-actions button:hover {

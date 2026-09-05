@@ -225,7 +225,9 @@ select,
     padding: 14px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
 }
 
 .investment-summary-card h2,
@@ -244,14 +246,17 @@ select,
 
 .investment-summary-card strong {
     font-size: 38px;
+    text-align: center;
 }
 
 .cdi-investment-card {
     align-items: center;
+    justify-content: center;
 }
 
 .cdi-investment-card strong {
     font-size: 34px;
+    text-align: center;
 }
 
 .assets-panel {

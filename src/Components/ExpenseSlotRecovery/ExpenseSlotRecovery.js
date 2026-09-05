@@ -6,7 +6,7 @@ const ExpenseSlotRecovery = (props) => {
         <div className={`expense-slot-recovery ${props.position || ''}`}>
             <h3>{props.expenseName} - R$ {props.price}</h3>
             <div className='buttons-action'>
-                <RemoveButton onClick={props.onRemove}></RemoveButton>
+                <RemoveButton label={props.removeLabel} onClick={props.onRemove}></RemoveButton>
             </div>
         </div>
     );

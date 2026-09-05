@@ -16,8 +16,15 @@
 
 .time-area h2 {
     background: none;
-    font-size: 35px;
+    font-size: clamp(18px, 1.5vw, 26px);
     margin-bottom: 0;
+    line-height: 1.15;
+    flex: 1 1 auto;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
 }
 
 .expense-form {
@@ -120,7 +127,7 @@
 
 .top {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
     width: 100%;
     background-color: #202020;
@@ -128,8 +135,14 @@
     gap: 8px;
 }
 
+.time-area .top h2 {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
 .time-area .top .add-button {
     margin-left: 0;
+    flex: 0 0 auto;
 }
 
 @media (max-width: 900px) {

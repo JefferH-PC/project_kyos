@@ -100,6 +100,117 @@ const normalizeIncomeHistory = (incomeHistory) => Object.entries(incomeHistory |
   return history;
 }, {});
 
+const APP_TEXT = {
+  en: {
+    selectLanguage: 'Select language',
+    languageName: 'English',
+    hideMoneyValues: 'Hide money values',
+    showMoneyValues: 'Show money values',
+    toggleTheme: 'Toggle theme',
+    netWorth: 'Net Worth',
+    balance: 'Balance',
+    investments: 'Investments',
+    database: 'Database',
+    localDatabase: 'Local Database',
+    saveDatabase: 'Save database',
+    topInvestment: 'Top Investment',
+    cdi: 'CDI',
+    assets: 'Assets',
+    date: 'Date',
+    decreaseDays: 'Decrease days',
+    increaseDays: 'Increase days',
+    add: 'Add',
+    name: 'Name',
+    yieldRate: 'Yield %',
+    investedAmount: 'Invested amount',
+    yield: 'Yield',
+    invested: 'Invested',
+    dailyIncome: 'Daily income',
+    totalIncome: 'Total income',
+    spent: 'Spent',
+    lastYear: 'Last Year',
+    moneyBalance: "Money's Balance",
+    total: 'Total',
+    milestone: 'Milestone',
+    today: 'Today',
+    yesterday: 'Yesterday',
+    week: 'Week',
+    lastWeek: 'Last Week',
+    month: 'Month',
+    lastMonth: 'Last Month',
+    year: 'Year',
+    lastYearLabel: 'Last Year',
+    wishlist: 'Wishlist',
+    recovery: 'Recovery',
+    expenseName: 'Expense name',
+    expenseValue: 'Expense value',
+    totalLabel: 'Total',
+    days: 'days',
+    investmentsCount: 'Investments',
+    eyeToggle: 'Toggle visibility',
+    addExpense: 'Add expense',
+    completeSlot: 'Complete slot',
+    removeSlot: 'Remove slot',
+    returnSlot: 'Return slot from processing',
+    moveToProcessing: 'Move slot to processing',
+    editDatabase: 'Edit local database'
+  },
+  pt: {
+    selectLanguage: 'Selecionar idioma',
+    languageName: 'Português',
+    hideMoneyValues: 'Ocultar valores monetários',
+    showMoneyValues: 'Mostrar valores monetários',
+    toggleTheme: 'Alternar tema',
+    netWorth: 'Patrimônio',
+    balance: 'Saldo',
+    investments: 'Investimentos',
+    database: 'Banco de dados',
+    localDatabase: 'Banco de dados local',
+    saveDatabase: 'Salvar banco de dados',
+    topInvestment: 'Maior investimento',
+    cdi: 'CDI',
+    assets: 'Ativos',
+    date: 'Data',
+    decreaseDays: 'Diminuir dias',
+    increaseDays: 'Aumentar dias',
+    add: 'Adicionar',
+    name: 'Nome',
+    yieldRate: 'Rendimento %',
+    investedAmount: 'Valor investido',
+    yield: 'Rendimento',
+    invested: 'Investido',
+    dailyIncome: 'Rendimento diário',
+    totalIncome: 'Rendimento total',
+    spent: 'Gasto',
+    lastYear: 'Ano anterior',
+    moneyBalance: 'Balanço financeiro',
+    total: 'Total',
+    milestone: 'Meta',
+    today: 'Hoje',
+    yesterday: 'Ontem',
+    week: 'Semana',
+    lastWeek: 'Semana anterior',
+    month: 'Mês',
+    lastMonth: 'Mês anterior',
+    year: 'Ano',
+    lastYearLabel: 'Ano anterior',
+    wishlist: 'Lista de desejos',
+    recovery: 'Recuperação',
+    expenseName: 'Nome da despesa',
+    expenseValue: 'Valor da despesa',
+    totalLabel: 'Total',
+    days: 'dias',
+    investmentsCount: 'Investimentos',
+    eyeToggle: 'Alternar visibilidade',
+    addExpense: 'Adicionar despesa',
+    completeSlot: 'Concluir item',
+    removeSlot: 'Remover item',
+    returnSlot: 'Retornar item do processamento',
+    moveToProcessing: 'Mover item para processamento',
+    editDatabase: 'Editar banco de dados local'
+  }
+};
+
 const defaultDatabase = {
   schemaVersion: DATABASE_VERSION,
   wishlistSlots: [],
@@ -167,6 +278,13 @@ const readDatabase = () => {
 function App() {
   const [activeSection, setActiveSection] = useState('Net Worth');
   const [isLightTheme, setIsLightTheme] = useState(false);
+  const [locale, setLocale] = useState(() => {
+    try {
+      return window.localStorage.getItem('kyos-locale') === 'pt' ? 'pt' : 'en';
+    } catch {
+      return 'en';
+    }
+  });
   const [database, setDatabase] = useState(readDatabase);
   const [isAssetFormOpen, setIsAssetFormOpen] = useState(false);
   const [assetForm, setAssetForm] = useState({ name: '', yieldRate: '', investedAmount: '' });
@@ -174,10 +292,19 @@ function App() {
   const [cdiRate, setCdiRate] = useState(CDI_RATE);
   const [areValuesVisible, setAreValuesVisible] = useState(true);
   const [databaseDraft, setDatabaseDraft] = useState('');
+  const t = APP_TEXT[locale] || APP_TEXT.en;
 
   useEffect(() => {
     window.localStorage.setItem('kyos-database', JSON.stringify(database));
   }, [database]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('kyos-locale', locale);
+    } catch {
+      // Ignore storage errors for non-persistent environments.
+    }
+  }, [locale]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -344,11 +471,11 @@ function App() {
       return (
         <div className='database-view'>
           <div className='database-heading'>
-            <h2>Local Database</h2>
-            <span>{database.wishlistSlots.length + database.recoverySlots.length} slots | {database.assets.length} assets</span>
+            <h2>{t.localDatabase}</h2>
+            <span>{database.wishlistSlots.length + database.recoverySlots.length} slots | {database.assets.length} {t.assets.toLowerCase()}</span>
           </div>
-          <textarea value={databaseDraft} onChange={(event) => setDatabaseDraft(event.target.value)} aria-label='Edit local database'></textarea>
-          <button className='database-save' type='button' onClick={saveDatabaseDraft}>Save database</button>
+          <textarea value={databaseDraft} onChange={(event) => setDatabaseDraft(event.target.value)} aria-label={t.editDatabase}></textarea>
+          <button className='database-save' type='button' onClick={saveDatabaseDraft}>{t.saveDatabase}</button>
         </div>
       );
     }
@@ -358,41 +485,41 @@ function App() {
         <div className='investments-view'>
           <div className='investment-summary-grid'>
             <div className='investment-summary-card'>
-              <h2>Top Investment</h2>
+              <h2>{t.topInvestment}</h2>
               <strong>{topInvestment.name}<br />R$ {displayMoney(topInvestment.investedAmount)}</strong>
             </div>
             <div className='investment-summary-card cdi-investment-card'>
-              <h2>CDI</h2>
+              <h2>{t.cdi}</h2>
               <strong>{formatDecimal(annualCdiRate)}%</strong>
             </div>
           </div>
           <div className='assets-panel'>
             <div className='assets-heading'>
-              <h2>Assets</h2>
-              <AddMoreButton onClick={() => setIsAssetFormOpen((current) => !current)}></AddMoreButton>
-              <span className='simulated-date'>Date: {formatDateBrazilian(database.simulatedDate)}</span>
+              <h2>{t.assets}</h2>
+              <AddMoreButton label={t.addExpense} onClick={() => setIsAssetFormOpen((current) => !current)}></AddMoreButton>
+              <span className='simulated-date'>{t.date}: {formatDateBrazilian(database.simulatedDate)}</span>
               <div className='simulate-days-control'>
                 <input className='simulate-days-input' type='number' min='1' step='1' value={daysToSimulate} onChange={(event) => setDaysToSimulate(event.target.value)} aria-label='Days to simulate' />
-                <button className='simulate-day-button' type='button' onClick={() => simulateDays(-1)}>Decrease days</button>
-                <button className='simulate-day-button' type='button' onClick={() => simulateDays(1)}>Increase days</button>
+                <button className='simulate-day-button' type='button' onClick={() => simulateDays(-1)}>{t.decreaseDays}</button>
+                <button className='simulate-day-button' type='button' onClick={() => simulateDays(1)}>{t.increaseDays}</button>
               </div>
             </div>
             {isAssetFormOpen && (
               <form className='asset-form' onSubmit={addAsset}>
-                <input placeholder='Name' value={assetForm.name} onChange={(event) => setAssetForm({ ...assetForm, name: event.target.value })} required />
-                <input placeholder='Yield %' type='number' min='0' step='0.01' value={assetForm.yieldRate} onChange={(event) => setAssetForm({ ...assetForm, yieldRate: event.target.value })} />
-                <input placeholder='Invested amount' type='number' min='0' step='0.01' value={assetForm.investedAmount} onChange={(event) => setAssetForm({ ...assetForm, investedAmount: event.target.value })} required />
-                <button type='submit'>Add</button>
+                <input placeholder={t.name} value={assetForm.name} onChange={(event) => setAssetForm({ ...assetForm, name: event.target.value })} required />
+                <input placeholder={t.yieldRate} type='number' min='0' step='0.01' value={assetForm.yieldRate} onChange={(event) => setAssetForm({ ...assetForm, yieldRate: event.target.value })} />
+                <input placeholder={t.investedAmount} type='number' min='0' step='0.01' value={assetForm.investedAmount} onChange={(event) => setAssetForm({ ...assetForm, investedAmount: event.target.value })} required />
+                <button type='submit'>{t.add}</button>
               </form>
             )}
             <div className='assets-grid'>
               {database.assets.map((asset) => (
                 <div className='asset-card' key={asset.id}>
-                  <div className='asset-title'><strong>{asset.name}</strong><RemoveButton onClick={() => removeAsset(asset.id)}></RemoveButton></div>
-                  <strong>Yield</strong><p>{formatDecimal(asset.yieldRate)}% of CDI</p>
-                  <strong>Invested</strong><p>R$ {displayMoney(asset.investedAmount)}</p>
-                  <strong>Daily income</strong><p>R$ {displayMoney(getDailyAssetIncome(asset, cdiRate))}</p>
-                  <strong>Total income</strong><p>R$ {displayMoney(asset.totalIncome)}</p>
+                  <div className='asset-title'><strong>{asset.name}</strong><RemoveButton label={t.removeSlot} onClick={() => removeAsset(asset.id)}></RemoveButton></div>
+                  <strong>{t.yield}</strong><p>{formatDecimal(asset.yieldRate)}% {t.cdi}</p>
+                  <strong>{t.invested}</strong><p>R$ {displayMoney(asset.investedAmount)}</p>
+                  <strong>{t.dailyIncome}</strong><p>R$ {displayMoney(getDailyAssetIncome(asset, cdiRate))}</p>
+                  <strong>{t.totalIncome}</strong><p>R$ {displayMoney(asset.totalIncome)}</p>
                 </div>
               ))}
             </div>
@@ -406,26 +533,26 @@ function App() {
         <div className='balance-view'>
           <div className='balance-year-grid'>
             <div className='balance-card'>
-              <h2>Spent</h2>
+              <h2>{t.spent}</h2>
               <strong>{simulatedDate.getFullYear()}</strong>
               <strong>R$ {displayMoney(spentTotal)}</strong>
-              <h3>Last Year</h3>
+              <h3>{t.lastYear}</h3>
               <strong>R$ {displayMoney(0)}</strong>
             </div>
             <div className='balance-card'>
-              <h2>Invested</h2>
+              <h2>{t.invested}</h2>
               <strong>{simulatedDate.getFullYear()}</strong>
               <strong>R$ {displayMoney(investedTotal)}</strong>
-              <h3>Last Year</h3>
+              <h3>{t.lastYear}</h3>
               <strong>R$ {displayMoney(0)}</strong>
             </div>
           </div>
           <div className='balance-chart-card'>
               <div className='balance-donut' style={{ '--spent-ratio': `${spentTotal + investedTotal ? (spentTotal / (spentTotal + investedTotal)) * 100 : 0}%` }} aria-label='Money balance chart'></div>
             <div className='balance-legend'>
-              <h2>Money's Balance</h2>
-              <p><span className='legend-swatch invested'></span>Invested</p>
-              <p><span className='legend-swatch spent'></span>Spent</p>
+              <h2>{t.moneyBalance}</h2>
+              <p><span className='legend-swatch invested'></span>{t.invested}</p>
+              <p><span className='legend-swatch spent'></span>{t.spent}</p>
             </div>
           </div>
         </div>
@@ -436,31 +563,31 @@ function App() {
       <>
         <div className='middle-summary'>
           <div className='middle-summary-main'>
-            <MiddleNetWorthCard title='Total' money={displayMoney(netWorthTotal)} investments={database.assets.length}></MiddleNetWorthCard>
-            <MiddleMilestoneCard title='Milestone' next={displayMoney(database.milestone.target)} remaining={`${displayMoney(milestoneRemaining)} - X days`}></MiddleMilestoneCard>
+            <MiddleNetWorthCard title={t.total} money={displayMoney(netWorthTotal)} investments={database.assets.length} investmentLabel={t.investmentsCount}></MiddleNetWorthCard>
+            <MiddleMilestoneCard title={t.milestone} next={displayMoney(database.milestone.target)} remaining={`${displayMoney(milestoneRemaining)} - X ${t.days}`}></MiddleMilestoneCard>
           </div>
           <div className='middle-summary-side'>
             <div className='summary-card today-card'>
-              <h2>Today</h2>
+              <h2>{t.today}</h2>
               <strong>R$ {displayMoney(todayIncome)} <span className={`trend ${todayTrend.className}`}>{todayTrend.symbol}</span></strong>
-              <h3>Yesterday</h3>
+              <h3>{t.yesterday}</h3>
               <strong>R$ {displayMoney(yesterdayIncome)}</strong>
             </div>
             <div className='summary-card cdi-card'>
-              <h2>CDI</h2>
+              <h2>{t.cdi}</h2>
               <strong>{formatDecimal(annualCdiRate)}%</strong>
             </div>
           </div>
         </div>
         <div className='time-cards'>
           <div className='summary-card period-card'>
-            <h2>Week</h2><strong>R$ {displayMoney(weekIncome)} <span className={`trend ${weekTrend.className}`}>{weekTrend.symbol}</span></strong><h3>Last Week</h3><strong>R$ {displayMoney(previousWeekIncome)}</strong>
+            <h2>{t.week}</h2><strong>R$ {displayMoney(weekIncome)} <span className={`trend ${weekTrend.className}`}>{weekTrend.symbol}</span></strong><h3>{t.lastWeek}</h3><strong>R$ {displayMoney(previousWeekIncome)}</strong>
           </div>
           <div className='summary-card period-card'>
-            <h2>Month</h2><strong>R$ {displayMoney(monthIncome)} <span className={`trend ${monthTrend.className}`}>{monthTrend.symbol}</span></strong><h3>Last Month</h3><strong>R$ {displayMoney(previousMonthIncome)}</strong>
+            <h2>{t.month}</h2><strong>R$ {displayMoney(monthIncome)} <span className={`trend ${monthTrend.className}`}>{monthTrend.symbol}</span></strong><h3>{t.lastMonth}</h3><strong>R$ {displayMoney(previousMonthIncome)}</strong>
           </div>
           <div className='summary-card period-card'>
-            <h2>Year</h2><strong>R$ {displayMoney(yearIncome)} <span className={`trend ${yearTrend.className}`}>{yearTrend.symbol}</span></strong><h3>Last Year</h3><strong>R$ {displayMoney(previousYearIncome)}</strong>
+            <h2>{t.year}</h2><strong>R$ {displayMoney(yearIncome)} <span className={`trend ${yearTrend.className}`}>{yearTrend.symbol}</span></strong><h3>{t.lastYearLabel}</h3><strong>R$ {displayMoney(previousYearIncome)}</strong>
           </div>
         </div>
       </>
@@ -469,19 +596,19 @@ function App() {
 
   return (
     <div className={`app ${isLightTheme ? 'light-theme' : ''}`}>
-      <Header isLightTheme={isLightTheme} areValuesVisible={areValuesVisible} onToggleValues={() => setAreValuesVisible((current) => !current)} onToggleTheme={() => setIsLightTheme((current) => !current)}></Header>
+      <Header locale={locale} isLightTheme={isLightTheme} areValuesVisible={areValuesVisible} onToggleValues={() => setAreValuesVisible((current) => !current)} onToggleTheme={() => setIsLightTheme((current) => !current)} onChangeLocale={(nextLocale) => setLocale(nextLocale)} labelSet={t}></Header>
       <div className='app-areas'>
-        <TimeArea title='Wishlist' slots={database.wishlistSlots} onSlotsChange={(slots) => updateSlots('wishlistSlots', slots)} onBuy={recordWishlistPurchase} total={wishlistTotal} className='wishlist'></TimeArea>
+        <TimeArea title={t.wishlist} area='wishlist' labels={{ add: t.add, expenseName: t.expenseName, expenseValue: t.expenseValue, total: t.totalLabel }} slots={database.wishlistSlots} onSlotsChange={(slots) => updateSlots('wishlistSlots', slots)} onBuy={recordWishlistPurchase} total={wishlistTotal} className='wishlist'></TimeArea>
         <div className='middle'>
           <div className='section-buttons'>
-            <SectionButton title='Net Worth' active={activeSection === 'Net Worth'} onClick={() => setActiveSection('Net Worth')}></SectionButton>
-            <SectionButton title='Balance' active={activeSection === 'Balance'} onClick={() => setActiveSection('Balance')}></SectionButton>
-            <SectionButton title='Investments' active={activeSection === 'Investments'} onClick={() => setActiveSection('Investments')}></SectionButton>
-            <SectionButton title='Database' active={activeSection === 'Database'} onClick={openDatabaseSection}></SectionButton>
+            <SectionButton title={t.netWorth} active={activeSection === 'Net Worth'} onClick={() => setActiveSection('Net Worth')}></SectionButton>
+            <SectionButton title={t.balance} active={activeSection === 'Balance'} onClick={() => setActiveSection('Balance')}></SectionButton>
+            <SectionButton title={t.investments} active={activeSection === 'Investments'} onClick={() => setActiveSection('Investments')}></SectionButton>
+            <SectionButton title={t.database} active={activeSection === 'Database'} onClick={openDatabaseSection}></SectionButton>
           </div>
           {renderMiddleContent()}
         </div>
-        <TimeArea title='Recovery' slots={database.recoverySlots} onSlotsChange={(slots) => updateSlots('recoverySlots', slots)} total={recoveryTotal} className='recovery'></TimeArea>
+        <TimeArea title={t.recovery} area='recovery' labels={{ add: t.add, expenseName: t.expenseName, expenseValue: t.expenseValue, total: t.totalLabel }} slots={database.recoverySlots} onSlotsChange={(slots) => updateSlots('recoverySlots', slots)} total={recoveryTotal} className='recovery'></TimeArea>
       </div>
     </div>
   );

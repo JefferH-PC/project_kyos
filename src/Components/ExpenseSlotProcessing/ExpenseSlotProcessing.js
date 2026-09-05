@@ -8,9 +8,9 @@ const ExpenseSlotProcessing = (props) => {
         <div className={`expense-slot-processing ${props.position || ''}`}>
             <h3>{props.expenseName} - R$ {props.price}</h3>
             <div className='buttons-action'>
-                <RemoveButton onClick={props.onRemove}></RemoveButton>
-                <ReturnButton onClick={props.onReturn}></ReturnButton>
-                <BuyButton onClick={props.onBuy}></BuyButton>
+                <RemoveButton label={props.removeLabel} onClick={props.onRemove}></RemoveButton>
+                <ReturnButton label={props.returnLabel} onClick={props.onReturn}></ReturnButton>
+                <BuyButton label={props.buyLabel} onClick={props.onBuy}></BuyButton>
             </div>
         </div>
     );

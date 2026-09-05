@@ -8,7 +8,8 @@ import { formatMoney } from '../../utils/formatters';
 import "./TimeArea.css";
 
 const TimeArea = (props) => {
-    const isRecoveryArea = props.title === 'Recovery';
+    const isRecoveryArea = props.area === 'recovery';
+    const labels = props.labels || { add: 'Add', expenseName: 'Expense name', expenseValue: 'Expense value', total: 'Total' };
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [expenseName, setExpenseName] = useState('');
     const [price, setPrice] = useState('');
@@ -73,6 +74,10 @@ const TimeArea = (props) => {
             expenseName: slot.expenseName,
             price: formatMoney(slot.price),
             position,
+            removeLabel: labels.removeSlot,
+            buyLabel: labels.completeSlot,
+            updateLabel: labels.moveToProcessing,
+            returnLabel: labels.returnSlot,
             onRemove: () => removeSlot(slot.id),
             onUpdate: () => moveToProcessing(slot.id),
             onBuy: () => buySlot(slot),
@@ -95,13 +100,13 @@ const TimeArea = (props) => {
         <div className="time-area">
             <div className="top">
                 <h2>{props.title}</h2>
-                <AddMoreButton onClick={() => setIsFormOpen((current) => !current)}></AddMoreButton>
+                <AddMoreButton label={labels.add} onClick={() => setIsFormOpen((current) => !current)}></AddMoreButton>
             </div>
             {isFormOpen && (
                 <form className="expense-form" onSubmit={addSlot}>
-                    <input value={expenseName} onChange={(event) => setExpenseName(event.target.value)} placeholder="Expense name" aria-label="Expense name" required />
-                    <input value={price} onChange={(event) => setPrice(event.target.value)} placeholder="R$ value" aria-label="Expense value" type="number" min="0" step="0.01" required />
-                    <button type="submit">Add</button>
+                    <input value={expenseName} onChange={(event) => setExpenseName(event.target.value)} placeholder={labels.expenseName} aria-label={labels.expenseName} required />
+                    <input value={price} onChange={(event) => setPrice(event.target.value)} placeholder={'R$ ' + labels.expenseValue.toLowerCase()} aria-label={labels.expenseValue} type="number" min="0" step="0.01" required />
+                    <button type="submit">{labels.add}</button>
                 </form>
             )}
             <div className="expense-area">
@@ -111,7 +116,7 @@ const TimeArea = (props) => {
                 {processingSlots.slice(0, isRecoveryArea ? 1 : 1).map((slot, index, list) => renderSlot(slot, index, list))}
             </div>
             <div className="total">
-                <h3>Total: R${formatMoney(props.total)}</h3>
+                <h3>{labels.total}: R${formatMoney(props.total)}</h3>
             </div>
         </div >
     );

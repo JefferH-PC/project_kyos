@@ -8,8 +8,8 @@ const ExpenseSlotReady = (props) => {
         <div className={`expense-slot-ready ${props.position || ''}`}>
             <h3>{props.expenseName} - R$ {props.price}</h3>
             <div className='buttons-action'>
-                <RemoveButton onClick={props.onRemove}></RemoveButton>
-                <BuyButton onClick={props.onBuy}></BuyButton>
+                <RemoveButton label={props.removeLabel} onClick={props.onRemove}></RemoveButton>
+                <BuyButton label={props.buyLabel} onClick={props.onBuy}></BuyButton>
             </div>
         </div>
     );
