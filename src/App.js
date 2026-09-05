@@ -10,6 +10,7 @@ import RemoveButton from './Components/RemoveButton/RemoveButton';
 import { formatDecimal, formatMoney } from './utils/formatters';
 
 const CDI_RATE = 10.5;
+const CDI_API_URL = 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados/ultimos/1?formato=json';
 const BUSINESS_DAYS_PER_YEAR = 252;
 const DATABASE_VERSION = 3;
 
@@ -32,7 +33,7 @@ const shiftDate = (date, amount) => {
 };
 
 const isWeekday = (date) => date.getDay() !== 0 && date.getDay() !== 6;
-const getDailyAssetIncome = (asset) => Number(asset.investedAmount || 0) * (Number(asset.yieldRate || 0) / 100) * (CDI_RATE / 100) / BUSINESS_DAYS_PER_YEAR;
+const getDailyAssetIncome = (asset, cdiRate) => Number(asset.investedAmount || 0) * (Number(asset.yieldRate || 0) / 100) * (cdiRate / 100) / BUSINESS_DAYS_PER_YEAR;
 
 const defaultDatabase = {
   schemaVersion: DATABASE_VERSION,
@@ -83,11 +84,32 @@ function App() {
   const [isAssetFormOpen, setIsAssetFormOpen] = useState(false);
   const [assetForm, setAssetForm] = useState({ name: '', yieldRate: '', investedAmount: '' });
   const [daysToSimulate, setDaysToSimulate] = useState('1');
+  const [cdiRate, setCdiRate] = useState(CDI_RATE);
+  const [areValuesVisible, setAreValuesVisible] = useState(true);
   const [databaseDraft, setDatabaseDraft] = useState('');
 
   useEffect(() => {
     window.localStorage.setItem('kyos-database', JSON.stringify(database));
   }, [database]);
+
+  useEffect(() => {
+    let isCancelled = false;
+    fetch(CDI_API_URL)
+      .then((response) => {
+        if (!response.ok) throw new Error('CDI request failed');
+        return response.json();
+      })
+      .then((data) => {
+        const dailyRate = Number(String(data[0]?.valor || '').replace(',', '.'));
+        if (!isCancelled && Number.isFinite(dailyRate)) {
+          setCdiRate(((1 + dailyRate / 100) ** BUSINESS_DAYS_PER_YEAR - 1) * 100);
+        }
+      })
+      .catch(() => {
+        // Keep the fallback CDI rate when the external service is unavailable.
+      });
+    return () => { isCancelled = true; };
+  }, []);
 
   const wishlistTotal = database.wishlistSlots.reduce((total, slot) => total + Number(slot.price || 0), 0);
   const recoveryTotal = database.recoverySlots.reduce((total, slot) => total + Number(slot.price || 0), 0);
@@ -124,6 +146,7 @@ function App() {
   const netWorthTotal = investedTotal;
   const spentTotal = recoveryTotal + Number(database.purchasedTotal || 0);
   const milestoneRemaining = Math.max(Number(database.milestone.target) - netWorthTotal, 0);
+  const displayMoney = (value) => areValuesVisible ? formatMoney(value) : '****';
   const getTrend = (current, previous) => current === previous
     ? { symbol: '→', className: 'trend-same' }
     : current > previous
@@ -172,7 +195,7 @@ function App() {
         const nextDateKey = getDateKey(simulationDate);
         assets = assets.map((asset) => {
           if (!isWeekday(simulationDate) || !asset.creationDate || parseDateKey(asset.creationDate) > simulationDate) return asset;
-          const dailyIncome = getDailyAssetIncome(asset);
+          const dailyIncome = getDailyAssetIncome(asset, cdiRate);
           return {
             ...asset,
             investedAmount: Number(asset.investedAmount || 0) + dailyIncome,
@@ -232,11 +255,11 @@ function App() {
           <div className='investment-summary-grid'>
             <div className='investment-summary-card'>
               <h2>Top Investment</h2>
-              <strong>{topInvestment.name}<br />R$ {formatMoney(topInvestment.investedAmount)}</strong>
+              <strong>{topInvestment.name}<br />R$ {displayMoney(topInvestment.investedAmount)}</strong>
             </div>
             <div className='investment-summary-card cdi-investment-card'>
               <h2>CDI</h2>
-              <strong>{formatDecimal(CDI_RATE)}%</strong>
+              <strong>{formatDecimal(cdiRate)}%</strong>
             </div>
           </div>
           <div className='assets-panel'>
@@ -261,9 +284,9 @@ function App() {
                 <div className='asset-card' key={asset.id}>
                   <div className='asset-title'><strong>{asset.name}</strong><RemoveButton onClick={() => removeAsset(asset.id)}></RemoveButton></div>
                   <strong>Yield</strong><p>{formatDecimal(asset.yieldRate)}% of CDI</p>
-                  <strong>Invested</strong><p>R$ {formatMoney(asset.investedAmount)}</p>
-                  <strong>Daily income</strong><p>R$ {formatMoney(getDailyAssetIncome(asset))}</p>
-                  <strong>Total income</strong><p>R$ {formatMoney(asset.totalIncome)}</p>
+                  <strong>Invested</strong><p>R$ {displayMoney(asset.investedAmount)}</p>
+                  <strong>Daily income</strong><p>R$ {displayMoney(getDailyAssetIncome(asset, cdiRate))}</p>
+                  <strong>Total income</strong><p>R$ {displayMoney(asset.totalIncome)}</p>
                 </div>
               ))}
             </div>
@@ -279,16 +302,16 @@ function App() {
             <div className='balance-card'>
               <h2>Spent</h2>
               <strong>{simulatedDate.getFullYear()}</strong>
-              <strong>R$ {formatMoney(spentTotal)}</strong>
+              <strong>R$ {displayMoney(spentTotal)}</strong>
               <h3>Last Year</h3>
-              <strong>R$ {formatMoney(0)}</strong>
+              <strong>R$ {displayMoney(0)}</strong>
             </div>
             <div className='balance-card'>
               <h2>Invested</h2>
               <strong>{simulatedDate.getFullYear()}</strong>
-              <strong>R$ {formatMoney(investedTotal)}</strong>
+              <strong>R$ {displayMoney(investedTotal)}</strong>
               <h3>Last Year</h3>
-              <strong>R$ {formatMoney(0)}</strong>
+              <strong>R$ {displayMoney(0)}</strong>
             </div>
           </div>
           <div className='balance-chart-card'>
@@ -307,31 +330,31 @@ function App() {
       <>
         <div className='middle-summary'>
           <div className='middle-summary-main'>
-            <MiddleNetWorthCard title='Total' money={formatMoney(netWorthTotal)} investments={database.assets.length}></MiddleNetWorthCard>
-            <MiddleMilestoneCard title='Milestone' next={formatMoney(database.milestone.target)} remaining={`${formatMoney(milestoneRemaining)} - X days`}></MiddleMilestoneCard>
+            <MiddleNetWorthCard title='Total' money={displayMoney(netWorthTotal)} investments={database.assets.length}></MiddleNetWorthCard>
+            <MiddleMilestoneCard title='Milestone' next={displayMoney(database.milestone.target)} remaining={`${displayMoney(milestoneRemaining)} - X days`}></MiddleMilestoneCard>
           </div>
           <div className='middle-summary-side'>
             <div className='summary-card today-card'>
               <h2>Today</h2>
-              <strong>R$ {formatMoney(todayIncome)} <span className={`trend ${todayTrend.className}`}>{todayTrend.symbol}</span></strong>
+              <strong>R$ {displayMoney(todayIncome)} <span className={`trend ${todayTrend.className}`}>{todayTrend.symbol}</span></strong>
               <h3>Yesterday</h3>
-              <strong>R$ {formatMoney(yesterdayIncome)}</strong>
+              <strong>R$ {displayMoney(yesterdayIncome)}</strong>
             </div>
             <div className='summary-card cdi-card'>
               <h2>CDI</h2>
-              <strong>{formatDecimal(CDI_RATE)}%</strong>
+              <strong>{formatDecimal(cdiRate)}%</strong>
             </div>
           </div>
         </div>
         <div className='time-cards'>
           <div className='summary-card period-card'>
-            <h2>Week</h2><strong>R$ {formatMoney(weekIncome)} <span className={`trend ${weekTrend.className}`}>{weekTrend.symbol}</span></strong><h3>Last Week</h3><strong>R$ {formatMoney(previousWeekIncome)}</strong>
+            <h2>Week</h2><strong>R$ {displayMoney(weekIncome)} <span className={`trend ${weekTrend.className}`}>{weekTrend.symbol}</span></strong><h3>Last Week</h3><strong>R$ {displayMoney(previousWeekIncome)}</strong>
           </div>
           <div className='summary-card period-card'>
-            <h2>Month</h2><strong>R$ {formatMoney(monthIncome)} <span className={`trend ${monthTrend.className}`}>{monthTrend.symbol}</span></strong><h3>Last Month</h3><strong>R$ {formatMoney(previousMonthIncome)}</strong>
+            <h2>Month</h2><strong>R$ {displayMoney(monthIncome)} <span className={`trend ${monthTrend.className}`}>{monthTrend.symbol}</span></strong><h3>Last Month</h3><strong>R$ {displayMoney(previousMonthIncome)}</strong>
           </div>
           <div className='summary-card period-card'>
-            <h2>Year</h2><strong>R$ {formatMoney(yearIncome)} <span className={`trend ${yearTrend.className}`}>{yearTrend.symbol}</span></strong><h3>Last Year</h3><strong>R$ {formatMoney(previousYearIncome)}</strong>
+            <h2>Year</h2><strong>R$ {displayMoney(yearIncome)} <span className={`trend ${yearTrend.className}`}>{yearTrend.symbol}</span></strong><h3>Last Year</h3><strong>R$ {displayMoney(previousYearIncome)}</strong>
           </div>
         </div>
       </>
@@ -340,7 +363,7 @@ function App() {
 
   return (
     <div className={`app ${isLightTheme ? 'light-theme' : ''}`}>
-      <Header isLightTheme={isLightTheme} onToggleTheme={() => setIsLightTheme((current) => !current)}></Header>
+      <Header isLightTheme={isLightTheme} areValuesVisible={areValuesVisible} onToggleValues={() => setAreValuesVisible((current) => !current)} onToggleTheme={() => setIsLightTheme((current) => !current)}></Header>
       <div className='app-areas'>
         <TimeArea title='Wishlist' slots={database.wishlistSlots} onSlotsChange={(slots) => updateSlots('wishlistSlots', slots)} onBuy={recordWishlistPurchase} total={wishlistTotal} className='wishlist'></TimeArea>
         <div className='middle'>

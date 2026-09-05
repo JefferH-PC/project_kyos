@@ -17,7 +17,7 @@
 .time-area h2 {
     background: none;
     font-size: 35px;
-    margin-bottom: 20px;
+    margin-bottom: 0;
 }
 
 .expense-form {
@@ -70,6 +70,27 @@
     scrollbar-color: #FFFFFF transparent;
 }
 
+.expense-area > * {
+    flex: 0 0 auto;
+    box-sizing: border-box;
+}
+
+.assets-grid::-webkit-scrollbar,
+.expense-area::-webkit-scrollbar {
+    width: 8px;
+}
+
+.assets-grid::-webkit-scrollbar-thumb,
+.expense-area::-webkit-scrollbar-thumb {
+    background: #FFFFFF;
+    border-radius: 8px;
+}
+
+.assets-grid::-webkit-scrollbar-track,
+.expense-area::-webkit-scrollbar-track {
+    background: transparent;
+}
+
 
 .processing-area {
     flex: 0 0 auto;
@@ -100,10 +121,15 @@
 .top {
     display: flex;
     justify-content: center;
+    align-items: center;
     width: 100%;
     background-color: #202020;
     padding: 0 10px;
     gap: 8px;
+}
+
+.time-area .top .add-button {
+    margin-left: 0;
 }
 
 @media (max-width: 900px) {

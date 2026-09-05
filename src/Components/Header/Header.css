@@ -43,3 +43,32 @@
     color: #202020;
 }
 
+.header-actions .visibility-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+}
+
+.header-actions .visibility-button svg {
+    display: block;
+    fill: #ffffff;
+}
+
+.header-actions .visibility-button:hover {
+    background: #ffffff;
+    color: #202020;
+}
+
+.header-actions .visibility-button:hover svg {
+    fill: #202020 !important;
+}
+
+.light-theme .header-actions .visibility-button svg {
+    fill: #202020;
+}
+
+.light-theme .header-actions .visibility-button:hover svg {
+    fill: #ffffff !important;
+}
+
