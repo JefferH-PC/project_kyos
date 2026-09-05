@@ -4,6 +4,7 @@ import AddMoreButton from "../AddMoreButton/AddMoreButton";
 import ExpenseSlot from "../ExpenseSlot/ExpenseSlot";
 import ExpenseSlotProcessing from "../ExpenseSlotProcessing/ExpenseSlotProcessing";
 import ExpenseSlotRecovery from "../ExpenseSlotRecovery/ExpenseSlotRecovery";
+import { formatMoney } from '../../utils/formatters';
 import "./TimeArea.css";
 
 const TimeArea = (props) => {
@@ -48,6 +49,11 @@ const TimeArea = (props) => {
         removeSlot(id);
     };
 
+    const buySlot = (slot) => {
+        props.onBuy?.(slot.price);
+        completeSlot(slot.id);
+    };
+
     const returnFromProcessing = (id) => {
         if (isRecoveryArea) return;
         props.onSlotsChange(slots.map((slot) => (
@@ -65,11 +71,11 @@ const TimeArea = (props) => {
         const slotProps = {
             key: slot.id,
             expenseName: slot.expenseName,
-            price: slot.price,
+            price: formatMoney(slot.price),
             position,
             onRemove: () => removeSlot(slot.id),
             onUpdate: () => moveToProcessing(slot.id),
-            onBuy: () => completeSlot(slot.id),
+            onBuy: () => buySlot(slot),
             onReturn: () => returnFromProcessing(slot.id)
         };
         if (slot.type === 'ready') return <ExpenseSlotReady {...slotProps}></ExpenseSlotReady>;
@@ -105,7 +111,7 @@ const TimeArea = (props) => {
                 {processingSlots.slice(0, isRecoveryArea ? 1 : 1).map((slot, index, list) => renderSlot(slot, index, list))}
             </div>
             <div className="total">
-                <h3>Total: R${props.total}</h3>
+                <h3>Total: R${formatMoney(props.total)}</h3>
             </div>
         </div >
     );

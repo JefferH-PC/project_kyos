@@ -7,12 +7,42 @@ import TimeArea from './Components/TimeArea/TimeArea';
 import MiddleNetWorthCard from './MiddleNetWorthCard/MiddleNetWorthCard';
 import AddMoreButton from './Components/AddMoreButton/AddMoreButton';
 import RemoveButton from './Components/RemoveButton/RemoveButton';
+import { formatDecimal, formatMoney } from './utils/formatters';
+
+const CDI_RATE = 10.5;
+const BUSINESS_DAYS_PER_YEAR = 252;
+const DATABASE_VERSION = 3;
+
+const getDateKey = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const parseDateKey = (dateKey) => {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+
+const shiftDate = (date, amount) => {
+  const shiftedDate = new Date(date);
+  shiftedDate.setDate(shiftedDate.getDate() + amount);
+  return shiftedDate;
+};
+
+const isWeekday = (date) => date.getDay() !== 0 && date.getDay() !== 6;
+const getDailyAssetIncome = (asset) => Number(asset.investedAmount || 0) * (Number(asset.yieldRate || 0) / 100) * (CDI_RATE / 100) / BUSINESS_DAYS_PER_YEAR;
 
 const defaultDatabase = {
+  schemaVersion: DATABASE_VERSION,
   wishlistSlots: [],
   recoverySlots: [],
-  milestone: { target: 10000.50 },
-  assets: []
+  milestone: { target: 0 },
+  assets: [],
+  purchasedTotal: 0,
+  simulatedDate: getDateKey(new Date()),
+  incomeHistory: {}
 };
 
 const readDatabase = () => {
@@ -20,6 +50,7 @@ const readDatabase = () => {
     const savedDatabase = window.localStorage.getItem('kyos-database');
     if (!savedDatabase) return defaultDatabase;
     const parsedDatabase = JSON.parse(savedDatabase);
+    if (parsedDatabase.schemaVersion !== DATABASE_VERSION) return defaultDatabase;
     const preAddedSlotIds = ['expense-default', 'ready-default', 'recovery-default'];
     const preAddedAssetIds = ['asset-1', 'asset-2', 'asset-3'];
     return {
@@ -29,9 +60,15 @@ const readDatabase = () => {
       recoverySlots: Array.isArray(parsedDatabase.recoverySlots) ? parsedDatabase.recoverySlots.filter((slot) => !preAddedSlotIds.includes(slot.id)) : defaultDatabase.recoverySlots,
       assets: Array.isArray(parsedDatabase.assets) ? parsedDatabase.assets.filter((asset) => !preAddedAssetIds.includes(asset.id)).map((asset) => ({
         ...asset,
-        investedAmount: Number(asset.investedAmount ?? asset.totalIncome ?? 0)
+        investedAmount: Number(asset.investedAmount ?? asset.totalIncome ?? 0),
+        totalIncome: Number(asset.totalIncome || 0),
+        incomeHistory: asset.incomeHistory && typeof asset.incomeHistory === 'object' ? asset.incomeHistory : {},
+        creationDate: asset.creationDate || parsedDatabase.simulatedDate || defaultDatabase.simulatedDate
       })) : defaultDatabase.assets,
-      milestone: { ...defaultDatabase.milestone, ...(parsedDatabase.milestone || {}) }
+      milestone: { ...defaultDatabase.milestone, ...(parsedDatabase.milestone || {}) },
+      purchasedTotal: Number(parsedDatabase.purchasedTotal || 0),
+      simulatedDate: parsedDatabase.simulatedDate || defaultDatabase.simulatedDate,
+      incomeHistory: parsedDatabase.incomeHistory && typeof parsedDatabase.incomeHistory === 'object' ? parsedDatabase.incomeHistory : defaultDatabase.incomeHistory
     };
   } catch {
     return defaultDatabase;
@@ -45,6 +82,7 @@ function App() {
   const [database, setDatabase] = useState(readDatabase);
   const [isAssetFormOpen, setIsAssetFormOpen] = useState(false);
   const [assetForm, setAssetForm] = useState({ name: '', yieldRate: '', investedAmount: '' });
+  const [daysToSimulate, setDaysToSimulate] = useState('1');
   const [databaseDraft, setDatabaseDraft] = useState('');
 
   useEffect(() => {
@@ -55,9 +93,46 @@ function App() {
   const recoveryTotal = database.recoverySlots.reduce((total, slot) => total + Number(slot.price || 0), 0);
   const investedTotal = database.assets.reduce((total, asset) => total + Number(asset.investedAmount || 0), 0);
   const topInvestment = database.assets.reduce((top, asset) => Number(asset.investedAmount) > Number(top.investedAmount) ? asset : top, { name: 'None', investedAmount: 0 });
+  const simulatedDate = parseDateKey(database.simulatedDate);
+  const getIncomeForDate = (date) => {
+    return database.assets.reduce((total, asset) => total + Number(asset.incomeHistory?.[getDateKey(date)] || 0), 0);
+  };
+  const getIncomeBetween = (startDate, endDate) => {
+    let total = 0;
+    for (let date = new Date(startDate); date <= endDate; date = shiftDate(date, 1)) {
+      total += getIncomeForDate(date);
+    }
+    return total;
+  };
+  const startOfWeek = shiftDate(simulatedDate, -(simulatedDate.getDay() === 0 ? 6 : simulatedDate.getDay() - 1));
+  const startOfMonth = new Date(simulatedDate.getFullYear(), simulatedDate.getMonth(), 1);
+  const startOfYear = new Date(simulatedDate.getFullYear(), 0, 1);
+  const previousWeekStart = shiftDate(startOfWeek, -7);
+  const previousWeekEnd = shiftDate(startOfWeek, -1);
+  const previousMonthStart = new Date(simulatedDate.getFullYear(), simulatedDate.getMonth() - 1, 1);
+  const previousMonthEnd = new Date(simulatedDate.getFullYear(), simulatedDate.getMonth(), 0);
+  const previousYearStart = new Date(simulatedDate.getFullYear() - 1, 0, 1);
+  const previousYearEnd = new Date(simulatedDate.getFullYear() - 1, 11, 31);
+  const todayIncome = getIncomeForDate(simulatedDate);
+  const yesterdayIncome = getIncomeForDate(shiftDate(simulatedDate, -1));
+  const weekIncome = getIncomeBetween(startOfWeek, simulatedDate);
+  const previousWeekIncome = getIncomeBetween(previousWeekStart, previousWeekEnd);
+  const monthIncome = getIncomeBetween(startOfMonth, simulatedDate);
+  const previousMonthIncome = getIncomeBetween(previousMonthStart, previousMonthEnd);
+  const yearIncome = getIncomeBetween(startOfYear, simulatedDate);
+  const previousYearIncome = getIncomeBetween(previousYearStart, previousYearEnd);
   const netWorthTotal = investedTotal;
+  const spentTotal = recoveryTotal + Number(database.purchasedTotal || 0);
   const milestoneRemaining = Math.max(Number(database.milestone.target) - netWorthTotal, 0);
-  const formatMoney = (value) => Number(value).toFixed(2).replace('.', ',');
+  const getTrend = (current, previous) => current === previous
+    ? { symbol: '→', className: 'trend-same' }
+    : current > previous
+      ? { symbol: '↑', className: 'trend-up' }
+      : { symbol: '↓', className: 'trend-down' };
+  const todayTrend = getTrend(todayIncome, yesterdayIncome);
+  const weekTrend = getTrend(weekIncome, previousWeekIncome);
+  const monthTrend = getTrend(monthIncome, previousMonthIncome);
+  const yearTrend = getTrend(yearIncome, previousYearIncome);
 
   const updateSlots = (key, slots) => setDatabase((current) => ({ ...current, [key]: slots }));
 
@@ -70,7 +145,10 @@ function App() {
         id: `${Date.now()}-${Math.random()}`,
         name: assetForm.name.trim(),
         yieldRate: Number(assetForm.yieldRate || 0),
-        investedAmount: Number(assetForm.investedAmount)
+        investedAmount: Number(assetForm.investedAmount),
+        totalIncome: 0,
+        incomeHistory: {},
+        creationDate: database.simulatedDate
       }]
     }));
     setAssetForm({ name: '', yieldRate: '', investedAmount: '' });
@@ -79,6 +157,44 @@ function App() {
 
   const removeAsset = (id) => {
     setDatabase((current) => ({ ...current, assets: current.assets.filter((asset) => asset.id !== id) }));
+  };
+
+  const simulateDay = () => {
+    setDatabase((current) => {
+      const days = Math.max(1, Math.floor(Number(daysToSimulate) || 1));
+      let nextDate = parseDateKey(current.simulatedDate);
+      let assets = current.assets;
+      let incomeHistory = current.incomeHistory;
+
+      for (let day = 0; day < days; day += 1) {
+        nextDate = shiftDate(nextDate, 1);
+        const simulationDate = nextDate;
+        const nextDateKey = getDateKey(simulationDate);
+        assets = assets.map((asset) => {
+          if (!isWeekday(simulationDate) || !asset.creationDate || parseDateKey(asset.creationDate) > simulationDate) return asset;
+          const dailyIncome = getDailyAssetIncome(asset);
+          return {
+            ...asset,
+            investedAmount: Number(asset.investedAmount || 0) + dailyIncome,
+            totalIncome: Number(asset.totalIncome || 0) + dailyIncome,
+            incomeHistory: { ...(asset.incomeHistory || {}), [nextDateKey]: dailyIncome }
+          };
+        });
+        const dailyIncome = assets.reduce((total, asset) => total + Number(asset.incomeHistory?.[nextDateKey] || 0), 0);
+        incomeHistory = { ...incomeHistory, [nextDateKey]: dailyIncome };
+      }
+
+      return {
+        ...current,
+        assets,
+        simulatedDate: getDateKey(nextDate),
+        incomeHistory
+      };
+    });
+  };
+
+  const recordWishlistPurchase = (amount) => {
+    setDatabase((current) => ({ ...current, purchasedTotal: Number(current.purchasedTotal || 0) + Number(amount || 0) }));
   };
 
   const openDatabaseSection = () => {
@@ -120,13 +236,17 @@ function App() {
             </div>
             <div className='investment-summary-card cdi-investment-card'>
               <h2>CDI</h2>
-              <strong>xx,xx%</strong>
+              <strong>{formatDecimal(CDI_RATE)}%</strong>
             </div>
           </div>
           <div className='assets-panel'>
             <div className='assets-heading'>
               <h2>Assets</h2>
               <AddMoreButton onClick={() => setIsAssetFormOpen((current) => !current)}></AddMoreButton>
+              <div className='simulate-days-control'>
+                <input className='simulate-days-input' type='number' min='1' step='1' value={daysToSimulate} onChange={(event) => setDaysToSimulate(event.target.value)} aria-label='Days to simulate' />
+                <button className='simulate-day-button' type='button' onClick={simulateDay}>Simulate days</button>
+              </div>
             </div>
             {isAssetFormOpen && (
               <form className='asset-form' onSubmit={addAsset}>
@@ -140,8 +260,10 @@ function App() {
               {database.assets.map((asset) => (
                 <div className='asset-card' key={asset.id}>
                   <div className='asset-title'><strong>{asset.name}</strong><RemoveButton onClick={() => removeAsset(asset.id)}></RemoveButton></div>
-                  <strong>Yield</strong><p>{asset.yieldRate}% of CDI</p>
+                  <strong>Yield</strong><p>{formatDecimal(asset.yieldRate)}% of CDI</p>
                   <strong>Invested</strong><p>R$ {formatMoney(asset.investedAmount)}</p>
+                  <strong>Daily income</strong><p>R$ {formatMoney(getDailyAssetIncome(asset))}</p>
+                  <strong>Total income</strong><p>R$ {formatMoney(asset.totalIncome)}</p>
                 </div>
               ))}
             </div>
@@ -156,21 +278,21 @@ function App() {
           <div className='balance-year-grid'>
             <div className='balance-card'>
               <h2>Spent</h2>
-              <strong>2026</strong>
-              <strong>R$ {formatMoney(wishlistTotal)}</strong>
+              <strong>{simulatedDate.getFullYear()}</strong>
+              <strong>R$ {formatMoney(spentTotal)}</strong>
               <h3>Last Year</h3>
-              <strong>R$ {formatMoney(investedTotal)}</strong>
+              <strong>R$ {formatMoney(0)}</strong>
             </div>
             <div className='balance-card'>
               <h2>Invested</h2>
-              <strong>2026</strong>
+              <strong>{simulatedDate.getFullYear()}</strong>
               <strong>R$ {formatMoney(investedTotal)}</strong>
               <h3>Last Year</h3>
-              <strong>R$ xxx,xx</strong>
+              <strong>R$ {formatMoney(0)}</strong>
             </div>
           </div>
           <div className='balance-chart-card'>
-            <div className='balance-donut' style={{ '--spent-ratio': `${wishlistTotal + investedTotal ? (wishlistTotal / (wishlistTotal + investedTotal)) * 100 : 0}%` }} aria-label='Money balance chart'></div>
+              <div className='balance-donut' style={{ '--spent-ratio': `${spentTotal + investedTotal ? (spentTotal / (spentTotal + investedTotal)) * 100 : 0}%` }} aria-label='Money balance chart'></div>
             <div className='balance-legend'>
               <h2>Money's Balance</h2>
               <p><span className='legend-swatch invested'></span>Invested</p>
@@ -191,25 +313,25 @@ function App() {
           <div className='middle-summary-side'>
             <div className='summary-card today-card'>
               <h2>Today</h2>
-              <strong>R$ {formatMoney(wishlistTotal)}</strong>
+              <strong>R$ {formatMoney(todayIncome)} <span className={`trend ${todayTrend.className}`}>{todayTrend.symbol}</span></strong>
               <h3>Yesterday</h3>
-              <strong>R$ xxx,xx <span className='trend'>→</span></strong>
+              <strong>R$ {formatMoney(yesterdayIncome)}</strong>
             </div>
             <div className='summary-card cdi-card'>
               <h2>CDI</h2>
-              <strong>xx,xx%</strong>
+              <strong>{formatDecimal(CDI_RATE)}%</strong>
             </div>
           </div>
         </div>
         <div className='time-cards'>
           <div className='summary-card period-card'>
-            <h2>Week</h2><strong>R$ xxx,xx</strong><h3>Last Week</h3><strong>R$ xxx,xx <span className='trend'>→</span></strong>
+            <h2>Week</h2><strong>R$ {formatMoney(weekIncome)} <span className={`trend ${weekTrend.className}`}>{weekTrend.symbol}</span></strong><h3>Last Week</h3><strong>R$ {formatMoney(previousWeekIncome)}</strong>
           </div>
           <div className='summary-card period-card'>
-            <h2>Month</h2><strong>R$ xxx,xx</strong><h3>Last Month</h3><strong>R$ xxx,xx <span className='trend'>→</span></strong>
+            <h2>Month</h2><strong>R$ {formatMoney(monthIncome)} <span className={`trend ${monthTrend.className}`}>{monthTrend.symbol}</span></strong><h3>Last Month</h3><strong>R$ {formatMoney(previousMonthIncome)}</strong>
           </div>
           <div className='summary-card period-card'>
-            <h2>Year</h2><strong>R$ xxx,xx</strong><h3>Last Year</h3><strong>R$ xxx,xx <span className='trend'>→</span></strong>
+            <h2>Year</h2><strong>R$ {formatMoney(yearIncome)} <span className={`trend ${yearTrend.className}`}>{yearTrend.symbol}</span></strong><h3>Last Year</h3><strong>R$ {formatMoney(previousYearIncome)}</strong>
           </div>
         </div>
       </>
@@ -220,7 +342,7 @@ function App() {
     <div className={`app ${isLightTheme ? 'light-theme' : ''}`}>
       <Header isLightTheme={isLightTheme} onToggleTheme={() => setIsLightTheme((current) => !current)}></Header>
       <div className='app-areas'>
-        <TimeArea title='Wishlist' slots={database.wishlistSlots} onSlotsChange={(slots) => updateSlots('wishlistSlots', slots)} total={wishlistTotal} className='wishlist'></TimeArea>
+        <TimeArea title='Wishlist' slots={database.wishlistSlots} onSlotsChange={(slots) => updateSlots('wishlistSlots', slots)} onBuy={recordWishlistPurchase} total={wishlistTotal} className='wishlist'></TimeArea>
         <div className='middle'>
           <div className='section-buttons'>
             <SectionButton title='Net Worth' active={activeSection === 'Net Worth'} onClick={() => setActiveSection('Net Worth')}></SectionButton>

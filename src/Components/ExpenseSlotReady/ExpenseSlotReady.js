@@ -6,7 +6,7 @@ import './ExpenseSlotReady.css';
 const ExpenseSlotReady = (props) => {
     return (
         <div className={`expense-slot-ready ${props.position || ''}`}>
-            <h3>{props.expenseName} - R${props.price}</h3>
+            <h3>{props.expenseName} - R$ {props.price}</h3>
             <div className='buttons-action'>
                 <RemoveButton onClick={props.onRemove}></RemoveButton>
                 <BuyButton onClick={props.onBuy}></BuyButton>
