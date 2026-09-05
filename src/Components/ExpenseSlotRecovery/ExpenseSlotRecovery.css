@@ -1,9 +1,10 @@
-.expense-slot {
+.expense-slot-recovery {
     max-width: 250px;
     width: 250px;
     min-height: 84px;
     max-height: none;
     border: 2px solid #9E3030;
+    border-radius: 15px;
     padding: 4px 8px;
     background-color: #202020;
     display: flex;
@@ -11,7 +12,7 @@
     gap: 4px;
 }
 
-.expense-slot h3 {
+.expense-slot-recovery h3 {
     background: #202020;
     font-size: 15px;
     line-height: 1.2;

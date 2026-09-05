@@ -1,9 +1,9 @@
-.expense-slot {
+.expense-slot-ready {
     max-width: 250px;
     width: 250px;
     min-height: 84px;
     max-height: none;
-    border: 2px solid #9E3030;
+    border: 2px solid #4D9E30;
     padding: 4px 8px;
     background-color: #202020;
     display: flex;
@@ -11,7 +11,7 @@
     gap: 4px;
 }
 
-.expense-slot h3 {
+.expense-slot-ready h3 {
     background: #202020;
     font-size: 15px;
     line-height: 1.2;

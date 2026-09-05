@@ -1,0 +1,16 @@
+.add-button {
+    background-color: #202020;
+    margin-left: 10px;
+}
+
+.add {
+    fill: #FFFFFF;
+    border: 2px solid #FFFFFF;
+    background: none;
+    border-radius: 15px 0 15px 15px;
+}
+
+.add:hover {
+    background: #FFFFFF;
+    fill: #202020;
+}

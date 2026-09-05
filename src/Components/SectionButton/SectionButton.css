@@ -1,0 +1,23 @@
+.section-button {
+    display: flex;
+    width: fit-content;
+    height: fit-content;
+    background-color: transparent;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+}
+
+.section-button h2 {
+    background-color: #202020;
+    padding: 10px 50px;
+    border: 2px solid #FFFFFF;
+    border-radius: 15px;
+    width: auto;
+}
+
+.section-button:hover h2,
+.section-button.active h2 {
+    background-color: #FFFFFF;
+    color: #202020;
+}

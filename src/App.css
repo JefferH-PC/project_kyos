@@ -1,11 +1,473 @@
 * {
     margin: 0px;
-    background-color: #0D0D0D;
+    background-color: transparent;
     color: #FFFFFF;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: 'Trebuchet MS', Arial, sans-serif;
+    box-sizing: border-box;
+}
+
+.app {
+    height: 100vh;
+    overflow: hidden;
+    padding: 0 16px 12px;
+    background-color: #0D0D0D;
 }
 
 .app-areas {
+    height: calc(100vh - 82px);
+    min-height: 0;
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+}
+
+.middle {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 100%;
+    overflow: hidden;
+    background-color: transparent;
+    padding: 0 8px;
+    display: flex;
+    flex-direction: column;
+}
+
+.section-buttons {
     display: flex;
     justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 10px;
+    background: transparent;
+    flex: 0 0 auto;
+}
+
+.section-button {
+    min-width: 0;
+}
+
+.section-buttons h2 {
+    min-width: 0;
+    padding: 7px 14px;
+    font-size: 23px;
+    white-space: nowrap;
+}
+
+.middle-summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) minmax(130px, .9fr);
+    gap: 20px;
+    padding: 10px;
+    border: 1px solid #ffffff;
+    border-radius: 12px;
+    background: #202020;
+}
+
+.middle-summary-main,
+.middle-summary-side {
+    display: grid;
+    gap: 15px;
+    min-width: 0;
+}
+
+.middle-summary-side {
+    grid-template-rows: 1fr 1fr;
+}
+
+.summary-card {
+    min-width: 0;
+    border: 1px solid #ffffff;
+    border-radius: 12px;
+    padding: 12px;
+    background: #202020;
+}
+
+.summary-card h2,
+.summary-card h3,
+.summary-card strong {
+    background: none;
+}
+
+.summary-card h2 {
+    font-size: 34px;
+    text-align: center;
+    line-height: 1;
+}
+
+.summary-card h3 {
+    font-size: 18px;
+    text-align: center;
+    line-height: 1;
+}
+
+.today-card,
+.cdi-card,
+.period-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.today-card {
+    height: 160px;
+}
+
+.today-card strong,
+.period-card strong {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.cdi-card {
+    height: 160px;
+    align-items: center;
+    justify-content: space-around;
+}
+
+.cdi-card strong {
+    font-size: 34px;
+}
+
+.trend {
+    color: #3f82d8;
+    font-size: 22px;
+}
+
+.time-cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.period-card {
+    height: 160px;
+}
+
+.balance-view {
+    height: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 10px;
+    border: 1px solid #ffffff;
+    border-radius: 12px;
+    background: #202020;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.investments-view {
+    height: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 10px;
+    border: 1px solid #ffffff;
+    border-radius: 12px;
+    background: #202020;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.investment-summary-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) minmax(150px, .9fr);
+    gap: 8px;
+    flex: 0 0 183px;
+}
+
+.investment-summary-card,
+.assets-panel,
+.asset-card {
+    border: 1px solid #ffffff;
+    border-radius: 12px;
+    background: #202020;
+}
+
+.investment-summary-card {
+    min-width: 0;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.investment-summary-card h2,
+.investment-summary-card strong,
+.asset-card strong,
+.asset-card p,
+.assets-heading h2 {
+    background: none;
+}
+
+.investment-summary-card h2 {
+    font-size: 34px;
+    line-height: 1;
+    text-align: center;
+}
+
+.investment-summary-card strong {
+    font-size: 38px;
+}
+
+.cdi-investment-card {
+    align-items: center;
+}
+
+.cdi-investment-card strong {
+    font-size: 34px;
+}
+
+.assets-panel {
+    min-height: 0;
+    flex: 1 1 auto;
+    padding: 10px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.assets-heading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: transparent;
+}
+
+.assets-heading h2 {
+    font-size: 34px;
+    line-height: 1;
+}
+
+.assets-heading .add-button {
+    margin-left: 0;
+    background: transparent;
+}
+
+.assets-heading svg {
+    width: 28px;
+    height: 28px;
+}
+
+.assets-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    align-items: start;
+}
+
+.asset-card {
+    min-width: 0;
+    min-height: 136px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.asset-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: transparent;
+}
+
+.asset-title .remove-button {
+    background: transparent;
+}
+
+.asset-title svg {
+    width: 27px;
+    height: 27px;
+}
+
+.asset-card strong {
+    font-size: 14px;
+    line-height: 1;
+}
+
+.asset-card p {
+    font-size: 10px;
+    line-height: 1;
+}
+
+.balance-year-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+.balance-card,
+.balance-chart-card {
+    border: 1px solid #ffffff;
+    border-radius: 12px;
+    background: #202020;
+}
+
+.balance-card {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-width: 0;
+}
+
+.balance-card h2,
+.balance-card h3,
+.balance-card strong,
+.balance-chart-card h2,
+.balance-chart-card p {
+    background: none;
+}
+
+.balance-card h2 {
+    font-size: 34px;
+    text-align: center;
+}
+
+.balance-card h3 {
+    font-size: 18px;
+}
+
+.balance-card strong {
+    font-size: 25px;
+}
+
+.balance-chart-card {
+    min-height: 235px;
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    gap: 24px;
+}
+
+.balance-donut {
+    width: min(220px, 42%);
+    aspect-ratio: 1;
+    border: 1px solid #ffffff;
+    border-radius: 50%;
+    background: conic-gradient(#4da52d 0 82%, #b8373d 82% 100%);
+    position: relative;
+    flex: 0 0 auto;
+}
+
+.balance-donut::after {
+    content: '';
+    position: absolute;
+    inset: 24%;
+    border: 1px solid #ffffff;
+    border-radius: 50%;
+    background: #202020;
+}
+
+.balance-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-width: 180px;
+}
+
+.balance-legend h2 {
+    font-size: 28px;
+}
+
+.balance-legend p {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 26px;
+}
+
+.legend-swatch {
+    width: 28px;
+    height: 28px;
+    border: 1px solid #ffffff;
+    border-radius: 10px;
+    display: inline-block;
+}
+
+.legend-swatch.invested {
+    background: #4da52d;
+}
+
+.legend-swatch.spent {
+    background: #b8373d;
+}
+
+.time-area .expense-slot,
+.time-area .expense-slot-ready,
+.time-area .expense-slot-recovery,
+.time-area .expense-slot-processing {
+    width: calc(100% - 12px);
+    max-width: none;
+    min-width: 0;
+}
+
+.time-area .expense-slot h3,
+.time-area .expense-slot-ready h3,
+.time-area .expense-slot-recovery h3,
+.time-area .expense-slot-processing h3 {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow-wrap: anywhere;
+}
+
+.time-area .buttons-action {
+    flex: 0 0 auto;
+    margin-left: 4px;
+    width: 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    transform: none;
+    background: transparent;
+}
+
+.time-area .buttons-action > div {
+    width: 28px;
+    height: 24px;
+    background: transparent;
+}
+
+.time-area .buttons-action svg {
+    display: block;
+    width: 28px;
+    height: 24px;
+}
+
+@media (max-width: 900px) {
+    .app {
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
+    }
+
+    .app-areas {
+        height: auto;
+        flex-direction: column;
+    }
+
+    .middle {
+        order: -1;
+        height: auto;
+    }
+}
+
+@media (max-width: 600px) {
+    .middle-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .section-buttons {
+        gap: 5px;
+    }
+
+    .section-buttons h2 {
+        padding: 7px 8px;
+        font-size: 16px;
+    }
 }

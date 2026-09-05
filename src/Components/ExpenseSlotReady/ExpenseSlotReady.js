@@ -1,6 +1,6 @@
 
-import BuyButton from '../Components/BuyButton/BuyButton';
-import RemoveButton from '../Components/RemoveButton/RemoveButton';
+import BuyButton from '../BuyButton/BuyButton';
+import RemoveButton from '../RemoveButton/RemoveButton';
 import './ExpenseSlotReady.css';
 
 const ExpenseSlotReady = (props) => {
