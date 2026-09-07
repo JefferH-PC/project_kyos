@@ -9,7 +9,7 @@ import "./TimeArea.css";
 
 const TimeArea = (props) => {
     const isRecoveryArea = props.area === 'recovery';
-    const labels = props.labels || { add: 'Add', expenseName: 'Expense name', expenseValue: 'Expense value', total: 'Total' };
+    const labels = props.labels || { add: 'Add', expenseName: 'Expense name', expenseValue: 'Expense value', total: 'Total', days: 'days' };
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [expenseName, setExpenseName] = useState('');
     const [price, setPrice] = useState('');
@@ -20,13 +20,17 @@ const TimeArea = (props) => {
         event.preventDefault();
         if (!expenseName.trim() || !price) return;
 
+        const slotPrice = Number(price);
         const newSlot = {
             id: `${Date.now()}-${Math.random()}`,
             type: isRecoveryArea ? 'recovery' : 'expense',
             isProcessing: isRecoveryArea && !slots.some((slot) => slot.type === 'recovery' && slot.isProcessing),
             expenseName: expenseName.trim(),
-            price: Number(price)
+            price: slotPrice
         };
+        if (isRecoveryArea) {
+            props.onAdd?.(slotPrice);
+        }
         props.onSlotsChange([
             ...slots,
             newSlot
@@ -36,9 +40,12 @@ const TimeArea = (props) => {
         setIsFormOpen(false);
     };
 
-    const removeSlot = (id) => {
+    const removeSlot = (id, isManualRemoval = true) => {
         const removedSlot = slots.find((slot) => slot.id === id);
         const remainingSlots = slots.filter((slot) => slot.id !== id);
+        if (isRecoveryArea && removedSlot && isManualRemoval) {
+            props.onRemove?.(removedSlot.price);
+        }
         if (isRecoveryArea && removedSlot?.isProcessing) {
             const nextRecovery = remainingSlots.find((slot) => slot.type === 'recovery');
             props.onSlotsChange(remainingSlots.map((slot) => slot.id === nextRecovery?.id ? { ...slot, isProcessing: true } : slot));
@@ -48,7 +55,7 @@ const TimeArea = (props) => {
     };
 
     const completeSlot = (id) => {
-        removeSlot(id);
+        removeSlot(id, false);
     };
 
     const buySlot = (slot) => {
