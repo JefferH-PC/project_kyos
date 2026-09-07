@@ -22,11 +22,6 @@ const getDateKey = (date) => {
   return `${year}-${month}-${day}`;
 };
 
-const parseDateKey = (dateKey) => {
-  const [year, month, day] = dateKey.split('-').map(Number);
-  return new Date(year, month - 1, day);
-};
-
 const isValidDateKey = (dateKey) => {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return false;
   const [year, month, day] = dateKey.split('-').map(Number);
@@ -292,7 +287,7 @@ function App() {
   const recoveryTotal = database.recoverySlots.reduce((total, slot) => total + Math.max(toFiniteNumber(slot.price), 0), 0);
   const investedTotal = database.assets.reduce((total, asset) => total + Math.max(toFiniteNumber(asset.investedAmount), 0), 0);
   const topInvestment = database.assets.reduce((top, asset) => toFiniteNumber(asset.investedAmount) > toFiniteNumber(top.investedAmount) ? asset : top, { name: 'None', investedAmount: 0 });
-  const simulatedDate = parseDateKey(database.simulatedDate);
+  const actualDate = new Date();
   const totalCdiRate = ((1 + cdiRate / 100) ** CDI_BUSINESS_DAYS - 1) * 100;
   const getIncomeForDate = (date) => {
     return database.assets.reduce((total, asset) => total + Number(asset.incomeHistory?.[getDateKey(date)] || 0), 0);
@@ -304,22 +299,22 @@ function App() {
     }
     return total;
   };
-  const startOfWeek = shiftDate(simulatedDate, -(simulatedDate.getDay() === 0 ? 6 : simulatedDate.getDay() - 1));
-  const startOfMonth = new Date(simulatedDate.getFullYear(), simulatedDate.getMonth(), 1);
-  const startOfYear = new Date(simulatedDate.getFullYear(), 0, 1);
+  const startOfWeek = shiftDate(actualDate, -(actualDate.getDay() === 0 ? 6 : actualDate.getDay() - 1));
+  const startOfMonth = new Date(actualDate.getFullYear(), actualDate.getMonth(), 1);
+  const startOfYear = new Date(actualDate.getFullYear(), 0, 1);
   const previousWeekStart = shiftDate(startOfWeek, -7);
   const previousWeekEnd = shiftDate(startOfWeek, -1);
-  const previousMonthStart = new Date(simulatedDate.getFullYear(), simulatedDate.getMonth() - 1, 1);
-  const previousMonthEnd = new Date(simulatedDate.getFullYear(), simulatedDate.getMonth(), 0);
-  const previousYearStart = new Date(simulatedDate.getFullYear() - 1, 0, 1);
-  const previousYearEnd = new Date(simulatedDate.getFullYear() - 1, 11, 31);
-  const todayIncome = getIncomeForDate(simulatedDate);
-  const yesterdayIncome = getIncomeForDate(shiftDate(simulatedDate, -1));
-  const weekIncome = getIncomeBetween(startOfWeek, simulatedDate);
+  const previousMonthStart = new Date(actualDate.getFullYear(), actualDate.getMonth() - 1, 1);
+  const previousMonthEnd = new Date(actualDate.getFullYear(), actualDate.getMonth(), 0);
+  const previousYearStart = new Date(actualDate.getFullYear() - 1, 0, 1);
+  const previousYearEnd = new Date(actualDate.getFullYear() - 1, 11, 31);
+  const todayIncome = getIncomeForDate(actualDate);
+  const yesterdayIncome = getIncomeForDate(shiftDate(actualDate, -1));
+  const weekIncome = getIncomeBetween(startOfWeek, actualDate);
   const previousWeekIncome = getIncomeBetween(previousWeekStart, previousWeekEnd);
-  const monthIncome = getIncomeBetween(startOfMonth, simulatedDate);
+  const monthIncome = getIncomeBetween(startOfMonth, actualDate);
   const previousMonthIncome = getIncomeBetween(previousMonthStart, previousMonthEnd);
-  const yearIncome = getIncomeBetween(startOfYear, simulatedDate);
+  const yearIncome = getIncomeBetween(startOfYear, actualDate);
   const previousYearIncome = getIncomeBetween(previousYearStart, previousYearEnd);
   const netWorthTotal = investedTotal;
   const totalDailyIncome = database.assets.reduce((total, asset) => total + getDailyAssetIncome(asset, cdiRate), 0);
@@ -353,7 +348,7 @@ function App() {
         initialInvestedAmount: Number(assetForm.investedAmount),
         totalIncome: 0,
         incomeHistory: {},
-        creationDate: current.simulatedDate
+        creationDate: getDateKey(new Date())
       }]
     }));
     setAssetForm({ name: '', yieldRate: '', investedAmount: '' });
@@ -370,7 +365,7 @@ function App() {
   const simulateDays = (direction) => {
     setDatabase((current) => {
       const days = Math.max(1, Math.floor(Number(daysToSimulate) || 1));
-      let nextDate = parseDateKey(current.simulatedDate);
+      let nextDate = new Date();
       let assets = current.assets;
       let wishlistSlots = current.wishlistSlots;
       let recoverySlots = current.recoverySlots;
@@ -444,7 +439,6 @@ function App() {
         wishlistSlots,
         recoverySlots,
         recoverySpentTotal,
-        simulatedDate: getDateKey(nextDate),
         incomeHistory: rebuildIncomeHistory(assets)
       };
     });
@@ -545,14 +539,14 @@ function App() {
           <div className='balance-year-grid'>
             <div className='balance-card'>
               <h2>{t.spent}</h2>
-              <strong>{simulatedDate.getFullYear()}</strong>
+              <strong>{actualDate.getFullYear()}</strong>
               <strong>R$ {displayMoney(spentTotal)}</strong>
               <h3>{t.lastYear}</h3>
               <strong>R$ {displayMoney(0)}</strong>
             </div>
             <div className='balance-card'>
               <h2>{t.invested}</h2>
-              <strong>{simulatedDate.getFullYear()}</strong>
+              <strong>{actualDate.getFullYear()}</strong>
               <strong>R$ {displayMoney(investedTotal)}</strong>
               <h3>{t.lastYear}</h3>
               <strong>R$ {displayMoney(0)}</strong>
