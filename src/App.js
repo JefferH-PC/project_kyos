@@ -12,7 +12,7 @@ import { formatDecimal, formatMoney } from './utils/formatters';
 const CDI_RATE = 0.051660;
 const CDI_BUSINESS_DAYS = 252;
 const CDI_API_URL = 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados/ultimos/1?formato=json';
-const DATABASE_VERSION = 9;
+const DATABASE_VERSION = 11;
 const toFiniteNumber = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
 
 const getDateKey = (date) => {
@@ -174,7 +174,7 @@ const defaultDatabase = {
   recoverySpentTotal: 0
 };
 
-const normalizeDatabase = (parsedDatabase, resetIncome = false) => {
+const normalizeDatabase = (parsedDatabase, resetNonAssetValues = false) => {
   const preAddedSlotIds = ['expense-default', 'ready-default', 'recovery-default'];
   const preAddedAssetIds = ['asset-1', 'asset-2', 'asset-3'];
   const parsedDate = typeof parsedDatabase.simulatedDate === 'string' && isValidDateKey(parsedDatabase.simulatedDate)
@@ -194,10 +194,10 @@ const normalizeDatabase = (parsedDatabase, resetIncome = false) => {
         ...asset,
         name: String(asset.name || 'Unnamed asset'),
         yieldRate: Number.isFinite(Number(asset.yieldRate)) ? Math.max(Number(asset.yieldRate), 0) : 0,
-        investedAmount: resetIncome ? baseAmount : Math.max(investedAmount, 0),
+        investedAmount: Math.max(investedAmount, 0),
         initialInvestedAmount: baseAmount,
-        totalIncome: resetIncome ? 0 : Math.max(totalIncome, 0),
-        incomeHistory: resetIncome ? {} : normalizeIncomeHistory(asset.incomeHistory),
+        totalIncome: Math.max(totalIncome, 0),
+        incomeHistory: resetNonAssetValues ? {} : normalizeIncomeHistory(asset.incomeHistory),
         creationDate
       };
     }) : [];
@@ -205,14 +205,14 @@ const normalizeDatabase = (parsedDatabase, resetIncome = false) => {
     ...defaultDatabase,
     ...parsedDatabase,
     schemaVersion: DATABASE_VERSION,
-    wishlistSlots: Array.isArray(parsedDatabase.wishlistSlots) ? parsedDatabase.wishlistSlots.filter((slot) => slot && typeof slot === 'object' && !preAddedSlotIds.includes(slot.id)) : [],
-    recoverySlots: Array.isArray(parsedDatabase.recoverySlots) ? parsedDatabase.recoverySlots.filter((slot) => slot && typeof slot === 'object' && !preAddedSlotIds.includes(slot.id)) : [],
+    wishlistSlots: resetNonAssetValues ? [] : Array.isArray(parsedDatabase.wishlistSlots) ? parsedDatabase.wishlistSlots.filter((slot) => slot && typeof slot === 'object' && !preAddedSlotIds.includes(slot.id)) : [],
+    recoverySlots: resetNonAssetValues ? [] : Array.isArray(parsedDatabase.recoverySlots) ? parsedDatabase.recoverySlots.filter((slot) => slot && typeof slot === 'object' && !preAddedSlotIds.includes(slot.id)) : [],
     assets,
-    milestone: { ...defaultDatabase.milestone, ...(parsedDatabase.milestone || {}), target: Math.max(toFiniteNumber(parsedDatabase.milestone?.target), 0) },
-    purchasedTotal: Math.max(toFiniteNumber(parsedDatabase.purchasedTotal), 0),
-    recoverySpentTotal: Math.max(toFiniteNumber(parsedDatabase.recoverySpentTotal), 0),
-    simulatedDate: resetIncome ? getDateKey(new Date()) : parsedDate,
-    incomeHistory: rebuildIncomeHistory(assets)
+    milestone: resetNonAssetValues ? { ...defaultDatabase.milestone } : { ...defaultDatabase.milestone, ...(parsedDatabase.milestone || {}), target: Math.max(toFiniteNumber(parsedDatabase.milestone?.target), 0) },
+    purchasedTotal: resetNonAssetValues ? 0 : Math.max(toFiniteNumber(parsedDatabase.purchasedTotal), 0),
+    recoverySpentTotal: resetNonAssetValues ? 0 : Math.max(toFiniteNumber(parsedDatabase.recoverySpentTotal), 0),
+    simulatedDate: getDateKey(new Date()),
+    incomeHistory: resetNonAssetValues ? {} : rebuildIncomeHistory(assets)
   };
 };
 
@@ -365,15 +365,15 @@ function App() {
   const simulateDays = (direction) => {
     setDatabase((current) => {
       const days = Math.max(1, Math.floor(Number(daysToSimulate) || 1));
-      let nextDate = new Date();
       let assets = current.assets;
       let wishlistSlots = current.wishlistSlots;
       let recoverySlots = current.recoverySlots;
       let recoverySpentTotal = Math.max(toFiniteNumber(current.recoverySpentTotal), 0);
 
       for (let day = 0; day < days; day += 1) {
-        nextDate = shiftDate(nextDate, direction);
-        const simulationDate = nextDate;
+        const simulationDate = direction > 0
+          ? shiftDate(new Date(), day - days + 1)
+          : shiftDate(new Date(), -day);
         const nextDateKey = getDateKey(simulationDate);
         if (direction > 0) {
           assets = assets.map((asset) => {
