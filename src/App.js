@@ -10,6 +10,7 @@ import RemoveButton from './Components/RemoveButton/RemoveButton';
 import { formatDecimal, formatMoney } from './utils/formatters';
 
 const CDI_RATE = 0.051660;
+const CDI_BUSINESS_DAYS = 252;
 const CDI_API_URL = 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados/ultimos/1?formato=json';
 const DATABASE_VERSION = 9;
 const toFiniteNumber = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
@@ -19,11 +20,6 @@ const getDateKey = (date) => {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
-};
-
-const formatDateBrazilian = (dateKey) => {
-  const [year, month, day] = dateKey.split('-');
-  return `${day}/${month}/${year}`;
 };
 
 const parseDateKey = (dateKey) => {
@@ -44,49 +40,7 @@ const shiftDate = (date, amount) => {
   return shiftedDate;
 };
 
-const getEasterSunday = (year) => {
-  const a = year % 19;
-  const b = Math.floor(year / 100);
-  const c = year % 100;
-  const d = Math.floor(b / 4);
-  const e = b % 4;
-  const f = Math.floor((b + 8) / 25);
-  const g = Math.floor((b - f + 1) / 3);
-  const h = (19 * a + b - d - g + 15) % 30;
-  const i = Math.floor(c / 4);
-  const k = c % 4;
-  const l = (32 + 2 * e + 2 * i - h - k) % 7;
-  const m = Math.floor((a + 11 * h + 22 * l) / 451);
-  const month = Math.floor((h + l - 7 * m + 114) / 31);
-  const day = ((h + l - 7 * m + 114) % 31) + 1;
-  return new Date(year, month - 1, day);
-};
-
-const getBrazilianNationalHolidays = (year) => {
-  const easter = getEasterSunday(year);
-  return new Set([
-    `${year}-01-01`,
-    getDateKey(shiftDate(easter, -2)),
-    `${year}-04-21`,
-    `${year}-05-01`,
-    `${year}-09-07`,
-    `${year}-10-12`,
-    `${year}-11-02`,
-    `${year}-11-15`,
-    `${year}-11-20`,
-    `${year}-12-25`
-  ]);
-};
-
 const getDailyAssetIncome = (asset, cdiRate) => Number(asset.investedAmount || 0) * (Number(asset.yieldRate || 0) / 100) * (cdiRate / 100);
-const getIncomeDaysInYear = (year) => {
-  const holidays = getBrazilianNationalHolidays(year);
-  let incomeDays = 0;
-  for (let date = new Date(year, 0, 1); date.getFullYear() === year; date = shiftDate(date, 1)) {
-    if (date.getDay() !== 0 && date.getDay() !== 6 && !holidays.has(getDateKey(date))) incomeDays += 1;
-  }
-  return incomeDays;
-};
 const rebuildIncomeHistory = (assets) => assets.reduce((history, asset) => {
   Object.entries(asset.incomeHistory || {}).forEach(([date, income]) => {
     history[date] = Number(history[date] || 0) + Number(income || 0);
@@ -126,6 +80,7 @@ const APP_TEXT = {
     yield: 'Yield',
     invested: 'Invested',
     dailyIncome: 'Daily income',
+    totalDailyIncome: 'Total daily income',
     totalIncome: 'Total income',
     spent: 'Spent',
     lastYear: 'Last Year',
@@ -180,6 +135,7 @@ const APP_TEXT = {
     yield: 'Rendimento',
     invested: 'Investido',
     dailyIncome: 'Rendimento diário',
+    totalDailyIncome: 'Rendimento diário total',
     totalIncome: 'Rendimento total',
     spent: 'Gasto',
     lastYear: 'Ano anterior',
@@ -219,7 +175,8 @@ const defaultDatabase = {
   assets: [],
   purchasedTotal: 0,
   simulatedDate: getDateKey(new Date()),
-  incomeHistory: {}
+  incomeHistory: {},
+  recoverySpentTotal: 0
 };
 
 const normalizeDatabase = (parsedDatabase, resetIncome = false) => {
@@ -258,6 +215,7 @@ const normalizeDatabase = (parsedDatabase, resetIncome = false) => {
     assets,
     milestone: { ...defaultDatabase.milestone, ...(parsedDatabase.milestone || {}), target: Math.max(toFiniteNumber(parsedDatabase.milestone?.target), 0) },
     purchasedTotal: Math.max(toFiniteNumber(parsedDatabase.purchasedTotal), 0),
+    recoverySpentTotal: Math.max(toFiniteNumber(parsedDatabase.recoverySpentTotal), 0),
     simulatedDate: resetIncome ? getDateKey(new Date()) : parsedDate,
     incomeHistory: rebuildIncomeHistory(assets)
   };
@@ -308,21 +266,26 @@ function App() {
 
   useEffect(() => {
     let isCancelled = false;
-    fetch(CDI_API_URL)
-      .then((response) => {
-        if (!response.ok) throw new Error('CDI request failed');
-        return response.json();
-      })
-      .then((data) => {
-        const dailyRate = Number(String(data[0]?.valor || '').replace(',', '.'));
-        if (!isCancelled && Number.isFinite(dailyRate)) {
-          setCdiRate(dailyRate);
-        }
-      })
-      .catch(() => {
-        // Keep the fallback CDI rate when the external service is unavailable.
-      });
-    return () => { isCancelled = true; };
+    const loadCdiRate = () => {
+      fetch(CDI_API_URL)
+        .then((response) => {
+          if (!response.ok) throw new Error('CDI request failed');
+          return response.json();
+        })
+        .then((data) => {
+          const dailyRate = Number(String(data[0]?.valor || '').replace(',', '.'));
+          if (!isCancelled && Number.isFinite(dailyRate)) setCdiRate(dailyRate);
+        })
+        .catch(() => {
+          // Keep the fallback CDI rate when the external service is unavailable.
+        });
+    };
+    loadCdiRate();
+    const dailyRefresh = window.setInterval(loadCdiRate, 24 * 60 * 60 * 1000);
+    return () => {
+      isCancelled = true;
+      window.clearInterval(dailyRefresh);
+    };
   }, []);
 
   const wishlistTotal = database.wishlistSlots.reduce((total, slot) => total + Math.max(toFiniteNumber(slot.price), 0), 0);
@@ -330,7 +293,7 @@ function App() {
   const investedTotal = database.assets.reduce((total, asset) => total + Math.max(toFiniteNumber(asset.investedAmount), 0), 0);
   const topInvestment = database.assets.reduce((top, asset) => toFiniteNumber(asset.investedAmount) > toFiniteNumber(top.investedAmount) ? asset : top, { name: 'None', investedAmount: 0 });
   const simulatedDate = parseDateKey(database.simulatedDate);
-  const annualCdiRate = ((1 + cdiRate / 100) ** getIncomeDaysInYear(simulatedDate.getFullYear()) - 1) * 100;
+  const totalCdiRate = ((1 + cdiRate / 100) ** CDI_BUSINESS_DAYS - 1) * 100;
   const getIncomeForDate = (date) => {
     return database.assets.reduce((total, asset) => total + Number(asset.incomeHistory?.[getDateKey(date)] || 0), 0);
   };
@@ -359,8 +322,11 @@ function App() {
   const yearIncome = getIncomeBetween(startOfYear, simulatedDate);
   const previousYearIncome = getIncomeBetween(previousYearStart, previousYearEnd);
   const netWorthTotal = investedTotal;
-  const spentTotal = recoveryTotal + Math.max(toFiniteNumber(database.purchasedTotal), 0);
-  const milestoneRemaining = Math.max(Number(database.milestone.target) - netWorthTotal, 0);
+  const totalDailyIncome = database.assets.reduce((total, asset) => total + getDailyAssetIncome(asset, cdiRate), 0);
+  const nextMilestone = (Math.floor(netWorthTotal / 10000) + 1) * 10000;
+  const spentTotal = Math.max(toFiniteNumber(database.recoverySpentTotal), 0) + Math.max(toFiniteNumber(database.purchasedTotal), 0);
+  const milestoneRemaining = nextMilestone - netWorthTotal;
+  const milestoneDays = totalDailyIncome > 0 ? Math.ceil(milestoneRemaining / totalDailyIncome) : 0;
   const displayMoney = (value) => areValuesVisible ? formatMoney(value) : '****';
   const getTrend = (current, previous) => current === previous
     ? { symbol: '→', className: 'trend-same' }
@@ -406,6 +372,9 @@ function App() {
       const days = Math.max(1, Math.floor(Number(daysToSimulate) || 1));
       let nextDate = parseDateKey(current.simulatedDate);
       let assets = current.assets;
+      let wishlistSlots = current.wishlistSlots;
+      let recoverySlots = current.recoverySlots;
+      let recoverySpentTotal = Math.max(toFiniteNumber(current.recoverySpentTotal), 0);
 
       for (let day = 0; day < days; day += 1) {
         nextDate = shiftDate(nextDate, direction);
@@ -436,11 +405,45 @@ function App() {
             };
           });
         }
+
+        if (direction > 0) {
+          const dailyIncome = assets.reduce((total, asset) => total + getDailyAssetIncome(asset, cdiRate), 0);
+          const recoveryIndex = recoverySlots.findIndex((slot) => slot.type === 'recovery' && slot.isProcessing);
+          const wishlistProcessingIndex = wishlistSlots.findIndex((slot) => slot.type === 'processing');
+          const wishlistIndex = recoveryIndex === -1
+            ? wishlistProcessingIndex >= 0
+              ? wishlistProcessingIndex
+              : wishlistSlots.findIndex((slot) => slot.type === 'expense')
+            : -1;
+
+          if (recoveryIndex >= 0) {
+            const slot = recoverySlots[recoveryIndex];
+            const nextPrice = Math.max(toFiniteNumber(slot.price) - dailyIncome, 0);
+            if (nextPrice === 0) {
+              recoverySlots = recoverySlots
+                .filter((_, index) => index !== recoveryIndex)
+                .map((item, index) => index === 0 ? { ...item, isProcessing: true } : item);
+            } else {
+              recoverySlots = recoverySlots.map((item, index) => index === recoveryIndex ? { ...item, price: nextPrice } : item);
+            }
+          } else if (wishlistIndex >= 0) {
+            wishlistSlots = wishlistSlots.map((slot, index) => index === wishlistIndex
+              ? { ...slot, type: 'processing', price: Math.max(toFiniteNumber(slot.price) - dailyIncome, 0) }
+              : slot);
+            const processingSlot = wishlistSlots[wishlistIndex];
+            if (processingSlot.price === 0) {
+              wishlistSlots = wishlistSlots.map((slot, index) => index === wishlistIndex ? { ...slot, type: 'ready' } : slot);
+            }
+          }
+        }
       }
 
       return {
         ...current,
         assets,
+        wishlistSlots,
+        recoverySlots,
+        recoverySpentTotal,
         simulatedDate: getDateKey(nextDate),
         incomeHistory: rebuildIncomeHistory(assets)
       };
@@ -449,6 +452,14 @@ function App() {
 
   const recordWishlistPurchase = (amount) => {
     setDatabase((current) => ({ ...current, purchasedTotal: Number(current.purchasedTotal || 0) + Number(amount || 0) }));
+  };
+
+  const recordRecoveryAddition = (amount) => {
+    setDatabase((current) => ({ ...current, recoverySpentTotal: Number(current.recoverySpentTotal || 0) + Number(amount || 0) }));
+  };
+
+  const recordRecoveryRemoval = (amount) => {
+    setDatabase((current) => ({ ...current, recoverySpentTotal: Math.max(Number(current.recoverySpentTotal || 0) - Number(amount || 0), 0) }));
   };
 
   const openDatabaseSection = () => {
@@ -490,14 +501,14 @@ function App() {
             </div>
             <div className='investment-summary-card cdi-investment-card'>
               <h2>{t.cdi}</h2>
-              <strong>{formatDecimal(annualCdiRate)}%</strong>
+              <strong>{formatDecimal(totalCdiRate)}%</strong>
             </div>
           </div>
           <div className='assets-panel'>
             <div className='assets-heading'>
               <h2>{t.assets}</h2>
+              <span className='total-daily-income'>{t.totalDailyIncome}: R$ {displayMoney(totalDailyIncome)}</span>
               <AddMoreButton label={t.addExpense} onClick={() => setIsAssetFormOpen((current) => !current)}></AddMoreButton>
-              <span className='simulated-date'>{t.date}: {formatDateBrazilian(database.simulatedDate)}</span>
               <div className='simulate-days-control'>
                 <input className='simulate-days-input' type='number' min='1' step='1' value={daysToSimulate} onChange={(event) => setDaysToSimulate(event.target.value)} aria-label='Days to simulate' />
                 <button className='simulate-day-button' type='button' onClick={() => simulateDays(-1)}>{t.decreaseDays}</button>
@@ -564,7 +575,7 @@ function App() {
         <div className='middle-summary'>
           <div className='middle-summary-main'>
             <MiddleNetWorthCard title={t.total} money={displayMoney(netWorthTotal)} investments={database.assets.length} investmentLabel={t.investmentsCount}></MiddleNetWorthCard>
-            <MiddleMilestoneCard title={t.milestone} next={displayMoney(database.milestone.target)} remaining={`${displayMoney(milestoneRemaining)} - X ${t.days}`}></MiddleMilestoneCard>
+            <MiddleMilestoneCard title={t.milestone} next={displayMoney(nextMilestone)} remaining={`${displayMoney(milestoneRemaining)} - ${milestoneDays} ${t.days}`}></MiddleMilestoneCard>
           </div>
           <div className='middle-summary-side'>
             <div className='summary-card today-card'>
@@ -575,7 +586,7 @@ function App() {
             </div>
             <div className='summary-card cdi-card'>
               <h2>{t.cdi}</h2>
-              <strong>{formatDecimal(annualCdiRate)}%</strong>
+              <strong>{formatDecimal(totalCdiRate)}%</strong>
             </div>
           </div>
         </div>
@@ -598,7 +609,7 @@ function App() {
     <div className={`app ${isLightTheme ? 'light-theme' : ''}`}>
       <Header locale={locale} isLightTheme={isLightTheme} areValuesVisible={areValuesVisible} onToggleValues={() => setAreValuesVisible((current) => !current)} onToggleTheme={() => setIsLightTheme((current) => !current)} onChangeLocale={(nextLocale) => setLocale(nextLocale)} labelSet={t}></Header>
       <div className='app-areas'>
-        <TimeArea title={t.wishlist} area='wishlist' labels={{ add: t.add, expenseName: t.expenseName, expenseValue: t.expenseValue, total: t.totalLabel }} slots={database.wishlistSlots} onSlotsChange={(slots) => updateSlots('wishlistSlots', slots)} onBuy={recordWishlistPurchase} total={wishlistTotal} className='wishlist'></TimeArea>
+        <TimeArea title={t.wishlist} area='wishlist' labels={{ add: t.add, expenseName: t.expenseName, expenseValue: t.expenseValue, total: t.totalLabel, days: t.days }} slots={database.wishlistSlots} onSlotsChange={(slots) => updateSlots('wishlistSlots', slots)} onBuy={recordWishlistPurchase} total={wishlistTotal} dailyIncome={totalDailyIncome} hasRecoveryProcessing={database.recoverySlots.some((slot) => slot.type === 'recovery' && slot.isProcessing)}></TimeArea>
         <div className='middle'>
           <div className='section-buttons'>
             <SectionButton title={t.netWorth} active={activeSection === 'Net Worth'} onClick={() => setActiveSection('Net Worth')}></SectionButton>
@@ -608,7 +619,7 @@ function App() {
           </div>
           {renderMiddleContent()}
         </div>
-        <TimeArea title={t.recovery} area='recovery' labels={{ add: t.add, expenseName: t.expenseName, expenseValue: t.expenseValue, total: t.totalLabel }} slots={database.recoverySlots} onSlotsChange={(slots) => updateSlots('recoverySlots', slots)} total={recoveryTotal} className='recovery'></TimeArea>
+        <TimeArea title={t.recovery} area='recovery' labels={{ add: t.add, expenseName: t.expenseName, expenseValue: t.expenseValue, total: t.totalLabel, days: t.days }} slots={database.recoverySlots} onSlotsChange={(slots) => updateSlots('recoverySlots', slots)} onAdd={recordRecoveryAddition} onRemove={recordRecoveryRemoval} total={recoveryTotal} dailyIncome={totalDailyIncome} hasWishlistProcessing={database.wishlistSlots.some((slot) => slot.type === 'processing')}></TimeArea>
       </div>
     </div>
   );
