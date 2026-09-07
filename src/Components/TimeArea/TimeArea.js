@@ -26,7 +26,8 @@ const TimeArea = (props) => {
             type: isRecoveryArea ? 'recovery' : 'expense',
             isProcessing: isRecoveryArea && !slots.some((slot) => slot.type === 'recovery' && slot.isProcessing),
             expenseName: expenseName.trim(),
-            price: slotPrice
+            price: slotPrice,
+            originalPrice: slotPrice
         };
         if (isRecoveryArea) {
             props.onAdd?.(slotPrice);
@@ -59,7 +60,8 @@ const TimeArea = (props) => {
     };
 
     const buySlot = (slot) => {
-        props.onBuy?.(slot.price);
+        const chargedAmount = Number(slot.originalPrice ?? slot.price ?? 0);
+        props.onBuy?.(chargedAmount);
         completeSlot(slot.id);
     };
 
