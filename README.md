@@ -100,7 +100,6 @@ src/
 	App.test.js                    Application tests
 public/                          Static public assets
 build/                           Generated production output
-Iterations.txt                  Development change log
 ```
 
 ## Validation
