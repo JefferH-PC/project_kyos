@@ -4,7 +4,7 @@ import './ExpenseSlotRecovery.css';
 const ExpenseSlotRecovery = (props) => {
     return (
         <div className={`expense-slot-recovery ${props.position || ''}`}>
-            <h3>{props.expenseName} - R$ {props.price}</h3>
+            <h3>{props.expenseName}: R$ {props.price} - {props.days} {props.daysLabel}</h3>
             <div className='buttons-action'>
                 <RemoveButton label={props.removeLabel} onClick={props.onRemove}></RemoveButton>
             </div>
