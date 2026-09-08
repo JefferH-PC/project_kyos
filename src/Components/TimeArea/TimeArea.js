@@ -45,7 +45,7 @@ const TimeArea = (props) => {
         const removedSlot = slots.find((slot) => slot.id === id);
         const remainingSlots = slots.filter((slot) => slot.id !== id);
         if (isRecoveryArea && removedSlot && isManualRemoval) {
-            props.onRemove?.(removedSlot.price);
+            props.onRemove?.(removedSlot.originalPrice ?? removedSlot.price);
         }
         if (isRecoveryArea && removedSlot?.isProcessing) {
             const nextRecovery = remainingSlots.find((slot) => slot.type === 'recovery');
@@ -74,6 +74,8 @@ const TimeArea = (props) => {
 
     const moveToProcessing = (id) => {
         if (slots.some((slot) => slot.type === 'processing')) return;
+        if (isRecoveryArea && props.hasWishlistProcessing) return;
+        if (!isRecoveryArea && props.hasRecoveryProcessing) return;
         props.onSlotsChange(slots.map((slot) => slot.id === id ? { ...slot, type: 'processing' } : slot));
     };
 

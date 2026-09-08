@@ -35,6 +35,11 @@ const shiftDate = (date, amount) => {
   return shiftedDate;
 };
 
+const parseDateKey = (dateKey) => {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+
 const getDailyAssetIncome = (asset, cdiRate) => Number(asset.investedAmount || 0) * (Number(asset.yieldRate || 0) / 100) * (cdiRate / 100);
 const rebuildIncomeHistory = (assets) => assets.reduce((history, asset) => {
   Object.entries(asset.incomeHistory || {}).forEach(([date, income]) => {
@@ -66,8 +71,9 @@ const APP_TEXT = {
     cdi: 'CDI',
     assets: 'Assets',
     date: 'Date',
-    decreaseDays: 'Decrease days',
+    decreaseDays: 'Reset Incomes',
     increaseDays: 'Increase days',
+    addInvestment: 'Add investment',
     add: 'Add',
     name: 'Name',
     yieldRate: 'Yield %',
@@ -121,8 +127,9 @@ const APP_TEXT = {
     cdi: 'CDI',
     assets: 'Ativos',
     date: 'Data',
-    decreaseDays: 'Diminuir dias',
+    decreaseDays: 'Resetar rendimentos',
     increaseDays: 'Aumentar dias',
+    addInvestment: 'Adicionar investimento',
     add: 'Adicionar',
     name: 'Nome',
     yieldRate: 'Rendimento %',
@@ -211,7 +218,7 @@ const normalizeDatabase = (parsedDatabase, resetNonAssetValues = false) => {
     milestone: resetNonAssetValues ? { ...defaultDatabase.milestone } : { ...defaultDatabase.milestone, ...(parsedDatabase.milestone || {}), target: Math.max(toFiniteNumber(parsedDatabase.milestone?.target), 0) },
     purchasedTotal: resetNonAssetValues ? 0 : Math.max(toFiniteNumber(parsedDatabase.purchasedTotal), 0),
     recoverySpentTotal: resetNonAssetValues ? 0 : Math.max(toFiniteNumber(parsedDatabase.recoverySpentTotal), 0),
-    simulatedDate: getDateKey(new Date()),
+    simulatedDate: parsedDate,
     incomeHistory: resetNonAssetValues ? {} : rebuildIncomeHistory(assets)
   };
 };
@@ -287,7 +294,7 @@ function App() {
   const recoveryTotal = database.recoverySlots.reduce((total, slot) => total + Math.max(toFiniteNumber(slot.price), 0), 0);
   const investedTotal = database.assets.reduce((total, asset) => total + Math.max(toFiniteNumber(asset.investedAmount), 0), 0);
   const topInvestment = database.assets.reduce((top, asset) => toFiniteNumber(asset.investedAmount) > toFiniteNumber(top.investedAmount) ? asset : top, { name: 'None', investedAmount: 0 });
-  const actualDate = new Date();
+  const actualDate = parseDateKey(database.simulatedDate);
   const totalCdiRate = ((1 + cdiRate / 100) ** CDI_BUSINESS_DAYS - 1) * 100;
   const getIncomeForDate = (date) => {
     return database.assets.reduce((total, asset) => total + Number(asset.incomeHistory?.[getDateKey(date)] || 0), 0);
@@ -348,7 +355,7 @@ function App() {
         initialInvestedAmount: Number(assetForm.investedAmount),
         totalIncome: 0,
         incomeHistory: {},
-        creationDate: getDateKey(new Date())
+        creationDate: current.simulatedDate
       }]
     }));
     setAssetForm({ name: '', yieldRate: '', investedAmount: '' });
@@ -365,41 +372,40 @@ function App() {
   const simulateDays = (direction) => {
     setDatabase((current) => {
       const days = Math.max(1, Math.floor(Number(daysToSimulate) || 1));
+      if (direction < 0) {
+        const assets = current.assets.map((asset) => ({
+          ...asset,
+          investedAmount: Math.max(toFiniteNumber(asset.initialInvestedAmount), 0),
+          totalIncome: 0,
+          incomeHistory: {}
+        }));
+        return {
+          ...current,
+          assets,
+          simulatedDate: getDateKey(new Date()),
+          incomeHistory: {}
+        };
+      }
+
       let assets = current.assets;
       let wishlistSlots = current.wishlistSlots;
       let recoverySlots = current.recoverySlots;
       let recoverySpentTotal = Math.max(toFiniteNumber(current.recoverySpentTotal), 0);
+      let simulationDate = parseDateKey(current.simulatedDate);
 
       for (let day = 0; day < days; day += 1) {
-        const simulationDate = direction > 0
-          ? shiftDate(new Date(), day - days + 1)
-          : shiftDate(new Date(), -day);
+        simulationDate = shiftDate(simulationDate, 1);
         const nextDateKey = getDateKey(simulationDate);
-        if (direction > 0) {
-          assets = assets.map((asset) => {
-            const dailyIncome = getDailyAssetIncome(asset, cdiRate);
-            const previousIncome = Number(asset.incomeHistory?.[nextDateKey] || 0);
-            return {
-              ...asset,
-              investedAmount: Number(asset.investedAmount || 0) + dailyIncome,
-              totalIncome: Number(asset.totalIncome || 0) + dailyIncome,
-              incomeHistory: { ...(asset.incomeHistory || {}), [nextDateKey]: previousIncome + dailyIncome }
-            };
-          });
-        } else {
-          assets = assets.map((asset) => {
-            const dailyIncome = Number(asset.incomeHistory?.[nextDateKey] || getDailyAssetIncome(asset, cdiRate));
-            const { [nextDateKey]: removedIncome, ...remainingIncomeHistory } = asset.incomeHistory || {};
-            const availableIncome = Math.max(toFiniteNumber(asset.totalIncome), 0);
-            const incomeReduction = Math.min(Math.max(dailyIncome, 0), availableIncome);
-            return {
-              ...asset,
-              investedAmount: Math.max(toFiniteNumber(asset.investedAmount) - incomeReduction, 0),
-              totalIncome: availableIncome - incomeReduction,
-              incomeHistory: remainingIncomeHistory
-            };
-          });
-        }
+        assets = assets.map((asset) => {
+          const dailyIncome = getDailyAssetIncome(asset, cdiRate);
+          const previousIncome = Number(asset.incomeHistory?.[nextDateKey] || 0);
+          return {
+            ...asset,
+            investedAmount: Number(asset.investedAmount || 0) + dailyIncome,
+            totalIncome: Number(asset.totalIncome || 0) + dailyIncome,
+            incomeHistory: { ...(asset.incomeHistory || {}), [nextDateKey]: previousIncome + dailyIncome }
+          };
+        });
 
         if (direction > 0) {
           const dailyIncome = assets.reduce((total, asset) => total + getDailyAssetIncome(asset, cdiRate), 0);
@@ -439,6 +445,7 @@ function App() {
         wishlistSlots,
         recoverySlots,
         recoverySpentTotal,
+        simulatedDate: getDateKey(simulationDate),
         incomeHistory: rebuildIncomeHistory(assets)
       };
     });
@@ -502,7 +509,7 @@ function App() {
             <div className='assets-heading'>
               <h2>{t.assets}</h2>
               <span className='total-daily-income'>{t.totalDailyIncome}: R$ {displayMoney(totalDailyIncome)}</span>
-              <AddMoreButton label={t.addExpense} onClick={() => setIsAssetFormOpen((current) => !current)}></AddMoreButton>
+              <AddMoreButton label={t.addInvestment} onClick={() => setIsAssetFormOpen((current) => !current)}></AddMoreButton>
               <div className='simulate-days-control'>
                 <input className='simulate-days-input' type='number' min='1' step='1' value={daysToSimulate} onChange={(event) => setDaysToSimulate(event.target.value)} aria-label='Days to simulate' />
                 <button className='simulate-day-button' type='button' onClick={() => simulateDays(-1)}>{t.decreaseDays}</button>

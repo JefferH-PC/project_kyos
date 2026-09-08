@@ -24,7 +24,7 @@ const Header = (props) => {
                         <option value='pt'>Português</option>
                     </select>
                 </label>
-                <button aria-label={props.labelSet.toggleTheme} onClick={props.onToggleTheme}>{props.isLightTheme ? '☾' : '☼'}</button>
+                <button type='button' aria-label={props.labelSet.toggleTheme} onClick={props.onToggleTheme}>{props.isLightTheme ? '☾' : '☼'}</button>
             </div>
         </div>
     )
