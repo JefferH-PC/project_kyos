@@ -1,26 +1,37 @@
 .section-button {
     display: flex;
-    width: fit-content;
-    height: fit-content;
+    flex: 1 1 0;
+    width: auto;
+    height: auto;
     background-color: transparent;
     border: 0;
     padding: 0;
     cursor: pointer;
-    overflow: hidden;
-    border-radius: 15px;
+    border-radius: 10px;
+    transition: all 0.2s ease;
 }
 
 .section-button h2 {
-    background-color: #202020;
-    padding: 10px 50px;
-    border: 2px solid #FFFFFF;
-    border-radius: 15px;
-    width: auto;
-    transition: background-color .2s ease, color .2s ease;
+    background-color: transparent;
+    padding: 8px 18px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    width: 100%;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    transition: all 0.2s ease;
 }
 
-.section-button:hover h2,
+.section-button:hover h2 {
+    color: var(--text-primary);
+    background-color: var(--bg-surface-elevated);
+}
+
 .section-button.active h2 {
-    background-color: #FFFFFF;
-    color: #202020;
+    background: var(--bg-surface-elevated);
+    border-color: var(--border-hover);
+    color: var(--text-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }

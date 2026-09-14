@@ -1,23 +1,47 @@
 .middle-net-worth {
     width: auto;
-    height: 160px;
+    height: 154px;
     display: flex;
     flex-direction: column;
-    border-radius: 15px;
-    border: 2px solid #FFFFFF;
-    padding: 10px;
+    border-radius: 14px;
+    border: 1px solid var(--border-card);
+    padding: 16px 20px;
     margin-bottom: 0;
-    background-color: #202020;
+    background: linear-gradient(135deg, var(--bg-surface-card), rgba(16, 185, 129, 0.05));
+    border-color: rgba(16, 185, 129, 0.25);
     justify-content: space-between;
+    box-shadow: var(--shadow-card);
 }
 
 .middle-net-worth h2 {
-    background-color: #202020;
+    background: transparent;
     margin-bottom: 0;
-    font-size: 30px;
-    line-height: 1;
+    line-height: 1.2;
 }
 
 .net-worth-title {
-    align-self: center;
+    align-self: flex-start;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: var(--text-secondary) !important;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.middle-net-worth h2:nth-of-type(2) {
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--accent-green);
+    letter-spacing: -0.6px;
+}
+
+.middle-net-worth h2:nth-of-type(3) {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--border-subtle);
+    padding: 4px 10px;
+    border-radius: 20px;
+    width: fit-content;
 }

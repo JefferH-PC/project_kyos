@@ -1,143 +1,46 @@
 .time-area {
-    margin: 0px 10px;
-    max-width: 262px;
-    width: 262px;
-    max-height: none;
+    margin: 0;
+    max-width: 300px;
+    width: 285px;
+    min-width: 260px;
     height: 100%;
-    border: 2px solid #FFFFFF;
-    padding: 12px 0;
+    border: 1px solid var(--border-card);
+    padding: 14px 10px;
     display: flex;
-    background-color: #202020;
-    border-radius: 15px;
+    background-color: var(--bg-surface);
+    border-radius: 16px;
     flex-direction: column;
     align-items: center;
     overflow: hidden;
+    box-shadow: var(--shadow-card);
 }
 
-.time-area h2 {
-    background: none;
-    font-size: clamp(18px, 1.5vw, 26px);
-    margin-bottom: 0;
-    line-height: 1.15;
-    flex: 1 1 auto;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    min-width: 0;
-}
-
-.expense-form {
-    width: calc(100% - 20px);
-    flex: 0 0 auto;
-    margin: 0 10px 8px;
-    padding: 8px;
-    display: grid;
-    gap: 6px;
-    border: 1px solid #ffffff;
-    border-radius: 10px;
-    background: #202020;
-    animation: reveal .2s ease both;
-}
-
-.expense-form input,
-.expense-form button {
-    width: 100%;
-    min-width: 0;
-    padding: 6px;
-    border: 1px solid #ffffff;
-    border-radius: 6px;
-    background: #202020;
-    color: #ffffff;
-    font: inherit;
-}
-
-.expense-form button {
-    cursor: pointer;
-}
-
-.expense-form button:hover {
-    background: #ffffff;
-    color: #202020;
-}
-
-.expense-area {
-    display: flex;
-    align-items: self-start;
-    flex: 1 1 auto;
-    min-height: 0;
-    height: auto;
-    flex-direction: column;
-    overflow-y: auto;
-    gap: 10px;
-    background: none;
-    margin-bottom: 8px;
-    padding: 0 10px;
-    width: 100%;
-    scrollbar-color: #FFFFFF transparent;
-}
-
-.expense-area > * {
-    flex: 0 0 auto;
-    box-sizing: border-box;
-}
-
-.assets-grid::-webkit-scrollbar,
-.expense-area::-webkit-scrollbar {
-    width: 8px;
-}
-
-.assets-grid::-webkit-scrollbar-thumb,
-.expense-area::-webkit-scrollbar-thumb {
-    background: #FFFFFF;
-    border-radius: 8px;
-}
-
-.assets-grid::-webkit-scrollbar-track,
-.expense-area::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-
-.processing-area {
-    flex: 0 0 auto;
-    background-color: #202020;
-    padding: 0 10px;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-}
-
-.total {
-    flex: 0 0 auto;
-    margin-top: 8px;
-    background: #202020;
-    padding: 0 10px;
-    width: 100%;
-}
-
-.total h3 {
-    background: #202020;
-    border: 2px solid #FFFFFF;
-    padding: 10px;
-    border-radius: 15px;
-    width: 100%;
-}
-
-.top {
+.time-area .top {
     display: flex;
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    background-color: #202020;
-    padding: 0 10px;
+    background-color: transparent;
+    padding: 0 4px 10px 4px;
     gap: 8px;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 10px;
 }
 
 .time-area .top h2 {
-    min-width: 0;
+    background: none;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0;
+    line-height: 1.2;
     flex: 1 1 auto;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    letter-spacing: -0.2px;
 }
 
 .time-area .top .add-button {
@@ -145,10 +48,111 @@
     flex: 0 0 auto;
 }
 
+.expense-form {
+    width: 100%;
+    flex: 0 0 auto;
+    margin-bottom: 10px;
+    padding: 12px;
+    display: grid;
+    gap: 8px;
+    border: 1px solid var(--border-card);
+    border-radius: 12px;
+    background: var(--bg-surface-elevated);
+    animation: reveal .2s ease both;
+}
+
+.expense-form input {
+    width: 100%;
+    min-width: 0;
+    padding: 8px 10px;
+    border: 1px solid var(--border-card);
+    border-radius: 8px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 13px;
+}
+
+.expense-form input:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 2px var(--accent-blue-bg);
+}
+
+.expense-form button {
+    width: 100%;
+    padding: 8px;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent-green);
+    color: #ffffff;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: filter 0.2s ease;
+}
+
+.expense-form button:hover {
+    filter: brightness(1.1);
+}
+
+.expense-area {
+    display: flex;
+    align-items: stretch;
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+    flex-direction: column;
+    overflow-y: auto;
+    gap: 8px;
+    background: none;
+    margin-bottom: 8px;
+    padding: 2px 4px 4px 2px;
+    width: 100%;
+}
+
+.expense-area > * {
+    flex: 0 0 auto;
+    box-sizing: border-box;
+}
+
+.processing-area {
+    flex: 0 0 auto;
+    background-color: transparent;
+    padding: 6px 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border-top: 1px dashed var(--border-subtle);
+}
+
+.total {
+    flex: 0 0 auto;
+    margin-top: 6px;
+    background: transparent;
+    padding: 0;
+    width: 100%;
+}
+
+.total h3 {
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--border-card);
+    padding: 10px 12px;
+    border-radius: 12px;
+    width: 100%;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
 @media (max-width: 900px) {
     .time-area {
         max-width: none;
         width: 100%;
-        height: 560px;
+        height: auto;
+        min-height: 380px;
     }
 }

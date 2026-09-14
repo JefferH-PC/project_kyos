@@ -4,15 +4,22 @@
     border: 0;
     cursor: pointer;
     overflow: hidden;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .return {
-    fill: #30549E;
-    background: none;
-    border: 2px solid #30549E;
+    fill: var(--accent-blue);
+    background: var(--accent-blue-bg);
+    border: 1px solid var(--accent-blue-border);
+    border-radius: 6px;
+    transition: all 0.2s ease;
 }
 
 .return:hover {
-    fill: #202020;
-    background: #30549E;
+    fill: #ffffff;
+    background: var(--accent-blue);
+    transform: scale(1.05);
 }

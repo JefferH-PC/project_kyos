@@ -1,27 +1,35 @@
 .add-button {
-    background-color: #202020;
+    background-color: var(--bg-surface-elevated);
     margin-left: 0;
-    border: 0;
+    border: 1px solid var(--border-card);
     padding: 0;
     cursor: pointer;
     overflow: hidden;
-    border-radius: 15px 0 15px 15px;
-    transition: transform .2s ease;
+    border-radius: 10px;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .add-button:hover {
-    background-color: #202020;
+    background-color: var(--accent-green);
+    border-color: var(--accent-green);
+    transform: translateY(-1px);
 }
 
 .add {
-    fill: #FFFFFF;
-    border: 2px solid #FFFFFF;
+    fill: var(--text-primary);
     background: none;
-    border-radius: inherit;
-    transition: background-color .2s ease, fill .2s ease;
+    border: none;
+    width: 20px;
+    height: 20px;
+    transition: fill .2s ease;
 }
 
 .add-button:hover .add {
-    background: #FFFFFF;
-    fill: #202020;
+    fill: #ffffff;
 }
