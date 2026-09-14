@@ -393,66 +393,42 @@ select,
     line-height: 1;
 }
 
-.database-view {
-    flex: 1 1 auto;
-    min-height: 0;
-    padding: 14px;
-    border: 1px solid #ffffff;
-    border-radius: 12px;
-    background: #202020;
+.holiday-error-banner {
+    background-color: #742a2a;
+    border: 1px solid #feb2b2;
+    border-radius: 8px;
+    padding: 10px 16px;
+    margin-bottom: 8px;
     display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.database-heading {
-    display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
     gap: 12px;
-    background: transparent;
+    animation: reveal .2s ease both;
+    flex: 0 0 auto;
 }
 
-.database-heading h2,
-.database-heading span {
-    background: none;
-}
-
-.database-heading h2 {
-    font-size: 28px;
-}
-
-.database-heading span {
+.holiday-error-banner span {
+    color: #ffffff;
     font-size: 14px;
+    font-weight: 500;
 }
 
-.database-view textarea {
-    flex: 1 1 auto;
-    min-height: 0;
-    width: 100%;
-    resize: none;
-    padding: 12px;
+.holiday-error-banner button {
+    background-color: #ffffff;
+    color: #742a2a;
     border: 1px solid #ffffff;
-    border-radius: 8px;
-    background: #0d0d0d;
-    color: #ffffff;
-    font: 13px/1.4 Consolas, monospace;
-}
-
-.database-save {
-    align-self: flex-end;
-    padding: 8px 14px;
-    border: 1px solid #ffffff;
-    border-radius: 8px;
-    background: #202020;
-    color: #ffffff;
+    border-radius: 6px;
+    padding: 4px 12px;
     cursor: pointer;
+    font-weight: bold;
+    font-size: 13px;
+    transition: all .2s ease;
 }
 
-.database-save:hover {
-    background: #ffffff;
-    color: #202020;
+.holiday-error-banner button:hover {
+    background-color: #fed7d7;
 }
+
 
 .asset-form {
     display: grid;
@@ -693,12 +669,23 @@ select,
     color: #202020;
 }
 
-.light-theme .database-view,
-.light-theme .database-view textarea,
-.light-theme .database-save {
-    background-color: #ffffff;
-    color: #202020;
-    border-color: #202020;
+.light-theme .holiday-error-banner {
+    background-color: #fff5f5;
+    border-color: #e53e3e;
+}
+
+.light-theme .holiday-error-banner span {
+    color: #c53030;
+}
+
+.light-theme .holiday-error-banner button {
+    background-color: #c53030;
+    color: #ffffff;
+    border-color: #c53030;
+}
+
+.light-theme .holiday-error-banner button:hover {
+    background-color: #9b2c2c;
 }
 
 .time-area .expense-slot,

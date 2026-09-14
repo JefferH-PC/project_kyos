@@ -82,7 +82,6 @@ const TimeArea = (props) => {
     const renderSlot = (slot, index, list) => {
         const position = list.length === 1 ? 'slot-single' : index === 0 ? 'slot-first' : index === list.length - 1 ? 'slot-last' : 'slot-middle';
         const slotProps = {
-            key: slot.id,
             expenseName: slot.expenseName,
             price: formatMoney(slot.price),
             days: getDays(slot.price),
@@ -97,10 +96,10 @@ const TimeArea = (props) => {
             onBuy: () => buySlot(slot),
             onReturn: () => returnFromProcessing(slot.id)
         };
-        if (slot.type === 'ready') return <ExpenseSlotReady {...slotProps}></ExpenseSlotReady>;
-        if (slot.type === 'processing') return <ExpenseSlotProcessing {...slotProps}></ExpenseSlotProcessing>;
-        if (slot.type === 'recovery') return <ExpenseSlotRecovery {...slotProps}></ExpenseSlotRecovery>;
-        return <ExpenseSlot {...slotProps}></ExpenseSlot>;
+        if (slot.type === 'ready') return <ExpenseSlotReady key={slot.id} {...slotProps}></ExpenseSlotReady>;
+        if (slot.type === 'processing') return <ExpenseSlotProcessing key={slot.id} {...slotProps}></ExpenseSlotProcessing>;
+        if (slot.type === 'recovery') return <ExpenseSlotRecovery key={slot.id} {...slotProps}></ExpenseSlotRecovery>;
+        return <ExpenseSlot key={slot.id} {...slotProps}></ExpenseSlot>;
     };
 
     const regularSlots = slots.filter((slot) => (
