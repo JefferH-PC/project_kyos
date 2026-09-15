@@ -59,7 +59,9 @@ const APP_TEXT = {
     cdi: 'CDI',
     assets: 'Assets',
     date: 'Date',
-    decreaseDays: 'Reset Incomes',
+    edit: 'Edit',
+    save: 'Save',
+    cancel: 'Cancel',
     addInvestment: 'Add investment',
     add: 'Add',
     name: 'Name',
@@ -113,7 +115,9 @@ const APP_TEXT = {
     cdi: 'CDI',
     assets: 'Ativos',
     date: 'Data',
-    decreaseDays: 'Resetar rendimentos',
+    edit: 'Editar',
+    save: 'Salvar',
+    cancel: 'Cancelar',
     addInvestment: 'Adicionar investimento',
     add: 'Adicionar',
     name: 'Nome',
@@ -244,6 +248,8 @@ function App() {
     totalAccrued: 0,
     completedSlots: []
   });
+  const [editingAssetId, setEditingAssetId] = useState(null);
+  const [editAssetForm, setEditAssetForm] = useState({ name: '', yieldRate: '', investedAmount: '' });
 
   const t = APP_TEXT[locale] || APP_TEXT.en;
 
@@ -531,21 +537,48 @@ function App() {
     });
   };
 
-  const resetIncomes = () => {
+  const startEditAsset = (asset) => {
+    setEditingAssetId(asset.id);
+    setEditAssetForm({
+      name: asset.name || '',
+      yieldRate: String(asset.yieldRate ?? 0),
+      investedAmount: String(asset.investedAmount ?? 0)
+    });
+  };
+
+  const cancelEditAsset = () => {
+    setEditingAssetId(null);
+    setEditAssetForm({ name: '', yieldRate: '', investedAmount: '' });
+  };
+
+  const saveAssetEdit = (event) => {
+    event.preventDefault();
+    if (!editAssetForm.name.trim() || !editAssetForm.investedAmount) return;
+    const newInvested = Math.max(Number(editAssetForm.investedAmount) || 0, 0);
+    const newYield = Math.max(Number(editAssetForm.yieldRate) || 0, 0);
+
     setDatabase((current) => {
-      const assets = current.assets.map((asset) => ({
-        ...asset,
-        investedAmount: Math.max(toFiniteNumber(asset.initialInvestedAmount), 0),
-        totalIncome: 0,
-        incomeHistory: {}
-      }));
+      const assets = current.assets.map((asset) => {
+        if (asset.id !== editingAssetId) return asset;
+        const prevInvested = Number(asset.investedAmount || 0);
+        const diff = newInvested - prevInvested;
+        const initial = Math.max(Number(asset.initialInvestedAmount || 0) + diff, 0);
+        return {
+          ...asset,
+          name: editAssetForm.name.trim(),
+          yieldRate: newYield,
+          investedAmount: newInvested,
+          initialInvestedAmount: initial
+        };
+      });
       return {
         ...current,
         assets,
-        simulatedDate: getDateKey(new Date()),
-        incomeHistory: {}
+        incomeHistory: rebuildIncomeHistory(assets)
       };
     });
+
+    setEditingAssetId(null);
   };
 
   const recordWishlistPurchase = (amount) => {
@@ -590,7 +623,6 @@ function App() {
               <h2>{t.assets}</h2>
               <span className='total-daily-income'>{t.totalDailyIncome}: R$ {displayMoney(totalDailyIncome)}</span>
               <AddMoreButton label={t.addInvestment} onClick={() => setIsAssetFormOpen((current) => !current)}></AddMoreButton>
-              <button className='simulate-day-button' type='button' onClick={resetIncomes}>{t.decreaseDays}</button>
             </div>
             {isAssetFormOpen && (
               <form className='asset-form' onSubmit={addAsset}>
@@ -603,11 +635,70 @@ function App() {
             <div className='assets-grid'>
               {database.assets.map((asset) => (
                 <div className='asset-card' key={asset.id}>
-                  <div className='asset-title'><strong>{asset.name}</strong><RemoveButton label={t.removeSlot} onClick={() => removeAsset(asset.id)}></RemoveButton></div>
-                  <strong>{t.yield}</strong><p>{formatDecimal(asset.yieldRate)}% {t.cdi}</p>
-                  <strong>{t.invested}</strong><p>R$ {displayMoney(asset.investedAmount)}</p>
-                  <strong>{t.dailyIncome}</strong><p>R$ {displayMoney(getDailyAssetIncome(asset, cdiRate))}</p>
-                  <strong>{t.totalIncome}</strong><p>R$ {displayMoney(asset.totalIncome)}</p>
+                  {editingAssetId === asset.id ? (
+                    <form className='asset-edit-form' onSubmit={saveAssetEdit}>
+                      <label className='asset-edit-label'>
+                        <span>{t.name}</span>
+                        <input
+                          value={editAssetForm.name}
+                          onChange={(e) => setEditAssetForm({ ...editAssetForm, name: e.target.value })}
+                          placeholder={t.name}
+                          required
+                        />
+                      </label>
+                      <label className='asset-edit-label'>
+                        <span>{t.yieldRate}</span>
+                        <input
+                          type='number'
+                          min='0'
+                          step='0.01'
+                          value={editAssetForm.yieldRate}
+                          onChange={(e) => setEditAssetForm({ ...editAssetForm, yieldRate: e.target.value })}
+                          placeholder={t.yieldRate}
+                        />
+                      </label>
+                      <label className='asset-edit-label'>
+                        <span>{t.investedAmount}</span>
+                        <input
+                          type='number'
+                          min='0'
+                          step='0.01'
+                          value={editAssetForm.investedAmount}
+                          onChange={(e) => setEditAssetForm({ ...editAssetForm, investedAmount: e.target.value })}
+                          placeholder={t.investedAmount}
+                          required
+                        />
+                      </label>
+                      <div className='asset-edit-actions'>
+                        <button type='submit' className='asset-save-btn'>{t.save}</button>
+                        <button type='button' className='asset-cancel-btn' onClick={cancelEditAsset}>{t.cancel}</button>
+                      </div>
+                    </form>
+                  ) : (
+                    <>
+                      <div className='asset-title'>
+                        <strong>{asset.name}</strong>
+                        <div className='asset-actions'>
+                          <button
+                            type='button'
+                            className='edit-asset-button'
+                            aria-label={`${t.edit} ${asset.name}`}
+                            title={t.edit}
+                            onClick={() => startEditAsset(asset)}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 256 256" fill="currentColor">
+                              <path d="M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.68,147.31,64l24-24L216,84.68Z"></path>
+                            </svg>
+                          </button>
+                          <RemoveButton label={t.removeSlot} onClick={() => removeAsset(asset.id)}></RemoveButton>
+                        </div>
+                      </div>
+                      <strong>{t.yield}</strong><p>{formatDecimal(asset.yieldRate)}% {t.cdi}</p>
+                      <strong>{t.invested}</strong><p>R$ {displayMoney(asset.investedAmount)}</p>
+                      <strong>{t.dailyIncome}</strong><p>R$ {displayMoney(getDailyAssetIncome(asset, cdiRate))}</p>
+                      <strong>{t.totalIncome}</strong><p>R$ {displayMoney(asset.totalIncome)}</p>
+                    </>
+                  )}
                 </div>
               ))}
             </div>

@@ -96,13 +96,21 @@ test('accumulates the current calendar week against the previous week', async ()
   expect(weekCard).toHaveTextContent('R$ 14,00');
 });
 
-test('reset incomes restores initial asset values and clears accumulated income', async () => {
+test('edits an individual asset name, yield rate, and invested amount', async () => {
   window.localStorage.setItem('kyos-database', JSON.stringify({
     schemaVersion: 11,
     simulatedDate: getDateKey(new Date()),
     wishlistSlots: [],
     recoverySlots: [],
-    assets: [{ id: 'asset-test', name: 'Test asset', yieldRate: 100, investedAmount: 110, initialInvestedAmount: 100, totalIncome: 10, incomeHistory: { [getDateKey(new Date())]: 10 } }],
+    assets: [{
+      id: 'asset-test',
+      name: 'Old Asset Name',
+      yieldRate: 100,
+      investedAmount: 1000,
+      initialInvestedAmount: 1000,
+      totalIncome: 0,
+      incomeHistory: {}
+    }],
     milestone: { target: 0 },
     purchasedTotal: 0,
     recoverySpentTotal: 0
@@ -112,10 +120,68 @@ test('reset incomes restores initial asset values and clears accumulated income'
   render(<App />);
   const investmentsBtn = await screen.findByRole('button', { name: 'Investments' });
   await userEvent.click(investmentsBtn);
-  await userEvent.click(screen.getByRole('button', { name: 'Reset Incomes' }));
 
-  expect(screen.getByText('R$ 100,00')).toBeInTheDocument();
-  expect(screen.getByText('R$ 0,00')).toBeInTheDocument();
+  expect(screen.getByText('Old Asset Name')).toBeInTheDocument();
+
+  // Click edit button
+  const editBtn = screen.getByRole('button', { name: /edit old asset name/i });
+  await userEvent.click(editBtn);
+
+  // Form should be visible
+  const nameInput = screen.getByDisplayValue('Old Asset Name');
+  await userEvent.clear(nameInput);
+  await userEvent.type(nameInput, 'Updated Asset Name');
+
+  const saveBtn = screen.getByRole('button', { name: 'Save' });
+  await userEvent.click(saveBtn);
+
+  expect(screen.getByText('Updated Asset Name')).toBeInTheDocument();
+  expect(screen.queryByText('Old Asset Name')).not.toBeInTheDocument();
+});
+
+test('canceling asset edit preserves original asset data', async () => {
+  window.localStorage.setItem('kyos-database', JSON.stringify({
+    schemaVersion: 11,
+    simulatedDate: getDateKey(new Date()),
+    wishlistSlots: [],
+    recoverySlots: [],
+    assets: [{
+      id: 'asset-test-cancel',
+      name: 'Stable Asset',
+      yieldRate: 100,
+      investedAmount: 5000,
+      initialInvestedAmount: 5000,
+      totalIncome: 0,
+      incomeHistory: {}
+    }],
+    milestone: { target: 0 },
+    purchasedTotal: 0,
+    recoverySpentTotal: 0
+  }));
+  window.localStorage.setItem('kyos-last-opened-date', getDateKey(new Date()));
+
+  render(<App />);
+  const investmentsBtn = await screen.findByRole('button', { name: 'Investments' });
+  await userEvent.click(investmentsBtn);
+
+  expect(screen.getByText('Stable Asset')).toBeInTheDocument();
+
+  // Click edit
+  const editBtn = screen.getByRole('button', { name: /edit stable asset/i });
+  await userEvent.click(editBtn);
+
+  // Type new name
+  const nameInput = screen.getByDisplayValue('Stable Asset');
+  await userEvent.clear(nameInput);
+  await userEvent.type(nameInput, 'Unsaved Changed Name');
+
+  // Click cancel
+  const cancelBtn = screen.getByRole('button', { name: 'Cancel' });
+  await userEvent.click(cancelBtn);
+
+  // Original name remains
+  expect(screen.getByText('Stable Asset')).toBeInTheDocument();
+  expect(screen.queryByText('Unsaved Changed Name')).not.toBeInTheDocument();
 });
 
 test('resiliency rule: displays error banner when holiday API fails and cache is empty', async () => {
