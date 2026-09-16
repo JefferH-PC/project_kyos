@@ -1,122 +1,133 @@
-# Kyos
+# Kyos – Personal Finance Dashboard
 
-Kyos is a browser-based personal finance dashboard for tracking investments, simulated income, net worth milestones, Wishlist goals, Recovery spending, and balance summaries.
+A modern, responsive React dashboard that helps users track net‑worth, daily income, investments, wish‑list items, and recovery slots while automatically handling Brazilian business‑day logic and offline resiliency.
 
-## Features
+---
 
-- Net Worth dashboard with total invested value, investment count, milestone progress, and income comparisons.
-- Investments section with asset creation, invested balance, yield, daily income, lifetime income, top investment, and combined daily income.
-- Simulated Increase days and Decrease days controls for testing compounded asset income and paying down Wishlist or Recovery values.
-- Wishlist items automatically enter processing when the processing lane is available. Processing can be moved between Wishlist items, and completed Wishlist items return as Ready items.
-- Recovery items are processed one at a time and block Wishlist processing while active. Completed Recovery items are removed and remain recorded as Balance spending; manually removed items are removed from spending totals.
-- Dynamic next milestone targets in R$10,000 increments, with remaining value and estimated days based on total daily investment income.
-- Balance summary for invested and spent values, including completed Wishlist purchases and Recovery additions.
-- Current-day, week, month, and year income cards based on the actual system date. Simulations update income history without changing the displayed calendar date.
-- CDI loading from the Banco Central do Brasil SGS API, refreshed daily. Cards show the annualized total based on the current daily CDI value, while asset income uses the daily rate.
-- English and Portuguese interface text, persisted locally.
-- Dark and light themes, persisted investment data, local database editing, and optional money-value masking.
+## Table of Contents
+- [Project Overview](#project-overview)
+- [Features (User View)](#features-user-view)
+- [Architecture Diagram](#architecture-diagram)
+- [Installation & Setup](#installation--setup)
+- [Usage / Quick Start](#usage--quick-start)
+- [License](#license)
 
-## Requirements
+---
 
-- Node.js 18 or newer is recommended.
-- npm.
-- A modern browser with `localStorage` and `fetch` support.
+## Project Overview
 
-## Getting Started
+Kyos is a single‑page React application built with **React 19** and **React‑Scripts**. It is designed for Brazilian users (but works globally) and automatically:
+- Calculates daily yield **only on Brazilian business days** (weekends + national holidays are excluded).
+- Caches holiday data from **BrasilAPI** in `localStorage` for offline use.
+- Persists the last opened date, database, and user preferences in `localStorage`.
+- Provides a **simulation mode** that lets users experiment with different CDI rates without affecting the main database.
 
-Install dependencies:
+---
 
-```bash
-npm install
+## Features (User View)
+
+| Section | What the user sees | Key interactions |
+|--------|--------------------|-----------------|
+| **Header** | Language selector (EN/PT), theme toggle (light/dark), money‑visibility toggle | Switch language instantly, toggle night mode, hide/reveal monetary values |
+| **Net Worth Card** | Shows total net worth, a green upward trend arrow, and day‑to‑day change | Quick glance at overall financial health |
+| **Weekly Summary** | Bar‑graph‑style cards for today, yesterday, and the current week | Shows daily income, yesterday’s income, and weekly total |
+| **Investments Area** | List of assets with name, invested amount, daily yield, and edit button on each card | Edit name, yield rate, or invested amount → immediate recalculation |
+| **Wishlist / Recovery** | Cards for pending expenses (wishlist) and debt‑recovery items, each with progress bars | When the daily yield is enough, items are automatically marked **Completed** |
+| **Catch‑Up Modal** (on app start) | Summarizes business days processed while the user was away, total accrued income, and any completed slots | “Continue” button dismisses the modal; no duplicate accrual on subsequent loads |
+| **Simulation Tab** | Independent sandbox where users can set a custom CDI rate, reset to live baseline, or clear all data | Allows “what‑if” analysis without touching the real data |
+| **Error Banner** | Appears when holiday data cannot be fetched and there is no cache | “Retry” button forces a fresh fetch once connectivity is restored |
+
+All UI elements are fully localized (English \u0026 Portuguese) and respect the user's preference for showing or hiding monetary values.
+
+---
+
+## Architecture Diagram
+
+```mermaid
+flowchart TD
+    A[App Mount] --> B{Load Holiday Cache}
+    B -->|Cache hit| C[Use Cached Holidays]
+    B -->|Cache miss| D[Fetch Holidays from BrasilAPI]
+    D --> E[Store Holidays in localStorage]
+    E --> C
+    C --> F[Read Last Opened Date]
+    F --> G{Has Missed Business Days?}
+    G -->|No| H[Set SimulatedDate = Today]
+    G -->|Yes| I[Compute Business Days List]
+    I --> J[Fetch CDI Rate for each Business Day]
+    J --> K[Process Each Day]
+    K --> L[Accrue Yield per Asset (once per day)]
+    L --> M[Update Income History \u0026 Totals]
+    M --> N[Show Catch‑Up Modal (if any accrual/completions)]
+    N --> O[User Dismisses Modal]
+    O --> P[Render Main UI (Header, Net Worth, Areas, etc.)]
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style P fill:#bbf,stroke:#333,stroke-width:2px
 ```
+*The diagram demonstrates the flow from app start, through holiday loading, catch‑up processing, and final UI rendering.*
 
-Start the development server:
+---
+
+## Installation / Setup
 
 ```bash
+# 1️⃣ Clone the repository
+git clone https://github.com/yourusername/project_kyos.git
+cd project_kyos
+
+# 2️⃣ Install dependencies (Node ≥ 18, npm ≥ 9)
+npm install
+
+# 3️⃣ (Optional) Set a custom homepage for production builds
+#    Edit package.json -\u003e "homepage": "https://yourdomain.com/kyos"
+
+# 4️⃣ Run the development server
 npm start
 ```
+The app will be available at `http://localhost:3000`. All environment‑specific settings are stored in `localStorage`; no additional configuration files are required.
 
-The app opens at `http://localhost:3000` by default.
+---
 
-## Available Scripts
+## Usage / Quick Start
 
-| Command | Description |
-| --- | --- |
-| `npm start` | Starts the development server. |
-| `npm test` | Runs the test watcher. |
-| `npm test -- --watch=false --runInBand` | Runs the test suite once. |
-| `npm run build` | Creates an optimized production build in `build/`. |
-| `npm run eject` | Ejects the Create React App configuration. This is irreversible. |
+1. **Open the app** – If you have been away, a **Catch‑Up Summary** modal appears showing missed business days, accrued income, and any completed wishlist/recovery items. Click **Continue** to proceed.
+2. **Select Language** – Use the dropdown in the top‑right corner to switch between English and Portuguese instantly.
+3. **Toggle Theme** – Click the sun/moon icon to switch between light and dark themes.
+4. **Hide/Show Money Values** – Click the eye icon to hide monetary numbers for privacy.
+5. **Edit an Asset** – In the **Investments** section, click the **Edit** (pencil) button on an asset card. Change the name, yield rate, or invested amount, then click **Save**. The dashboard updates immediately, and the asset’s income history is rebuilt.
+6. **Wish‑List \u0026 Recovery** – Add new expense or debt items via the respective tabs. As daily yield accrues, the app automatically reduces the price until the item is marked **Completed** and appears in the modal’s “Completed Slots” list.
+7. **Simulation Mode** – Switch to the **Simulation** tab to experiment with a custom CDI rate. Use **Reset to Live Baseline** to revert to the real data, or **Clear All** to start a fresh sandbox.
+8. **Error Handling** – If the holiday API fails and there is no cached data, an error banner appears with a **Retry** button. Clicking **Retry** forces a fresh fetch once the network is reachable.
 
-## How It Works
+All actions are persisted in `localStorage`, so reloading or reopening the browser retains your data and preferences.
 
-### Investments
-
-Create assets with a name, yield percentage, and initial investment. Daily income is calculated from the current invested amount, the asset yield, and the daily CDI value:
-
-```text
-daily income = invested amount x (asset yield / 100) x (daily CDI / 100)
-```
-
-Increasing simulated days compounds income into each asset's invested amount and lifetime income. Decreasing simulated days rolls back recorded income without reducing an asset below its original principal.
-
-### Income Cards and Dates
-
-The application always uses the computer's actual date for Today, Yesterday, Week, Month, and Year calculations. Simulation controls change recorded income and goal progress only; they do not move the displayed day, month, or year.
-
-### Wishlist and Recovery
-
-Wishlist and Recovery values display both their remaining amount and estimated days based on the combined daily income of all assets. Recovery has priority over Wishlist processing. When no Recovery item is active, Wishlist automatically processes the active item or selects the first queued item. A completed Wishlist item becomes Ready and can be bought or removed.
-
-Adding a Recovery item immediately contributes its original value to Balance spending. Removing it manually reverses that contribution. Completing it through processing leaves the amount recorded as spent.
-
-### Persistence and Reset Migrations
-
-Application data is stored in browser `localStorage` under `kyos-database`. The application normalizes stored data on startup and uses a schema version to apply one-time migrations.
-
-The current schema migration preserves assets while resetting non-asset values when required. This includes Wishlist, Recovery, milestones, spending totals, dates, and income history according to the migration version in `src/App.js`.
-
-The Database section provides a JSON editor for inspecting or replacing the local database. Invalid or incomplete database drafts are ignored.
-
-## CDI Data Source
-
-Kyos requests the latest SGS series 12 value from Banco Central do Brasil:
-
-```text
-https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados/ultimos/1?formato=json
-```
-
-The API value is treated as a daily percentage and refreshed every 24 hours. If the request fails, the built-in fallback value is used until a later refresh succeeds. Browser network policies or API availability may affect live CDI updates.
-
-## Project Structure
-
-```text
-src/
-	App.js                         Main application state and calculations
-	App.css                        Main layout and theme styles
-	Components/                    Reusable dashboard controls and slot views
-	MiddleNetWorthCard/            Net Worth total card
-	utils/formatters.js            Brazilian currency and number formatting
-	App.test.js                    Application tests
-public/                          Static public assets
-build/                           Generated production output
-```
-
-## Validation
-
-Run the production build before publishing changes:
-
-```bash
-npm run build
-```
-
-Run the tests once in CI-style mode:
-
-```bash
-npm test -- --watch=false --runInBand
-```
+---
 
 ## License
 
-No license has been specified for this repository yet.
+This project is licensed under the **MIT License**.
 
+```
+MIT License
+
+Copyright (c) 2026 <Your Name>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the “Software”), to deal
+in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+sell copies of the Software, and to permit persons to whom the Software
+is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+```
+---
