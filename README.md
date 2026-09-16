@@ -47,7 +47,7 @@ All UI elements are fully localized (English \u0026 Portuguese) and respect the 
 3. **Toggle Theme** – Click the sun/moon icon to switch between light and dark themes.
 4. **Hide/Show Money Values** – Click the eye icon to hide monetary numbers for privacy.
 5. **Edit an Asset** – In the **Investments** section, click the **Edit** (pencil) button on an asset card. Change the name, yield rate, or invested amount, then click **Save**. The dashboard updates immediately, and the asset’s income history is rebuilt.
-6. **Wish‑List \u0026 Recovery** – Add new expense or debt items via the respective tabs. As daily yield accrues, the app automatically reduces the price until the item is marked **Completed** and appears in the modal’s “Completed Slots” list.
+6. **Wish‑List / Recovery** – Add new expense or debt items via the respective tabs. As daily yield accrues, the app automatically reduces the price until the item is marked **Completed** and appears in the modal’s “Completed Slots” list.
 7. **Simulation Mode** – Switch to the **Simulation** tab to experiment with a custom CDI rate. Use **Reset to Live Baseline** to revert to the real data, or **Clear All** to start a fresh sandbox.
 8. **Error Handling** – If the holiday API fails and there is no cached data, an error banner appears with a **Retry** button. Clicking **Retry** forces a fresh fetch once the network is reachable.
 
