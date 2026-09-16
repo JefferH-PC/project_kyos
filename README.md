@@ -7,7 +7,6 @@ A modern, responsive React dashboard that helps users track net‑worth, daily i
 ## Table of Contents
 - [Project Overview](#project-overview)
 - [Features (User View)](#features-user-view)
-- [Architecture Diagram](#architecture-diagram)
 - [Installation & Setup](#installation--setup)
 - [Usage / Quick Start](#usage--quick-start)
 - [License](#license)
@@ -38,53 +37,6 @@ Kyos is a single‑page React application built with **React 19** and **React�
 | **Error Banner** | Appears when holiday data cannot be fetched and there is no cache | “Retry” button forces a fresh fetch once connectivity is restored |
 
 All UI elements are fully localized (English \u0026 Portuguese) and respect the user's preference for showing or hiding monetary values.
-
----
-
-## Architecture Diagram
-
-```mermaid
-flowchart TD
-    A[App Mount] --> B{Load Holiday Cache}
-    B -->|Cache hit| C[Use Cached Holidays]
-    B -->|Cache miss| D[Fetch Holidays from BrasilAPI]
-    D --> E[Store Holidays in localStorage]
-    E --> C
-    C --> F[Read Last Opened Date]
-    F --> G{Has Missed Business Days?}
-    G -->|No| H[Set SimulatedDate = Today]
-    G -->|Yes| I[Compute Business Days List]
-    I --> J[Fetch CDI Rate for each Business Day]
-    J --> K[Process Each Day]
-    K --> L[Accrue Yield per Asset (once per day)]
-    L --> M[Update Income History \u0026 Totals]
-    M --> N[Show Catch‑Up Modal (if any accrual/completions)]
-    N --> O[User Dismisses Modal]
-    O --> P[Render Main UI (Header, Net Worth, Areas, etc.)]
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style P fill:#bbf,stroke:#333,stroke-width:2px
-```
-*The diagram demonstrates the flow from app start, through holiday loading, catch‑up processing, and final UI rendering.*
-
----
-
-## Installation / Setup
-
-```bash
-# 1️⃣ Clone the repository
-git clone https://github.com/yourusername/project_kyos.git
-cd project_kyos
-
-# 2️⃣ Install dependencies (Node ≥ 18, npm ≥ 9)
-npm install
-
-# 3️⃣ (Optional) Set a custom homepage for production builds
-#    Edit package.json -\u003e "homepage": "https://yourdomain.com/kyos"
-
-# 4️⃣ Run the development server
-npm start
-```
-The app will be available at `http://localhost:3000`. All environment‑specific settings are stored in `localStorage`; no additional configuration files are required.
 
 ---
 
