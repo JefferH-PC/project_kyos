@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import './App.css';
 import Header from './Components/Header/Header';
 import MiddleMilestoneCard from './Components/MiddleMilestoneCard/MiddleMilestoneCard';
@@ -251,6 +251,11 @@ function App() {
   const [editingAssetId, setEditingAssetId] = useState(null);
   const [editAssetForm, setEditAssetForm] = useState({ name: '', yieldRate: '', investedAmount: '' });
 
+  const hasRunCatchUpRef = useRef(false);
+  const isCatchingUpRef = useRef(false);
+  const cdiRateRef = useRef(cdiRate);
+  cdiRateRef.current = cdiRate;
+
   const t = APP_TEXT[locale] || APP_TEXT.en;
 
   useEffect(() => {
@@ -318,6 +323,9 @@ function App() {
       return;
     }
 
+    // Mark last-opened-date immediately to prevent duplicate runs
+    window.localStorage.setItem('kyos-last-opened-date', currentDateKey);
+
     // Fetch CDI rate for each business day
     const dayRates = {};
     for (const day of businessDaysList) {
@@ -325,37 +333,48 @@ function App() {
       dayRates[key] = await fetchHistoricalCDI(key, currentCdi);
     }
 
+    // Read latest current database state
+    const currentDb = readDatabase();
+    let assets = JSON.parse(JSON.stringify(currentDb.assets || []));
+    let wishlistSlots = JSON.parse(JSON.stringify(currentDb.wishlistSlots || []));
+    let recoverySlots = JSON.parse(JSON.stringify(currentDb.recoverySlots || []));
+    let recoverySpentTotal = Number(currentDb.recoverySpentTotal || 0);
+
     let accruedSum = 0;
     const completed = [];
 
-    setDatabase((current) => {
-      let assets = JSON.parse(JSON.stringify(current.assets || []));
-      let wishlistSlots = JSON.parse(JSON.stringify(current.wishlistSlots || []));
-      let recoverySlots = JSON.parse(JSON.stringify(current.recoverySlots || []));
-      let recoverySpentTotal = Number(current.recoverySpentTotal || 0);
+    for (const day of businessDaysList) {
+      const dayKey = getDateKey(day);
+      const dayRate = dayRates[dayKey] || currentCdi;
+      let dayYield = 0;
 
-      for (const day of businessDaysList) {
-        const dayKey = getDateKey(day);
-        const dayRate = dayRates[dayKey] || currentCdi;
-        let dayYield = 0;
+      assets = assets.map((asset) => {
+        // Date-level idempotency: skip if already processed for this day
+        if (asset.incomeHistory && typeof asset.incomeHistory[dayKey] === 'number') {
+          return asset;
+        }
 
-        assets = assets.map((asset) => {
-          const income = calculateDailyYield(asset.investedAmount, asset.yieldRate, dayRate);
-          dayYield += income;
-          const prev = Number(asset.incomeHistory?.[dayKey] || 0);
-          return {
-            ...asset,
-            investedAmount: Number(asset.investedAmount || 0) + income,
-            totalIncome: Number(asset.totalIncome || 0) + income,
-            incomeHistory: {
-              ...(asset.incomeHistory || {}),
-              [dayKey]: prev + income
-            }
-          };
-        });
+        // Only accrue if asset existed on or before this day
+        if (asset.creationDate && asset.creationDate > dayKey) {
+          return asset;
+        }
 
-        accruedSum += dayYield;
+        const income = calculateDailyYield(asset.investedAmount, asset.yieldRate, dayRate);
+        dayYield += income;
+        return {
+          ...asset,
+          investedAmount: Number(asset.investedAmount || 0) + income,
+          totalIncome: Number(asset.totalIncome || 0) + income,
+          incomeHistory: {
+            ...(asset.incomeHistory || {}),
+            [dayKey]: income
+          }
+        };
+      });
 
+      accruedSum += dayYield;
+
+      if (dayYield > 0) {
         // Apply yield to Recovery first, then Wishlist
         const recoveryIndex = recoverySlots.findIndex((s) => s.type === 'recovery' && s.isProcessing);
         const wishlistProcessingIndex = wishlistSlots.findIndex((s) => s.type === 'processing');
@@ -397,19 +416,24 @@ function App() {
           }
         }
       }
+    }
 
-      return {
-        ...current,
-        assets,
-        wishlistSlots,
-        recoverySlots,
-        recoverySpentTotal,
-        simulatedDate: currentDateKey,
-        incomeHistory: rebuildIncomeHistory(assets)
-      };
-    });
+    const updatedDatabase = {
+      ...currentDb,
+      assets,
+      wishlistSlots,
+      recoverySlots,
+      recoverySpentTotal,
+      simulatedDate: currentDateKey,
+      incomeHistory: rebuildIncomeHistory(assets)
+    };
 
-    window.localStorage.setItem('kyos-last-opened-date', currentDateKey);
+    setDatabase(updatedDatabase);
+    try {
+      window.localStorage.setItem('kyos-database', JSON.stringify(updatedDatabase));
+    } catch {
+      // Ignore storage errors
+    }
 
     setCatchUpModalData({
       isOpen: true,
@@ -421,7 +445,12 @@ function App() {
   }, [database.simulatedDate]);
 
   // Pre-fetch Brazilian holidays & execute catch-up
-  const loadHolidaysAndCatchUp = useCallback(async () => {
+  const loadHolidaysAndCatchUp = useCallback(async (forced = false) => {
+    if (isCatchingUpRef.current) return;
+    if (!forced && hasRunCatchUpRef.current) return;
+    isCatchingUpRef.current = true;
+    hasRunCatchUpRef.current = true;
+
     const today = new Date();
     const currentYear = today.getFullYear();
     let holidays = [];
@@ -445,11 +474,16 @@ function App() {
     } catch (err) {
       // Resiliency rule: Block auto-update calculations & display error banner
       setHolidaysError(true);
+      isCatchingUpRef.current = false;
       return;
     }
 
-    await processMissedDays(holidays, cdiRate);
-  }, [cdiRate, processMissedDays]);
+    try {
+      await processMissedDays(holidays, cdiRateRef.current);
+    } finally {
+      isCatchingUpRef.current = false;
+    }
+  }, [processMissedDays]);
 
   useEffect(() => {
     loadHolidaysAndCatchUp();
@@ -778,7 +812,7 @@ function App() {
       {holidaysError && (
         <div className='holiday-error-banner' role='alert'>
           <span>⚠️ {t.holidayError}</span>
-          <button type='button' onClick={loadHolidaysAndCatchUp}>{t.retry}</button>
+          <button type='button' onClick={() => loadHolidaysAndCatchUp(true)}>{t.retry}</button>
         </div>
       )}
       <Header

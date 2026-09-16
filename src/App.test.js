@@ -278,3 +278,132 @@ test('dedicated simulation section operates independently without mutating main 
   expect(mainDb.assets[0].name).toBe('Main Asset');
   expect(mainDb.assets[0].investedAmount).toBe(5000);
 });
+
+test('catch-up modal displays accurate non-zero accrued income and completed slots rather than R$ 0,00', async () => {
+  const RealDate = Date;
+  class MockDate extends RealDate {
+    constructor(...args) {
+      if (args.length === 0) {
+        super('2026-09-16T12:00:00Z');
+      } else {
+        super(...args);
+      }
+    }
+    static now() {
+      return new RealDate('2026-09-16T12:00:00Z').getTime();
+    }
+  }
+
+  global.Date = MockDate;
+
+  try {
+    window.localStorage.setItem('kyos-last-opened-date', '2026-09-15');
+    window.localStorage.setItem('kyos-database', JSON.stringify({
+      schemaVersion: 11,
+      simulatedDate: '2026-09-15',
+      wishlistSlots: [{ id: 'wish-coffee', type: 'expense', expenseName: 'Artisan Coffee', price: 4, originalPrice: 4 }],
+      recoverySlots: [],
+      assets: [{
+        id: 'asset-test-accrual',
+        name: 'Tesouro Selic',
+        yieldRate: 100,
+        investedAmount: 10000,
+        initialInvestedAmount: 10000,
+        totalIncome: 0,
+        incomeHistory: {}
+      }],
+      milestone: { target: 0 },
+      purchasedTotal: 0,
+      recoverySpentTotal: 0
+    }));
+
+    render(<App />);
+
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toBeInTheDocument();
+
+    // Verify modal does NOT display R$ 0,00 for accrued income
+    const accruedMetric = screen.getByText(/Total Accrued Income/i).parentElement;
+    expect(accruedMetric).toHaveTextContent('R$ 5,17');
+    expect(accruedMetric).not.toHaveTextContent('R$ 0,00');
+
+    // Verify completed item is listed in the modal
+    expect(screen.getByText('Artisan Coffee')).toBeInTheDocument();
+  } finally {
+    global.Date = RealDate;
+  }
+});
+
+test('daily income accrues strictly once (1x, not 2x) on catch-up and reopening does not re-accrue', async () => {
+  const RealDate = Date;
+  class MockDate extends RealDate {
+    constructor(...args) {
+      if (args.length === 0) {
+        super('2026-09-16T12:00:00Z');
+      } else {
+        super(...args);
+      }
+    }
+    static now() {
+      return new RealDate('2026-09-16T12:00:00Z').getTime();
+    }
+  }
+
+  global.Date = MockDate;
+
+  try {
+    window.localStorage.setItem('kyos-last-opened-date', '2026-09-15');
+    window.localStorage.setItem('kyos-database', JSON.stringify({
+      schemaVersion: 11,
+      simulatedDate: '2026-09-15',
+      wishlistSlots: [],
+      recoverySlots: [],
+      assets: [{
+        id: 'asset-single-yield',
+        name: 'Tesouro Selic',
+        yieldRate: 100,
+        investedAmount: 10000,
+        initialInvestedAmount: 10000,
+        totalIncome: 0,
+        incomeHistory: {}
+      }],
+      milestone: { target: 0 },
+      purchasedTotal: 0,
+      recoverySpentTotal: 0
+    }));
+
+    const { unmount } = render(<App />);
+
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toBeInTheDocument();
+
+    // Wait for catch-up to complete and persist
+    await waitFor(() => {
+      const db = JSON.parse(window.localStorage.getItem('kyos-database'));
+      expect(db.assets[0].investedAmount).toBeCloseTo(10005.17, 1);
+    });
+
+    const savedDb = JSON.parse(window.localStorage.getItem('kyos-database'));
+    // Income should have increased by ~5.17 (1 day), definitely NOT ~10.33 (2 days)
+    const incomeAdded = savedDb.assets[0].investedAmount - 10000;
+    expect(incomeAdded).toBeCloseTo(5.17, 1);
+    expect(incomeAdded).toBeLessThan(8.0); // Guards against duplicate 2x accrual
+
+    // Unmount and simulate reopening on the same day
+    unmount();
+
+    render(<App />);
+
+    // Reopening on the same day must NOT show the catch-up modal again
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    // Reopening must NOT compound income again
+    const reopenedDb = JSON.parse(window.localStorage.getItem('kyos-database'));
+    expect(reopenedDb.assets[0].investedAmount).toBeCloseTo(10005.17, 1);
+  } finally {
+    global.Date = RealDate;
+  }
+});
+
