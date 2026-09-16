@@ -36,7 +36,7 @@ Kyos is a single‑page React application built with **React 19** and **React�
 | **Simulation Tab** | Independent sandbox where users can set a custom CDI rate, reset to live baseline, or clear all data | Allows “what‑if” analysis without touching the real data |
 | **Error Banner** | Appears when holiday data cannot be fetched and there is no cache | “Retry” button forces a fresh fetch once connectivity is restored |
 
-All UI elements are fully localized (English \u0026 Portuguese) and respect the user's preference for showing or hiding monetary values.
+All UI elements are fully localized (English / Portuguese) and respect the user's preference for showing or hiding monetary values.
 
 ---
 
