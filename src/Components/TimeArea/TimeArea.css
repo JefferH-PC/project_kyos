@@ -153,6 +153,37 @@
         max-width: none;
         width: 100%;
         height: auto;
-        min-height: 380px;
+        min-height: 260px;
+    }
+
+    .expense-area {
+        max-height: 380px;
+    }
+
+    .expense-form input {
+        font-size: 16px;
+        padding: 9px 12px;
+    }
+
+    .expense-form button {
+        min-height: 40px;
+        font-size: 14px;
     }
 }
+
+@media (max-width: 600px) {
+    .time-area {
+        padding: 12px 10px;
+        border-radius: 14px;
+    }
+
+    .time-area .top h2 {
+        font-size: 16px;
+    }
+
+    .total h3 {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+}
+

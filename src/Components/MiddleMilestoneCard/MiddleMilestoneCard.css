@@ -29,10 +29,11 @@
 }
 
 .middle-milestone h2:nth-of-type(2) {
-    font-size: 32px;
+    font-size: clamp(22px, 5vw, 32px);
     font-weight: 800;
     color: var(--accent-blue);
     letter-spacing: -0.5px;
+    overflow-wrap: anywhere;
 }
 
 .middle-milestone h2:nth-of-type(3) {
@@ -44,4 +45,17 @@
     padding: 4px 10px;
     border-radius: 20px;
     width: fit-content;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+    .middle-milestone {
+        height: auto;
+        min-height: 130px;
+        padding: 14px 16px;
+        gap: 8px;
+    }
 }

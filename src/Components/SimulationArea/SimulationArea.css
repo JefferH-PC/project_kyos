@@ -396,3 +396,94 @@
         grid-template-columns: 1fr;
     }
 }
+
+@media (max-width: 600px) {
+    .simulation-area {
+        padding: 12px;
+        gap: 12px;
+    }
+
+    .simulation-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding-bottom: 12px;
+    }
+
+    .simulation-actions {
+        width: 100%;
+        gap: 8px;
+    }
+
+    .simulation-btn {
+        flex: 1 1 0;
+        text-align: center;
+        padding: 9px 8px;
+        font-size: 12px;
+        min-height: 40px;
+    }
+
+    .simulation-cdi-control {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .simulation-cdi-input {
+        font-size: 16px;
+        padding: 6px 8px;
+        width: 80px;
+    }
+
+    .simulation-calendar-card,
+    .simulation-results-card {
+        padding: 12px;
+        gap: 10px;
+    }
+
+    .calendar-grid {
+        gap: 3px;
+    }
+
+    .calendar-day-header {
+        font-size: 11px;
+        padding: 4px 0;
+    }
+
+    .calendar-day-cell {
+        font-size: 12px;
+        border-radius: 6px;
+    }
+
+    .calendar-legend {
+        gap: 8px;
+        font-size: 10px;
+    }
+
+    .simulation-metric-grid {
+        gap: 8px;
+    }
+
+    .simulation-metric {
+        padding: 10px;
+    }
+
+    .simulation-metric strong {
+        font-size: 17px;
+    }
+}
+
+@media (max-width: 380px) {
+    .calendar-day-cell {
+        font-size: 11px;
+    }
+
+    .calendar-day-header {
+        font-size: 10px;
+    }
+
+    .simulation-btn {
+        font-size: 11px;
+        padding: 8px 4px;
+    }
+}
+

@@ -199,3 +199,60 @@
     filter: brightness(0.9);
     transform: translateY(-1px);
 }
+
+@media (max-width: 600px) {
+    .catchup-overlay {
+        padding: 12px;
+    }
+
+    .catchup-modal {
+        padding: 16px;
+        border-radius: 16px;
+        gap: 14px;
+        max-height: 90vh;
+    }
+
+    .catchup-header h2 {
+        font-size: 19px;
+    }
+
+    .catchup-header p {
+        font-size: 13px;
+    }
+
+    .catchup-metrics {
+        gap: 8px;
+    }
+
+    .catchup-metric-card {
+        padding: 10px 12px;
+    }
+
+    .catchup-metric-card strong {
+        font-size: 18px;
+    }
+
+    .catchup-slot-item {
+        padding: 8px 10px;
+    }
+
+    .catchup-slot-name {
+        font-size: 13px;
+    }
+
+    .catchup-slot-price {
+        font-size: 13px;
+    }
+
+    .catchup-footer {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .catchup-btn-continue {
+        width: 100%;
+        min-height: 44px;
+        font-size: 15px;
+    }
+}
+

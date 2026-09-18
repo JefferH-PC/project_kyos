@@ -887,34 +887,306 @@ select,
 
 /* Media Queries */
 @media (max-width: 900px) {
+    body {
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
     .app {
         height: auto;
         min-height: 100vh;
-        overflow: visible;
+        min-height: 100dvh;
+        overflow-x: hidden;
+        overflow-y: visible;
+        padding: env(safe-area-inset-top, 0px) 12px calc(14px + env(safe-area-inset-bottom, 0px));
     }
 
     .app-areas {
         height: auto;
         flex-direction: column;
+        gap: 16px;
+        min-height: 0;
     }
 
     .middle {
         order: -1;
         height: auto;
+        min-height: 0;
+        padding: 0;
+        overflow: visible;
+    }
+
+    .balance-view,
+    .investments-view {
+        height: auto;
+        max-height: none;
+        overflow: visible;
     }
 }
 
 @media (max-width: 600px) {
-    .middle-summary {
-        grid-template-columns: 1fr;
+    .section-buttons {
+        gap: 6px;
+        padding: 4px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        flex-wrap: nowrap;
+        border-radius: 12px;
     }
 
-    .section-buttons {
+    .section-buttons::-webkit-scrollbar {
+        display: none;
+    }
+
+    .section-button {
+        flex: 1 0 auto;
+        min-width: max-content;
+    }
+
+    .section-buttons .section-button h2 {
+        padding: 8px 14px;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+
+    .middle-summary {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        padding: 12px;
+        border-radius: 14px;
+    }
+
+    .middle-summary-side {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: auto;
+        gap: 10px;
+    }
+
+    .today-card,
+    .cdi-card {
+        height: auto;
+        min-height: 110px;
+        padding: 12px;
+        gap: 6px;
+    }
+
+    .today-card strong {
+        font-size: clamp(16px, 4.5vw, 20px);
+        gap: 4px;
+        flex-wrap: wrap;
+    }
+
+    .today-card h3 + strong {
+        font-size: 14px;
+    }
+
+    .cdi-card strong {
+        font-size: clamp(20px, 5.5vw, 28px);
+    }
+
+    .trend {
+        font-size: 13px;
+        padding: 1px 6px;
+    }
+
+    .time-cards {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .period-card {
+        height: auto;
+        min-height: 80px;
+        padding: 14px;
         gap: 4px;
     }
 
-    .section-buttons h2 {
-        padding: 7px 8px;
+    .period-card strong {
+        font-size: clamp(18px, 4.5vw, 22px);
+        gap: 6px;
+    }
+
+    .period-card h3 + strong {
+        font-size: 14px;
+    }
+
+    .balance-view {
+        padding: 12px;
+        gap: 12px;
+        border-radius: 14px;
+    }
+
+    .balance-year-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .balance-card {
+        padding: 14px;
+        min-height: 100px;
+        gap: 6px;
+    }
+
+    .balance-card strong {
+        font-size: clamp(20px, 5vw, 26px);
+    }
+
+    .balance-chart-card {
+        flex-direction: column;
+        padding: 18px 14px;
+        gap: 16px;
+        text-align: center;
+        min-height: 0;
+    }
+
+    .balance-donut {
+        width: 140px;
+        max-width: 50vw;
+    }
+
+    .balance-legend {
+        min-width: 0;
+        width: 100%;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .balance-legend h2 {
+        font-size: 17px;
+    }
+
+    .balance-legend p {
+        font-size: 15px;
+    }
+
+    .investments-view {
+        padding: 12px;
+        gap: 12px;
+        border-radius: 14px;
+    }
+
+    .investment-summary-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .investment-summary-card {
+        padding: 14px;
+        min-height: 90px;
+        gap: 6px;
+    }
+
+    .investment-summary-card strong {
+        font-size: clamp(20px, 5vw, 26px);
+    }
+
+    .cdi-investment-card strong {
+        font-size: clamp(22px, 5.5vw, 30px);
+    }
+
+    .assets-panel {
+        padding: 12px;
+        gap: 12px;
+        border-radius: 12px;
+    }
+
+    .assets-heading {
+        gap: 8px;
+    }
+
+    .assets-heading h2 {
+        font-size: 18px;
+    }
+
+    .total-daily-income {
+        font-size: 12px;
+        padding: 2px 8px;
+    }
+
+    .asset-form {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .asset-form input:nth-child(1) {
+        grid-column: span 2;
+    }
+
+    .asset-form button {
+        grid-column: span 2;
+        width: 100%;
+        min-height: 42px;
+        font-size: 14px;
+    }
+
+    .asset-form input,
+    .asset-edit-label input {
+        font-size: 16px;
+        padding: 8px 10px;
+    }
+
+    .assets-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        max-height: none;
+        overflow: visible;
+    }
+
+    .asset-card {
+        min-height: auto;
+        padding: 12px 14px;
+    }
+
+    .edit-asset-button {
+        width: 32px;
+        height: 28px;
+    }
+
+    .holiday-error-banner {
+        padding: 10px 14px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .holiday-error-banner span {
         font-size: 13px;
     }
+
+    .time-area .buttons-action {
+        width: 32px;
+    }
+
+    .time-area .buttons-action > div,
+    .time-area .buttons-action > button {
+        width: 32px;
+        height: 28px;
+    }
+
+    .time-area .buttons-action svg {
+        width: 32px;
+        height: 28px;
+    }
 }
+
+@media (max-width: 380px) {
+    .middle-summary-side {
+        grid-template-columns: 1fr;
+    }
+
+    .asset-form {
+        grid-template-columns: 1fr;
+    }
+
+    .asset-form input:nth-child(1),
+    .asset-form button {
+        grid-column: span 1;
+    }
+
+    .app {
+        padding: env(safe-area-inset-top, 0px) 8px calc(12px + env(safe-area-inset-bottom, 0px));
+    }
+}
+
