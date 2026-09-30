@@ -9,6 +9,17 @@ const Header = (props) => {
             <h1>Kyos</h1>
             </div>
             <div className='header-actions'>
+                <button
+                    className='help-button'
+                    aria-label={props.labelSet.aboutKyos || 'How Kyos works'}
+                    title={props.labelSet.aboutKyos || 'How Kyos works'}
+                    onClick={props.onOpenAbout}
+                    type='button'
+                >
+                    <svg aria-hidden='true' xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 256 256' fill='currentColor'>
+                        <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm12-40a12,12,0,1,1-12-12A12,12,0,0,1,140,176Zm-1.84-56.16A8,8,0,0,0,132,126.74V132a8,8,0,0,1-16,0v-5.26a24,24,0,0,1,18.49-23.41,12,12,0,1,0-13.63-12.75,8,8,0,0,1-16-.86,28,28,0,1,1,33.3,27.12Z" />
+                    </svg>
+                </button>
                 <button className='visibility-button' aria-label={visibilityLabel} aria-pressed={!props.areValuesVisible} onClick={props.onToggleValues} type='button'>
                     <svg aria-hidden='true' xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 256 256' fill='currentColor'>
                         {props.areValuesVisible ? (

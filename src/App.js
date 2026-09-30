@@ -8,6 +8,7 @@ import MiddleNetWorthCard from './MiddleNetWorthCard/MiddleNetWorthCard';
 import AddMoreButton from './Components/AddMoreButton/AddMoreButton';
 import RemoveButton from './Components/RemoveButton/RemoveButton';
 import CatchUpModal from './Components/CatchUpModal/CatchUpModal';
+import AboutModal from './Components/AboutModal/AboutModal';
 import SimulationArea from './Components/SimulationArea/SimulationArea';
 import { formatDecimal, formatMoney } from './utils/formatters';
 import {
@@ -99,7 +100,8 @@ const APP_TEXT = {
     returnSlot: 'Return slot from processing',
     moveToProcessing: 'Move slot to processing',
     holidayError: 'Unable to fetch holiday data. Auto-update paused. Check your connection.',
-    retry: 'Retry'
+    retry: 'Retry',
+    aboutKyos: 'How Kyos works'
   },
   pt: {
     selectLanguage: 'Selecionar idioma',
@@ -155,7 +157,8 @@ const APP_TEXT = {
     returnSlot: 'Retornar item do processamento',
     moveToProcessing: 'Mover item para processamento',
     holidayError: 'Não foi possível carregar os feriados. Atualização automática pausada. Verifique sua conexão.',
-    retry: 'Tentar novamente'
+    retry: 'Tentar novamente',
+    aboutKyos: 'Como o Kyos funciona'
   }
 };
 
@@ -248,6 +251,7 @@ function App() {
     totalAccrued: 0,
     completedSlots: []
   });
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
   const [editingAssetId, setEditingAssetId] = useState(null);
   const [editAssetForm, setEditAssetForm] = useState({ name: '', yieldRate: '', investedAmount: '' });
 
@@ -822,6 +826,7 @@ function App() {
         onToggleValues={() => setAreValuesVisible((current) => !current)}
         onToggleTheme={() => setIsLightTheme((current) => !current)}
         onChangeLocale={(nextLocale) => setLocale(nextLocale)}
+        onOpenAbout={() => setIsAboutModalOpen(true)}
         labelSet={t}
       ></Header>
       <div className='app-areas'>
@@ -866,6 +871,12 @@ function App() {
         calendarDays={catchUpModalData.calendarDays}
         totalAccrued={catchUpModalData.totalAccrued}
         completedSlots={catchUpModalData.completedSlots}
+        locale={locale}
+      />
+
+      <AboutModal
+        isOpen={isAboutModalOpen}
+        onClose={() => setIsAboutModalOpen(false)}
         locale={locale}
       />
     </div>

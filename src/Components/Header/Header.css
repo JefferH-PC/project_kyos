@@ -79,6 +79,7 @@
     background-position: right 10px center;
 }
 
+.header-actions .help-button,
 .header-actions .visibility-button {
     display: inline-flex;
     align-items: center;
@@ -87,12 +88,14 @@
     padding: 7px 10px;
 }
 
+.header-actions .help-button svg,
 .header-actions .visibility-button svg {
     display: block;
     fill: var(--text-secondary);
     transition: fill 0.2s ease;
 }
 
+.header-actions .help-button:hover svg,
 .header-actions .visibility-button:hover svg {
     fill: var(--text-primary);
 }
@@ -134,6 +137,7 @@
         background-position: right 6px center;
     }
 
+    .header-actions .help-button,
     .header-actions .visibility-button {
         min-width: 38px;
         padding: 6px 8px;
@@ -162,6 +166,7 @@
         min-height: 36px;
     }
 
+    .header-actions .help-button,
     .header-actions .visibility-button {
         min-width: 36px;
     }

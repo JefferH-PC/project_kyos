@@ -407,3 +407,75 @@ test('daily income accrues strictly once (1x, not 2x) on catch-up and reopening 
   }
 });
 
+test('opens the About modal with ? button and explains daily income, 10k milestones, recovery, and wishlist', async () => {
+  render(<App />);
+
+  const aboutButton = await screen.findByRole('button', { name: /how kyos works/i });
+  expect(aboutButton).toBeInTheDocument();
+
+  // Modal is not visible initially
+  expect(screen.queryByRole('dialog', { name: /how kyos works/i })).not.toBeInTheDocument();
+
+  // Click ? button
+  await userEvent.click(aboutButton);
+
+  // Modal opens
+  const modal = await screen.findByRole('dialog');
+  expect(modal).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'How Kyos Works' })).toBeInTheDocument();
+  expect(screen.getByText('Daily Income Driven')).toBeInTheDocument();
+  expect(screen.getByText('Auto 10k Milestones')).toBeInTheDocument();
+  expect(screen.getByText('Recovery System')).toBeInTheDocument();
+  expect(screen.getByText('Wishlist Funding')).toBeInTheDocument();
+  expect(screen.getByText('Daily Yield Allocation Flow')).toBeInTheDocument();
+
+  // Close modal via Got it button
+  const gotItButton = screen.getByRole('button', { name: /got it/i });
+  await userEvent.click(gotItButton);
+
+  await waitFor(() => {
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});
+
+test('closes the About modal when pressing the Escape key', async () => {
+  render(<App />);
+
+  const aboutButton = await screen.findByRole('button', { name: /how kyos works/i });
+  await userEvent.click(aboutButton);
+
+  expect(await screen.findByRole('dialog')).toBeInTheDocument();
+
+  await userEvent.keyboard('{Escape}');
+
+  await waitFor(() => {
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});
+
+test('displays About modal in Portuguese when locale is pt', async () => {
+  render(<App />);
+
+  const localeSelect = await screen.findByRole('combobox', { name: /select language/i });
+  await userEvent.selectOptions(localeSelect, 'pt');
+
+  const aboutButtonPt = screen.getByRole('button', { name: /como o kyos funciona/i });
+  expect(aboutButtonPt).toBeInTheDocument();
+
+  await userEvent.click(aboutButtonPt);
+
+  expect(await screen.findByRole('heading', { name: 'Como Funciona o Kyos' })).toBeInTheDocument();
+  expect(screen.getByText('Metas Automáticas de 10k')).toBeInTheDocument();
+  expect(screen.getByText('Base no Rendimento Diário')).toBeInTheDocument();
+  expect(screen.getByText('Sistema de Recuperação')).toBeInTheDocument();
+  expect(screen.getByText('Financiamento de Desejos')).toBeInTheDocument();
+  expect(screen.getByText('Fluxo de Alocação do Rendimento')).toBeInTheDocument();
+
+  const closeBtn = screen.getByRole('button', { name: /fechar/i });
+  await userEvent.click(closeBtn);
+
+  await waitFor(() => {
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});
+
