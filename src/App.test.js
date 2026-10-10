@@ -479,21 +479,97 @@ test('displays About modal in Portuguese when locale is pt', async () => {
   });
 });
 
-test('toggles Tax & IOF deduction mode and updates header badge', async () => {
+test('makes Tax & IOF deduction optional per investment individually without affecting others', async () => {
+  const simulatedDateKey = getDateKey(new Date());
+
+  window.localStorage.setItem('kyos-database', JSON.stringify({
+    schemaVersion: 11,
+    simulatedDate: simulatedDateKey,
+    wishlistSlots: [],
+    recoverySlots: [],
+    assets: [
+      {
+        id: 'asset-lci',
+        name: 'LCI Banco Inter',
+        yieldRate: 95,
+        investedAmount: 10000,
+        initialInvestedAmount: 10000,
+        totalIncome: 100,
+        creationDate: simulatedDateKey,
+        applyTax: false,
+        incomeHistory: {}
+      },
+      {
+        id: 'asset-cdb',
+        name: 'CDB Nubank',
+        yieldRate: 110,
+        investedAmount: 10000,
+        initialInvestedAmount: 10000,
+        totalIncome: 100,
+        creationDate: simulatedDateKey,
+        applyTax: true,
+        incomeHistory: {}
+      }
+    ],
+    milestone: { target: 0 },
+    purchasedTotal: 0,
+    recoverySpentTotal: 0
+  }));
+  window.localStorage.setItem('kyos-last-opened-date', simulatedDateKey);
+
   render(<App />);
 
-  const taxToggleBtn = await screen.findByRole('button', { name: /deduct taxes/i });
-  expect(taxToggleBtn).toHaveTextContent('IR/IOF OFF');
+  // Go to Investments
+  const investmentsBtn = await screen.findByRole('button', { name: 'Investments' });
+  await userEvent.click(investmentsBtn);
 
-  // Toggle on
-  await userEvent.click(taxToggleBtn);
-  expect(taxToggleBtn).toHaveTextContent('IR/IOF ON');
-  expect(window.localStorage.getItem('kyos-tax-deducted')).toBe('true');
+  // LCI should be tax-exempt (Isento)
+  const lciToggleBtn = screen.getByRole('button', { name: /toggle tax.*lci banco inter/i });
+  expect(lciToggleBtn).toHaveTextContent('Isento');
 
-  // Toggle off
-  await userEvent.click(taxToggleBtn);
-  expect(taxToggleBtn).toHaveTextContent('IR/IOF OFF');
-  expect(window.localStorage.getItem('kyos-tax-deducted')).toBe('false');
+  // CDB should be taxable (Tributado)
+  const cdbToggleBtn = screen.getByRole('button', { name: /toggle tax.*cdb nubank/i });
+  expect(cdbToggleBtn).toHaveTextContent('Tributado');
+
+  // Click toggle on LCI to make it taxable
+  await userEvent.click(lciToggleBtn);
+  expect(lciToggleBtn).toHaveTextContent('Tributado');
+  // CDB must remain taxable (not toggled together!)
+  expect(cdbToggleBtn).toHaveTextContent('Tributado');
+
+  // Verify persistence in localStorage
+  let savedDb = JSON.parse(window.localStorage.getItem('kyos-database'));
+  expect(savedDb.assets.find((a) => a.id === 'asset-lci').applyTax).toBe(true);
+  expect(savedDb.assets.find((a) => a.id === 'asset-cdb').applyTax).toBe(true);
+
+  // Click toggle on CDB to make it exempt
+  await userEvent.click(cdbToggleBtn);
+  expect(cdbToggleBtn).toHaveTextContent('Isento');
+  // LCI must still be taxable
+  expect(lciToggleBtn).toHaveTextContent('Tributado');
+
+  savedDb = JSON.parse(window.localStorage.getItem('kyos-database'));
+  expect(savedDb.assets.find((a) => a.id === 'asset-lci').applyTax).toBe(true);
+  expect(savedDb.assets.find((a) => a.id === 'asset-cdb').applyTax).toBe(false);
+});
+
+test('restores proportions of the 3 segment areas as direct children without area-column wrappers', async () => {
+  render(<App />);
+
+  const appAreas = document.querySelector('.app-areas');
+  expect(appAreas).toBeInTheDocument();
+
+  // Verify direct children are TimeArea (wishlist), main (middle), and TimeArea (recovery)
+  const directChildren = appAreas.children;
+  expect(directChildren.length).toBe(3);
+
+  expect(directChildren[0]).toHaveClass('time-area', 'area-wishlist');
+  expect(directChildren[1]).toHaveClass('middle');
+  expect(directChildren[1].tagName.toLowerCase()).toBe('main');
+  expect(directChildren[2]).toHaveClass('time-area', 'area-recovery');
+
+  // Ensure no broken wrapper .area-column exists
+  expect(document.querySelector('.area-column')).toBeNull();
 });
 
 test('adds asset with a past investment date and calculates accrued income up to today', async () => {

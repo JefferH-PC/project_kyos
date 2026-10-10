@@ -4,9 +4,6 @@ import './Header.css';
 const Header = (props) => {
     const fileInputRef = useRef(null);
     const visibilityLabel = props.areValuesVisible ? props.labelSet.hideMoneyValues : props.labelSet.showMoneyValues;
-    const taxLabel = props.isTaxDeducted
-        ? (props.labelSet.disableTax || 'Taxes applied (IR/IOF). Click to disable.')
-        : (props.labelSet.enableTax || 'Deduct taxes (IR/IOF). Click to enable.');
 
     const handleImportClick = () => {
         if (fileInputRef.current) {
@@ -24,18 +21,6 @@ const Header = (props) => {
                 <h1>Kyos</h1>
             </div>
             <div className='header-actions'>
-                <button
-                    className={`tax-toggle-btn ${props.isTaxDeducted ? 'active' : ''}`}
-                    aria-label={taxLabel}
-                    title={taxLabel}
-                    aria-pressed={props.isTaxDeducted}
-                    onClick={props.onToggleTax}
-                    type='button'
-                >
-                    <span className='tax-pill-badge'>%</span>
-                    <span className='tax-pill-text'>{props.isTaxDeducted ? 'IR/IOF ON' : 'IR/IOF OFF'}</span>
-                </button>
-
                 <button
                     className='action-icon-button'
                     aria-label={props.labelSet.exportData || 'Export JSON backup'}

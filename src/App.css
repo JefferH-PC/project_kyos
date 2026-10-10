@@ -100,25 +100,6 @@ select,
     flex: 1 1 auto;
 }
 
-.area-column {
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-}
-
-.area-column.area-wishlist,
-.area-column.area-recovery {
-    flex: 0 0 320px;
-    width: 320px;
-    height: 100%;
-}
-
-.area-column.area-middle {
-    flex: 1 1 auto;
-    min-width: 0;
-    height: 100%;
-}
-
 .middle {
     flex: 1 1 auto;
     min-width: 0;
@@ -979,6 +960,61 @@ select,
     background: var(--accent-green-bg);
 }
 
+.asset-tax-checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    grid-column: span 2;
+    cursor: pointer;
+    user-select: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    padding: 4px 2px;
+}
+
+.asset-tax-checkbox-label input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent-blue);
+    cursor: pointer;
+}
+
+.asset-tax-toggle-btn {
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid transparent;
+}
+
+.asset-tax-toggle-btn.exempt {
+    background: var(--accent-green-bg);
+    color: var(--accent-green);
+    border-color: var(--accent-green-border);
+}
+
+.asset-tax-toggle-btn.exempt:hover {
+    background: rgba(16, 185, 129, 0.25);
+    transform: scale(1.04);
+}
+
+.asset-tax-toggle-btn.taxable {
+    background: var(--accent-blue-bg);
+    color: var(--accent-blue);
+    border-color: var(--accent-blue-border);
+}
+
+.asset-tax-toggle-btn.taxable:hover {
+    background: rgba(59, 130, 246, 0.25);
+    transform: scale(1.04);
+}
+
 /* Floating Toast Notification */
 .toast-notification {
     position: fixed;
@@ -1175,19 +1211,21 @@ select,
         min-height: 0;
     }
 
-    .area-column {
+    .app-areas .area-wishlist,
+    .app-areas .area-recovery {
         width: 100%;
+        max-width: none;
     }
 
     .app-areas.mobile-tab-wishlist .area-wishlist {
         display: flex !important;
     }
-    .app-areas.mobile-tab-wishlist .area-middle,
+    .app-areas.mobile-tab-wishlist .middle,
     .app-areas.mobile-tab-wishlist .area-recovery {
         display: none !important;
     }
 
-    .app-areas.mobile-tab-dashboard .area-middle {
+    .app-areas.mobile-tab-dashboard .middle {
         display: flex !important;
     }
     .app-areas.mobile-tab-dashboard .area-wishlist,
@@ -1199,7 +1237,7 @@ select,
         display: flex !important;
     }
     .app-areas.mobile-tab-recovery .area-wishlist,
-    .app-areas.mobile-tab-recovery .area-middle {
+    .app-areas.mobile-tab-recovery .middle {
         display: none !important;
     }
 

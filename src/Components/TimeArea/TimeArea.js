@@ -110,7 +110,7 @@ const TimeArea = (props) => {
     ));
 
     return (
-        <div className="time-area">
+        <div className={`time-area area-${props.area || ''}`}>
             <div className="top">
                 <h2>{props.title}</h2>
                 <AddMoreButton label={labels.add} onClick={() => setIsFormOpen((current) => !current)}></AddMoreButton>

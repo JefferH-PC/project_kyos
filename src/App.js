@@ -109,9 +109,10 @@ const APP_TEXT = {
     exportSuccess: 'Backup exported successfully!',
     importSuccess: 'Backup imported successfully!',
     importError: 'Invalid backup file format.',
-    enableTax: 'Deduct taxes (IR & IOF)',
-    disableTax: 'Disable taxes deduction',
-    taxMode: 'Taxes (IR/IOF)',
+    applyTaxLabel: 'Apply IR & IOF Tax (CDB / Tesouro)',
+    taxExemptBadge: 'Isento',
+    taxableBadge: 'Tributado',
+    toggleTaxTip: 'Toggle tax (CDB / Tesouro vs LCI / LCA)',
     gross: 'Gross',
     net: 'Net',
     netIncome: 'Net Income',
@@ -191,9 +192,10 @@ const APP_TEXT = {
     exportSuccess: 'Backup exportado com sucesso!',
     importSuccess: 'Backup importado com sucesso!',
     importError: 'Formato de arquivo inválido.',
-    enableTax: 'Descontar impostos (IR e IOF)',
-    disableTax: 'Desativar desconto de impostos',
-    taxMode: 'Tributação (IR/IOF)',
+    applyTaxLabel: 'Descontar IR e IOF (CDB / Tesouro)',
+    taxExemptBadge: 'Isento',
+    taxableBadge: 'Tributado',
+    toggleTaxTip: 'Alternar tributação (CDB / Tesouro vs LCI / LCA)',
     gross: 'Bruto',
     net: 'Líquido',
     netIncome: 'Rendimento Líquido',
@@ -250,7 +252,8 @@ const normalizeDatabase = (parsedDatabase, resetNonAssetValues = false) => {
         initialInvestedAmount: baseAmount,
         totalIncome: Math.max(totalIncome, 0),
         incomeHistory: resetNonAssetValues ? {} : normalizeIncomeHistory(asset.incomeHistory),
-        creationDate
+        creationDate,
+        applyTax: Boolean(asset.applyTax)
       };
     }) : [];
   return {
@@ -289,13 +292,6 @@ function App() {
       return 'en';
     }
   });
-  const [isTaxDeducted, setIsTaxDeducted] = useState(() => {
-    try {
-      return window.localStorage.getItem('kyos-tax-deducted') === 'true';
-    } catch {
-      return false;
-    }
-  });
   const [mobileArea, setMobileArea] = useState('dashboard');
   const [toastMessage, setToastMessage] = useState('');
   const [database, setDatabase] = useState(readDatabase);
@@ -304,7 +300,8 @@ function App() {
     name: '',
     yieldRate: '',
     investedAmount: '',
-    creationDate: getDateKey(new Date())
+    creationDate: getDateKey(new Date()),
+    applyTax: false
   }));
   const [cdiRate, setCdiRate] = useState(DEFAULT_CDI_RATE);
   const [areValuesVisible, setAreValuesVisible] = useState(true);
@@ -323,7 +320,8 @@ function App() {
     name: '',
     yieldRate: '',
     investedAmount: '',
-    creationDate: ''
+    creationDate: '',
+    applyTax: false
   });
 
   const hasRunCatchUpRef = useRef(false);
@@ -353,14 +351,6 @@ function App() {
       // Ignore storage errors for non-persistent environments.
     }
   }, [locale]);
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem('kyos-tax-deducted', String(isTaxDeducted));
-    } catch {
-      // Ignore
-    }
-  }, [isTaxDeducted]);
 
   // Initial CDI rate refresh and daily interval
   useEffect(() => {
@@ -662,8 +652,6 @@ function App() {
   const previousYearStart = new Date(actualDate.getFullYear() - 1, 0, 1);
   const previousYearEnd = new Date(actualDate.getFullYear() - 1, 11, 31);
 
-  const todayIncomeGross = getIncomeForDate(actualDate);
-  const yesterdayIncomeGross = getIncomeForDate(shiftDate(actualDate, -1));
   const weekIncome = getIncomeBetween(startOfWeek, actualDate);
   const previousWeekIncome = getIncomeBetween(previousWeekStart, previousWeekEnd);
   const monthIncome = getIncomeBetween(startOfMonth, actualDate);
@@ -671,31 +659,28 @@ function App() {
   const yearIncome = getIncomeBetween(startOfYear, actualDate);
   const previousYearIncome = getIncomeBetween(previousYearStart, previousYearEnd);
 
-  // Daily incomes calculation (with optional tax deduction)
-  const totalDailyIncomeGross = database.assets.reduce((total, asset) => total + getDailyAssetIncome(asset, cdiRate), 0);
-
-  const totalDailyIncomeNet = database.assets.reduce((total, asset) => {
+  // Daily incomes calculation (per-asset tax deduction if asset.applyTax is true)
+  const totalDailyIncome = database.assets.reduce((total, asset) => {
     const gross = getDailyAssetIncome(asset, cdiRate);
+    if (!asset.applyTax) return total + gross;
     const tax = calculateTaxBreakdown(gross, asset.creationDate, actualDate);
     return total + tax.netYield;
   }, 0);
 
-  const totalDailyIncome = isTaxDeducted ? totalDailyIncomeNet : totalDailyIncomeGross;
-  const todayIncome = isTaxDeducted
-    ? database.assets.reduce((total, asset) => {
-        const gross = Number(asset.incomeHistory?.[getDateKey(actualDate)] || 0);
-        const tax = calculateTaxBreakdown(gross, asset.creationDate, actualDate);
-        return total + tax.netYield;
-      }, 0)
-    : todayIncomeGross;
-  const yesterdayIncome = isTaxDeducted
-    ? database.assets.reduce((total, asset) => {
-        const yesterdayKey = getDateKey(shiftDate(actualDate, -1));
-        const gross = Number(asset.incomeHistory?.[yesterdayKey] || 0);
-        const tax = calculateTaxBreakdown(gross, asset.creationDate, shiftDate(actualDate, -1));
-        return total + tax.netYield;
-      }, 0)
-    : yesterdayIncomeGross;
+  const todayIncome = database.assets.reduce((total, asset) => {
+    const gross = Number(asset.incomeHistory?.[getDateKey(actualDate)] || 0);
+    if (!asset.applyTax) return total + gross;
+    const tax = calculateTaxBreakdown(gross, asset.creationDate, actualDate);
+    return total + tax.netYield;
+  }, 0);
+
+  const yesterdayIncome = database.assets.reduce((total, asset) => {
+    const yesterdayDate = shiftDate(actualDate, -1);
+    const gross = Number(asset.incomeHistory?.[getDateKey(yesterdayDate)] || 0);
+    if (!asset.applyTax) return total + gross;
+    const tax = calculateTaxBreakdown(gross, asset.creationDate, yesterdayDate);
+    return total + tax.netYield;
+  }, 0);
 
   const netWorthTotal = investedTotal;
   const nextMilestone = (Math.floor(netWorthTotal / 10000) + 1) * 10000;
@@ -725,6 +710,8 @@ function App() {
       ? assetForm.creationDate
       : database.simulatedDate;
 
+    const applyTax = Boolean(assetForm.applyTax);
+
     let newAsset = {
       id: `${Date.now()}-${Math.random()}`,
       name: assetForm.name.trim(),
@@ -733,7 +720,8 @@ function App() {
       initialInvestedAmount: baseAmount,
       totalIncome: 0,
       incomeHistory: {},
-      creationDate
+      creationDate,
+      applyTax
     };
 
     // If invested on a past date, backfill yields up to simulatedDate
@@ -759,10 +747,27 @@ function App() {
       name: '',
       yieldRate: '',
       investedAmount: '',
-      creationDate: database.simulatedDate
+      creationDate: database.simulatedDate,
+      applyTax: false
     });
     setIsAssetFormOpen(false);
     showToast(locale === 'pt' ? 'Investimento adicionado!' : 'Investment added!');
+  };
+
+  const toggleAssetTax = (assetId) => {
+    setDatabase((current) => {
+      const updatedAssets = current.assets.map((asset) => {
+        if (asset.id !== assetId) return asset;
+        return {
+          ...asset,
+          applyTax: !asset.applyTax
+        };
+      });
+      return {
+        ...current,
+        assets: updatedAssets
+      };
+    });
   };
 
   const removeAsset = (id) => {
@@ -778,13 +783,14 @@ function App() {
       name: asset.name || '',
       yieldRate: String(asset.yieldRate ?? 0),
       investedAmount: String(asset.initialInvestedAmount ?? asset.investedAmount ?? 0),
-      creationDate: asset.creationDate || database.simulatedDate
+      creationDate: asset.creationDate || database.simulatedDate,
+      applyTax: Boolean(asset.applyTax)
     });
   };
 
   const cancelEditAsset = () => {
     setEditingAssetId(null);
-    setEditAssetForm({ name: '', yieldRate: '', investedAmount: '', creationDate: '' });
+    setEditAssetForm({ name: '', yieldRate: '', investedAmount: '', creationDate: '', applyTax: false });
   };
 
   const saveAssetEdit = (event) => {
@@ -795,6 +801,7 @@ function App() {
     const newCreationDate = isValidDateKey(editAssetForm.creationDate)
       ? editAssetForm.creationDate
       : database.simulatedDate;
+    const editedApplyTax = Boolean(editAssetForm.applyTax);
 
     setDatabase((current) => {
       const assets = current.assets.map((asset) => {
@@ -805,7 +812,8 @@ function App() {
           yieldRate: newYield,
           initialInvestedAmount: newInitial,
           investedAmount: newInitial,
-          creationDate: newCreationDate
+          creationDate: newCreationDate,
+          applyTax: editedApplyTax
         };
 
         if (newCreationDate < current.simulatedDate) {
@@ -876,7 +884,6 @@ function App() {
               <h2>{t.assets}</h2>
               <span className='total-daily-income'>
                 {t.totalDailyIncome}: R$ {displayMoney(totalDailyIncome)}
-                {isTaxDeducted && <small className='tax-pill-badge-inline'>({t.net})</small>}
               </span>
               <AddMoreButton label={t.addInvestment} onClick={() => setIsAssetFormOpen((current) => !current)}></AddMoreButton>
             </div>
@@ -913,6 +920,14 @@ function App() {
                     max={database.simulatedDate}
                     onChange={(event) => setAssetForm({ ...assetForm, creationDate: event.target.value })}
                   />
+                </label>
+                <label className='asset-tax-checkbox-label'>
+                  <input
+                    type='checkbox'
+                    checked={assetForm.applyTax}
+                    onChange={(event) => setAssetForm({ ...assetForm, applyTax: event.target.checked })}
+                  />
+                  <span>{t.applyTaxLabel}</span>
                 </label>
                 <button type='submit'>{t.add}</button>
               </form>
@@ -969,6 +984,14 @@ function App() {
                             onChange={(e) => setEditAssetForm({ ...editAssetForm, creationDate: e.target.value })}
                           />
                         </label>
+                        <label className='asset-tax-checkbox-label'>
+                          <input
+                            type='checkbox'
+                            checked={editAssetForm.applyTax}
+                            onChange={(e) => setEditAssetForm({ ...editAssetForm, applyTax: e.target.checked })}
+                          />
+                          <span>{t.applyTaxLabel}</span>
+                        </label>
                         <div className='asset-edit-actions'>
                           <button type='submit' className='asset-save-btn'>{t.save}</button>
                           <button type='button' className='asset-cancel-btn' onClick={cancelEditAsset}>{t.cancel}</button>
@@ -979,6 +1002,15 @@ function App() {
                         <div className='asset-title'>
                           <strong>{asset.name}</strong>
                           <div className='asset-actions'>
+                            <button
+                              type='button'
+                              className={`asset-tax-toggle-btn ${asset.applyTax ? 'taxable' : 'exempt'}`}
+                              onClick={() => toggleAssetTax(asset.id)}
+                              title={t.toggleTaxTip}
+                              aria-label={`${t.toggleTaxTip} - ${asset.name}`}
+                            >
+                              {asset.applyTax ? t.taxableBadge : t.taxExemptBadge}
+                            </button>
                             <button
                               type='button'
                               className='edit-asset-button'
@@ -1003,7 +1035,7 @@ function App() {
                         <strong>{t.yield}</strong><p>{formatDecimal(asset.yieldRate)}% {t.cdi}</p>
                         <strong>{t.invested}</strong><p>R$ {displayMoney(asset.investedAmount)}</p>
 
-                        {isTaxDeducted ? (
+                        {asset.applyTax ? (
                           <div className='asset-tax-block'>
                             <strong>{t.dailyIncome} ({t.net})</strong>
                             <p>
@@ -1151,7 +1183,6 @@ function App() {
               <strong>
                 R$ {displayMoney(todayIncome)}
                 <span className={`trend ${todayTrend.className}`}>{todayTrend.symbol}</span>
-                {isTaxDeducted && <small className='tax-pill-badge-inline'>({t.net})</small>}
               </strong>
               <h3>{t.yesterday}</h3>
               <strong>R$ {displayMoney(yesterdayIncome)}</strong>
@@ -1196,8 +1227,6 @@ function App() {
         locale={locale}
         isLightTheme={isLightTheme}
         areValuesVisible={areValuesVisible}
-        isTaxDeducted={isTaxDeducted}
-        onToggleTax={() => setIsTaxDeducted((cur) => !cur)}
         onToggleValues={() => setAreValuesVisible((current) => !current)}
         onToggleTheme={() => setIsLightTheme((current) => !current)}
         onChangeLocale={(nextLocale) => setLocale(nextLocale)}
@@ -1233,21 +1262,19 @@ function App() {
       </nav>
 
       <div className={`app-areas mobile-tab-${mobileArea}`}>
-        <div className='area-column area-wishlist'>
-          <TimeArea
-            title={t.wishlist}
-            area='wishlist'
-            labels={{ add: t.add, expenseName: t.expenseName, expenseValue: t.expenseValue, total: t.totalLabel, days: t.days }}
-            slots={database.wishlistSlots}
-            onSlotsChange={(slots) => updateSlots('wishlistSlots', slots)}
-            onBuy={recordWishlistPurchase}
-            total={wishlistTotal}
-            dailyIncome={totalDailyIncome}
-            hasRecoveryProcessing={database.recoverySlots.some((slot) => slot.type === 'recovery' && slot.isProcessing)}
-          ></TimeArea>
-        </div>
+        <TimeArea
+          title={t.wishlist}
+          area='wishlist'
+          labels={{ add: t.add, expenseName: t.expenseName, expenseValue: t.expenseValue, total: t.totalLabel, days: t.days }}
+          slots={database.wishlistSlots}
+          onSlotsChange={(slots) => updateSlots('wishlistSlots', slots)}
+          onBuy={recordWishlistPurchase}
+          total={wishlistTotal}
+          dailyIncome={totalDailyIncome}
+          hasRecoveryProcessing={database.recoverySlots.some((slot) => slot.type === 'recovery' && slot.isProcessing)}
+        />
 
-        <main className='middle area-column area-middle'>
+        <main className='middle'>
           <div className='section-buttons'>
             <SectionButton title={t.netWorth} active={activeSection === 'Net Worth'} onClick={() => setActiveSection('Net Worth')}></SectionButton>
             <SectionButton title={t.balance} active={activeSection === 'Balance'} onClick={() => setActiveSection('Balance')}></SectionButton>
@@ -1257,20 +1284,18 @@ function App() {
           {renderMiddleContent()}
         </main>
 
-        <div className='area-column area-recovery'>
-          <TimeArea
-            title={t.recovery}
-            area='recovery'
-            labels={{ add: t.add, expenseName: t.expenseName, expenseValue: t.expenseValue, total: t.totalLabel, days: t.days }}
-            slots={database.recoverySlots}
-            onSlotsChange={(slots) => updateSlots('recoverySlots', slots)}
-            onAdd={recordRecoveryAddition}
-            onRemove={recordRecoveryRemoval}
-            total={recoveryTotal}
-            dailyIncome={totalDailyIncome}
-            hasWishlistProcessing={database.wishlistSlots.some((slot) => slot.type === 'processing')}
-          ></TimeArea>
-        </div>
+        <TimeArea
+          title={t.recovery}
+          area='recovery'
+          labels={{ add: t.add, expenseName: t.expenseName, expenseValue: t.expenseValue, total: t.totalLabel, days: t.days }}
+          slots={database.recoverySlots}
+          onSlotsChange={(slots) => updateSlots('recoverySlots', slots)}
+          onAdd={recordRecoveryAddition}
+          onRemove={recordRecoveryRemoval}
+          total={recoveryTotal}
+          dailyIncome={totalDailyIncome}
+          hasWishlistProcessing={database.wishlistSlots.some((slot) => slot.type === 'processing')}
+        />
       </div>
 
       <CatchUpModal
