@@ -128,7 +128,6 @@ const APP_TEXT = {
     mobileNavWishlist: 'Wishlist',
     mobileNavDashboard: 'Dashboard',
     mobileNavRecovery: 'Recovery',
-    assetAllocation: 'Asset Allocation',
     milestoneProgress: 'Progress'
   },
   pt: {
@@ -211,7 +210,6 @@ const APP_TEXT = {
     mobileNavWishlist: 'Lista de Desejos',
     mobileNavDashboard: 'Painel',
     mobileNavRecovery: 'Recuperação',
-    assetAllocation: 'Alocação de Ativos',
     milestoneProgress: 'Progresso'
   }
 };
@@ -1120,43 +1118,6 @@ function App() {
               </div>
             </div>
           </div>
-
-          {/* Interactive Portfolio Asset Allocation Breakdown */}
-          {database.assets.length > 0 && (
-            <div className='portfolio-allocation-card'>
-              <h3>{t.assetAllocation}</h3>
-              <div className='allocation-bar-track'>
-                {database.assets.map((asset, idx) => {
-                  const pct = investedTotal > 0 ? (Number(asset.investedAmount) / investedTotal) * 100 : 0;
-                  const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4'];
-                  return (
-                    <div
-                      key={asset.id}
-                      className='allocation-segment'
-                      style={{
-                        width: `${pct}%`,
-                        backgroundColor: colors[idx % colors.length]
-                      }}
-                      title={`${asset.name}: ${formatDecimal(pct)}%`}
-                    />
-                  );
-                })}
-              </div>
-              <div className='allocation-items-grid'>
-                {database.assets.map((asset, idx) => {
-                  const pct = investedTotal > 0 ? (Number(asset.investedAmount) / investedTotal) * 100 : 0;
-                  const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4'];
-                  return (
-                    <div className='allocation-item' key={asset.id}>
-                      <span className='allocation-item-dot' style={{ backgroundColor: colors[idx % colors.length] }} />
-                      <span className='allocation-item-name'>{asset.name}</span>
-                      <strong className='allocation-item-val'>R$ {displayMoney(asset.investedAmount)} ({formatDecimal(pct)}%)</strong>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </div>
       );
     }

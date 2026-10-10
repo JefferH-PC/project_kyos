@@ -713,4 +713,54 @@ test('displays asset investment date in BR format in Portuguese and USA format i
   expect(screen.getByText('21/04/2026')).toBeInTheDocument();
 });
 
+test('balance section maintains stable 2-card layout without breaking when investments are added', async () => {
+  const simulatedDateKey = getDateKey(new Date());
+
+  window.localStorage.setItem('kyos-database', JSON.stringify({
+    schemaVersion: 11,
+    simulatedDate: simulatedDateKey,
+    wishlistSlots: [],
+    recoverySlots: [],
+    assets: [
+      {
+        id: 'asset-bal-1',
+        name: 'Tesouro Selic',
+        yieldRate: 100,
+        investedAmount: 25000,
+        initialInvestedAmount: 25000,
+        totalIncome: 0,
+        creationDate: simulatedDateKey,
+        applyTax: true,
+        incomeHistory: {}
+      }
+    ],
+    milestone: { target: 0 },
+    purchasedTotal: 5000,
+    recoverySpentTotal: 0
+  }));
+  window.localStorage.setItem('kyos-last-opened-date', simulatedDateKey);
+
+  render(<App />);
+
+  // Navigate to Balance tab
+  const balanceBtn = await screen.findByRole('button', { name: 'Balance' });
+  await userEvent.click(balanceBtn);
+
+  const balanceView = document.querySelector('.balance-view');
+  expect(balanceView).toBeInTheDocument();
+
+  // Must contain only the 2 balanced sections: year grid and chart card
+  expect(balanceView.children.length).toBe(2);
+  expect(balanceView.children[0]).toHaveClass('balance-year-grid');
+  expect(balanceView.children[1]).toHaveClass('balance-chart-card');
+
+  // Verify Spent and Invested values render properly
+  expect(screen.getByText('R$ 25.000,00')).toBeInTheDocument();
+  expect(screen.getByText('R$ 5.000,00')).toBeInTheDocument();
+
+  // Verify Donut Chart exists and has no extraneous layout breaking cards
+  expect(document.querySelector('.balance-donut')).toBeInTheDocument();
+  expect(document.querySelector('.portfolio-allocation-card')).toBeNull();
+});
+
 
