@@ -101,8 +101,22 @@ const SimulationArea = ({
   const baselineDateKey = simDatabase.simulatedDate || getDateKey(new Date());
   const baselineDateObj = useMemo(() => parseDateKey(baselineDateKey), [baselineDateKey]);
 
-  const [calendarYear, setCalendarYear] = useState(() => baselineDateObj.getFullYear());
-  const [calendarMonth, setCalendarMonth] = useState(() => baselineDateObj.getMonth());
+  const minYear = baselineDateObj.getFullYear();
+  const minMonth = baselineDateObj.getMonth();
+
+  const [calendarYear, setCalendarYear] = useState(() => minYear);
+  const [calendarMonth, setCalendarMonth] = useState(() => minMonth);
+
+  const isAtMinMonth =
+    calendarYear < minYear ||
+    (calendarYear === minYear && calendarMonth <= minMonth);
+
+  useEffect(() => {
+    if (calendarYear < minYear || (calendarYear === minYear && calendarMonth < minMonth)) {
+      setCalendarYear(minYear);
+      setCalendarMonth(minMonth);
+    }
+  }, [minYear, minMonth, calendarYear, calendarMonth]);
 
   // Load and cache holidays for current calendar view year
   useEffect(() => {
@@ -147,6 +161,8 @@ const SimulationArea = ({
     setSimDatabase(cloneState(mainDatabase));
     setCustomCdi(liveCdiRate);
     setTargetDate('');
+    setCalendarYear(minYear);
+    setCalendarMonth(minMonth);
   };
 
   const handleClearAll = () => {
@@ -164,6 +180,7 @@ const SimulationArea = ({
 
   // Calendar navigation
   const handlePrevMonth = () => {
+    if (isAtMinMonth) return;
     if (calendarMonth === 0) {
       setCalendarMonth(11);
       setCalendarYear((y) => y - 1);
@@ -360,9 +377,26 @@ const SimulationArea = ({
         {/* Calendar UI */}
         <div className="simulation-calendar-card">
           <div className="calendar-header">
-            <button type="button" className="calendar-nav-btn" onClick={handlePrevMonth}>&lt;</button>
+            <button
+              type="button"
+              className="calendar-nav-btn"
+              onClick={handlePrevMonth}
+              disabled={isAtMinMonth}
+              aria-label={locale === 'pt' ? 'Mês anterior' : 'Previous month'}
+              title={isAtMinMonth ? (locale === 'pt' ? 'Não é possível voltar antes do mês atual' : 'Cannot navigate before current month') : (locale === 'pt' ? 'Mês anterior' : 'Previous month')}
+            >
+              &lt;
+            </button>
             <h3>{monthNames[calendarMonth]} {calendarYear}</h3>
-            <button type="button" className="calendar-nav-btn" onClick={handleNextMonth}>&gt;</button>
+            <button
+              type="button"
+              className="calendar-nav-btn"
+              onClick={handleNextMonth}
+              aria-label={locale === 'pt' ? 'Próximo mês' : 'Next month'}
+              title={locale === 'pt' ? 'Próximo mês' : 'Next month'}
+            >
+              &gt;
+            </button>
           </div>
 
           <div className="calendar-legend">

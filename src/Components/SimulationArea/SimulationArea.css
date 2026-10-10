@@ -151,9 +151,16 @@
     transition: all 0.2s ease;
 }
 
-.calendar-nav-btn:hover {
+.calendar-nav-btn:hover:not(:disabled) {
     background: var(--border-hover);
     transform: scale(1.05);
+}
+
+.calendar-nav-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+    transform: none;
 }
 
 .calendar-legend {

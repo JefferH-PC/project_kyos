@@ -279,6 +279,56 @@ test('dedicated simulation section operates independently without mutating main 
   expect(mainDb.assets[0].investedAmount).toBe(5000);
 });
 
+test('simulation calendar restricts backward month navigation to current and future months only', async () => {
+  const simulatedDateKey = '2026-10-10';
+  window.localStorage.setItem('kyos-last-opened-date', simulatedDateKey);
+  window.localStorage.setItem('kyos-database', JSON.stringify({
+    schemaVersion: 11,
+    simulatedDate: simulatedDateKey,
+    wishlistSlots: [],
+    recoverySlots: [],
+    assets: [],
+    milestone: { target: 0 },
+    purchasedTotal: 0,
+    recoverySpentTotal: 0
+  }));
+
+  render(<App />);
+
+  // Navigate to Simulation tab
+  const simBtn = await screen.findByRole('button', { name: 'Simulation' });
+  await userEvent.click(simBtn);
+
+  // Month header initially displays October 2026
+  expect(await screen.findByText(/October 2026/i)).toBeInTheDocument();
+
+  // Previous month button must be disabled on the current baseline month
+  const prevBtn = screen.getByRole('button', { name: /previous month/i });
+  const nextBtn = screen.getByRole('button', { name: /next month/i });
+
+  expect(prevBtn).toBeDisabled();
+  expect(nextBtn).toBeEnabled();
+
+  // Clicking prevBtn while disabled does NOT go backward to September 2026
+  await userEvent.click(prevBtn);
+  expect(screen.getByText(/October 2026/i)).toBeInTheDocument();
+  expect(screen.queryByText(/September 2026/i)).toBeNull();
+
+  // Navigate forward to November 2026
+  await userEvent.click(nextBtn);
+  expect(await screen.findByText(/November 2026/i)).toBeInTheDocument();
+
+  // Now previous month button should be enabled
+  expect(prevBtn).toBeEnabled();
+
+  // Navigate back to October 2026
+  await userEvent.click(prevBtn);
+  expect(await screen.findByText(/October 2026/i)).toBeInTheDocument();
+
+  // Once back at October 2026 (current month), it is disabled again
+  expect(prevBtn).toBeDisabled();
+});
+
 test('catch-up modal displays accurate non-zero accrued income and completed slots rather than R$ 0,00', async () => {
   const RealDate = Date;
   class MockDate extends RealDate {
