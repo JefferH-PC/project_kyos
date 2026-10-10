@@ -128,7 +128,10 @@ const APP_TEXT = {
     mobileNavWishlist: 'Wishlist',
     mobileNavDashboard: 'Dashboard',
     mobileNavRecovery: 'Recovery',
-    milestoneProgress: 'Progress'
+    milestoneProgress: 'Progress',
+    capitalAllocation: 'Capital Distribution',
+    totalFlow: 'Total Capital Flow',
+    capitalEfficiency: 'Preserved vs Outflow'
   },
   pt: {
     selectLanguage: 'Selecionar idioma',
@@ -210,7 +213,10 @@ const APP_TEXT = {
     mobileNavWishlist: 'Lista de Desejos',
     mobileNavDashboard: 'Painel',
     mobileNavRecovery: 'Recuperação',
-    milestoneProgress: 'Progresso'
+    milestoneProgress: 'Progresso',
+    capitalAllocation: 'Distribuição de Capital',
+    totalFlow: 'Fluxo Total de Capital',
+    capitalEfficiency: 'Preservado vs Saídas'
   }
 };
 
@@ -298,7 +304,6 @@ function App() {
     name: '',
     yieldRate: '',
     investedAmount: '',
-    creationDate: getDateKey(new Date()),
     applyTax: false
   }));
   const [cdiRate, setCdiRate] = useState(DEFAULT_CDI_RATE);
@@ -318,7 +323,6 @@ function App() {
     name: '',
     yieldRate: '',
     investedAmount: '',
-    creationDate: '',
     applyTax: false
   });
 
@@ -704,13 +708,10 @@ function App() {
     if (!assetForm.name.trim() || !assetForm.investedAmount) return;
 
     const baseAmount = Number(assetForm.investedAmount);
-    const creationDate = isValidDateKey(assetForm.creationDate)
-      ? assetForm.creationDate
-      : database.simulatedDate;
-
+    const creationDate = database.simulatedDate;
     const applyTax = Boolean(assetForm.applyTax);
 
-    let newAsset = {
+    const newAsset = {
       id: `${Date.now()}-${Math.random()}`,
       name: assetForm.name.trim(),
       yieldRate: Number(assetForm.yieldRate || 0),
@@ -721,16 +722,6 @@ function App() {
       creationDate,
       applyTax
     };
-
-    // If invested on a past date, backfill yields up to simulatedDate
-    if (creationDate < database.simulatedDate) {
-      newAsset = calculateAssetAccrualSinceDate(
-        newAsset,
-        database.simulatedDate,
-        holidaysList,
-        cdiRate
-      );
-    }
 
     setDatabase((current) => {
       const updatedAssets = [...current.assets, newAsset];
@@ -745,7 +736,6 @@ function App() {
       name: '',
       yieldRate: '',
       investedAmount: '',
-      creationDate: database.simulatedDate,
       applyTax: false
     });
     setIsAssetFormOpen(false);
@@ -781,14 +771,13 @@ function App() {
       name: asset.name || '',
       yieldRate: String(asset.yieldRate ?? 0),
       investedAmount: String(asset.initialInvestedAmount ?? asset.investedAmount ?? 0),
-      creationDate: asset.creationDate || database.simulatedDate,
       applyTax: Boolean(asset.applyTax)
     });
   };
 
   const cancelEditAsset = () => {
     setEditingAssetId(null);
-    setEditAssetForm({ name: '', yieldRate: '', investedAmount: '', creationDate: '', applyTax: false });
+    setEditAssetForm({ name: '', yieldRate: '', investedAmount: '', applyTax: false });
   };
 
   const saveAssetEdit = (event) => {
@@ -796,25 +785,23 @@ function App() {
     if (!editAssetForm.name.trim() || !editAssetForm.investedAmount) return;
     const newInitial = Math.max(Number(editAssetForm.investedAmount) || 0, 0);
     const newYield = Math.max(Number(editAssetForm.yieldRate) || 0, 0);
-    const newCreationDate = isValidDateKey(editAssetForm.creationDate)
-      ? editAssetForm.creationDate
-      : database.simulatedDate;
     const editedApplyTax = Boolean(editAssetForm.applyTax);
 
     setDatabase((current) => {
       const assets = current.assets.map((asset) => {
         if (asset.id !== editingAssetId) return asset;
+        const creationDate = asset.creationDate || current.simulatedDate;
         let editedAsset = {
           ...asset,
           name: editAssetForm.name.trim(),
           yieldRate: newYield,
           initialInvestedAmount: newInitial,
           investedAmount: newInitial,
-          creationDate: newCreationDate,
+          creationDate,
           applyTax: editedApplyTax
         };
 
-        if (newCreationDate < current.simulatedDate) {
+        if (creationDate < current.simulatedDate) {
           editedAsset = calculateAssetAccrualSinceDate(
             editedAsset,
             current.simulatedDate,
@@ -910,15 +897,6 @@ function App() {
                   onChange={(event) => setAssetForm({ ...assetForm, investedAmount: event.target.value })}
                   required
                 />
-                <label className='asset-date-field-wrap'>
-                  <span>{t.investmentDate}:</span>
-                  <input
-                    type='date'
-                    value={assetForm.creationDate || database.simulatedDate}
-                    max={database.simulatedDate}
-                    onChange={(event) => setAssetForm({ ...assetForm, creationDate: event.target.value })}
-                  />
-                </label>
                 <label className='asset-tax-checkbox-label'>
                   <input
                     type='checkbox'
@@ -971,15 +949,6 @@ function App() {
                             onChange={(e) => setEditAssetForm({ ...editAssetForm, investedAmount: e.target.value })}
                             placeholder={t.investedAmount}
                             required
-                          />
-                        </label>
-                        <label className='asset-edit-label'>
-                          <span>{t.investmentDate}</span>
-                          <input
-                            type='date'
-                            value={editAssetForm.creationDate || database.simulatedDate}
-                            max={database.simulatedDate}
-                            onChange={(e) => setEditAssetForm({ ...editAssetForm, creationDate: e.target.value })}
                           />
                         </label>
                         <label className='asset-tax-checkbox-label'>
@@ -1095,26 +1064,89 @@ function App() {
             </div>
           </div>
 
-          <div className='balance-chart-card'>
-            <div
-              className='balance-donut'
-              style={{ '--spent-ratio': `${spentRatio}%` }}
-              aria-label='Money balance chart'
-            >
-              <div className='donut-inner-content'>
-                <span className='donut-pct'>{formatDecimal(investedRatio)}%</span>
-                <span className='donut-sub'>{t.invested}</span>
+          <div className='balance-chart-card balance-graphic-card'>
+            <div className='balance-graphic-header'>
+              <div className='graphic-title-group'>
+                <h2>{t.moneyBalance}</h2>
+                <span className='graphic-subtitle'>{t.capitalAllocation}</span>
+              </div>
+              <div className='graphic-total-badge'>
+                <span className='total-badge-label'>{t.totalFlow}</span>
+                <strong>R$ {displayMoney(totalBalance)}</strong>
               </div>
             </div>
-            <div className='balance-legend'>
-              <h2>{t.moneyBalance}</h2>
-              <div className='legend-row'>
-                <p><span className='legend-swatch invested'></span>{t.invested}</p>
-                <strong>R$ {displayMoney(investedTotal)} ({formatDecimal(investedRatio)}%)</strong>
+
+            <div className='balance-visual-track-wrap'>
+              <div className='balance-track-header'>
+                <span className='track-marker invested-marker'>
+                  <span className='marker-dot invested'></span>
+                  {t.invested}: <strong>{formatDecimal(investedRatio)}%</strong>
+                </span>
+                <span className='track-marker spent-marker'>
+                  <span className='marker-dot spent'></span>
+                  {t.spent}: <strong>{formatDecimal(spentRatio)}%</strong>
+                </span>
               </div>
-              <div className='legend-row'>
-                <p><span className='legend-swatch spent'></span>{t.spent}</p>
-                <strong>R$ {displayMoney(spentTotal)} ({formatDecimal(spentRatio)}%)</strong>
+              <div
+                className='balance-proportional-bar'
+                role='progressbar'
+                aria-valuenow={investedRatio}
+                aria-valuemin='0'
+                aria-valuemax='100'
+                aria-label={t.moneyBalance}
+              >
+                <div
+                  className='bar-segment invested-segment'
+                  style={{ width: `${totalBalance > 0 ? Math.max(investedRatio, 3) : 50}%` }}
+                  title={`${t.invested}: R$ ${displayMoney(investedTotal)} (${formatDecimal(investedRatio)}%)`}
+                >
+                  {investedRatio >= 14 && <span className='segment-label'>{formatDecimal(investedRatio)}%</span>}
+                </div>
+                <div
+                  className='bar-segment spent-segment'
+                  style={{ width: `${totalBalance > 0 ? Math.max(spentRatio, 3) : 50}%` }}
+                  title={`${t.spent}: R$ ${displayMoney(spentTotal)} (${formatDecimal(spentRatio)}%)`}
+                >
+                  {spentRatio >= 14 && <span className='segment-label'>{formatDecimal(spentRatio)}%</span>}
+                </div>
+              </div>
+            </div>
+
+            <div className='balance-graphic-grid'>
+              <div className='graphic-flow-card invested-flow'>
+                <div className='flow-card-top'>
+                  <div className='flow-icon-wrap invested'>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 256 256" fill="currentColor">
+                      <path d="M240,56v48a8,8,0,0,1-13.66,5.66L205.66,89,141.66,153a8,8,0,0,1-11.32,0L96,118.63,29.66,185a8,8,0,0,1-11.32-11.32l72-72a8,8,0,0,1,11.32,0L136,136.69l58.34-58.35L173.66,57.66A8,8,0,0,1,184,48h48A8,8,0,0,1,240,56Z"></path>
+                    </svg>
+                  </div>
+                  <div className='flow-meta'>
+                    <span className='flow-type-label'>{t.invested}</span>
+                    <span className='flow-ratio-pill invested'>{formatDecimal(investedRatio)}%</span>
+                  </div>
+                </div>
+                <strong className='flow-amount'>R$ {displayMoney(investedTotal)}</strong>
+                <div className='flow-bar-container'>
+                  <div className='flow-mini-bar invested' style={{ width: `${totalBalance > 0 ? investedRatio : 0}%` }}></div>
+                </div>
+              </div>
+
+              <div className='graphic-flow-card spent-flow'>
+                <div className='flow-card-top'>
+                  <div className='flow-icon-wrap spent'>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 256 256" fill="currentColor">
+                      <path d="M240,192a8,8,0,0,1-8,8H184a8,8,0,0,1-5.66-13.66L199,165.66l-58.34-58.35L106.34,142a8,8,0,0,1-11.32,0l-72-72A8,8,0,0,1,34.34,58.69L96,120.34l34.34-34.35a8,8,0,0,1,11.32,0l64,64,20.68-20.69A8,8,0,0,1,240,136Z"></path>
+                    </svg>
+                  </div>
+                  <div className='flow-meta'>
+                    <span className='flow-type-label'>{t.spent}</span>
+                    <span className='flow-ratio-pill spent'>{formatDecimal(spentRatio)}%</span>
+                  </div>
+                </div>
+                <strong className='flow-amount'>R$ {displayMoney(spentTotal)}</strong>
+                <div className='flow-bar-container'>
+                  <div className='flow-mini-bar spent' style={{ width: `${totalBalance > 0 ? spentRatio : 0}%` }}></div>
+                </div>
               </div>
             </div>
           </div>

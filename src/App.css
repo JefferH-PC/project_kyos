@@ -700,102 +700,17 @@ select,
 .balance-chart-card {
     flex: 1 1 0;
     min-height: 0;
-    padding: 22px;
+    padding: 22px 24px;
     display: flex;
-    align-items: center;
-    justify-content: space-evenly;
-    gap: 28px;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 16px;
     background: var(--bg-surface);
-}
-
-.balance-donut {
-    width: min(170px, 36%);
-    aspect-ratio: 1;
-    border-radius: 50%;
-    background: conic-gradient(var(--accent-red) 0 var(--spent-ratio, 0%), var(--accent-green) var(--spent-ratio, 0%) 100%);
-    position: relative;
-    flex: 0 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-
-.balance-donut::after {
-    content: '';
-    position: absolute;
-    inset: 22%;
-    border-radius: 50%;
-    background: var(--bg-surface-card);
+    border-radius: 14px;
     border: 1px solid var(--border-subtle);
-    z-index: 1;
 }
 
-.donut-inner-content {
-    position: relative;
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    pointer-events: none;
-}
-
-.donut-pct {
-    font-size: 20px;
-    font-weight: 800;
-    color: var(--text-primary);
-}
-
-.donut-sub {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-muted);
-    text-transform: uppercase;
-}
-
-.balance-legend {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    min-width: 200px;
-}
-
-.balance-legend h2 {
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--text-primary);
-}
-
-.balance-legend p {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--text-secondary);
-}
-
-.legend-swatch {
-    width: 20px;
-    height: 20px;
-    border-radius: 6px;
-    display: inline-block;
-    flex: 0 0 auto;
-}
-
-.legend-swatch.invested {
-    background: var(--accent-green);
-    border: 1px solid var(--accent-green-border);
-}
-
-.legend-swatch.spent {
-    background: var(--accent-red);
-    border: 1px solid var(--accent-red-border);
-}
-
-.legend-row {
+.balance-graphic-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -803,10 +718,239 @@ select,
     width: 100%;
 }
 
-.legend-row strong {
-    font-size: 15px;
+.graphic-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.graphic-title-group h2 {
+    font-size: 19px;
+    font-weight: 700;
     color: var(--text-primary);
-    white-space: nowrap;
+    margin: 0;
+}
+
+.graphic-subtitle {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.graphic-total-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    padding: 6px 14px;
+    background: var(--bg-surface-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+}
+
+.total-badge-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.graphic-total-badge strong {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+/* Proportional Ratio Track */
+.balance-visual-track-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.balance-track-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.track-marker {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.track-marker strong {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.marker-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.marker-dot.invested {
+    background: var(--accent-green);
+}
+
+.marker-dot.spent {
+    background: var(--accent-red);
+}
+
+.balance-proportional-bar {
+    width: 100%;
+    height: 28px;
+    border-radius: 999px;
+    background: var(--bg-surface-card);
+    display: flex;
+    overflow: hidden;
+    padding: 3px;
+    border: 1px solid var(--border-subtle);
+    gap: 3px;
+}
+
+.bar-segment {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 6px;
+}
+
+.bar-segment.invested-segment {
+    background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+    color: #ffffff;
+}
+
+.bar-segment.spent-segment {
+    background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+    color: #ffffff;
+}
+
+.segment-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    user-select: none;
+    padding: 0 6px;
+}
+
+/* Comparative Flow Grid */
+.balance-graphic-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    width: 100%;
+}
+
+.graphic-flow-card {
+    background: var(--bg-surface-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: border-color 0.2s ease, transform 0.15s ease;
+}
+
+.graphic-flow-card:hover {
+    border-color: var(--border-strong);
+}
+
+.flow-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.flow-icon-wrap {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flow-icon-wrap.invested {
+    background: rgba(16, 185, 129, 0.12);
+    color: var(--accent-green);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.flow-icon-wrap.spent {
+    background: rgba(239, 68, 68, 0.12);
+    color: var(--accent-red);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.flow-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.flow-type-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.flow-ratio-pill {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+}
+
+.flow-ratio-pill.invested {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--accent-green);
+}
+
+.flow-ratio-pill.spent {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--accent-red);
+}
+
+.flow-amount {
+    font-size: 19px;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.flow-bar-container {
+    width: 100%;
+    height: 5px;
+    background: var(--border-subtle);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 2px;
+}
+
+.flow-mini-bar {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.3s ease;
+}
+
+.flow-mini-bar.invested {
+    background: var(--accent-green);
+}
+
+.flow-mini-bar.spent {
+    background: var(--accent-red);
 }
 
 /* Asset Date & Tax Details */
@@ -827,28 +971,6 @@ select,
 
 .asset-meta-badge strong {
     color: var(--text-primary);
-}
-
-.asset-date-field-wrap {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    grid-column: span 2;
-}
-
-.asset-date-field-wrap span {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-secondary);
-}
-
-.asset-date-field-wrap input {
-    background-color: var(--bg-input);
-    border: 1px solid var(--border-card);
-    border-radius: 10px;
-    color: var(--text-primary);
-    padding: 8px 12px;
-    font-size: 14px;
 }
 
 .asset-tax-block {
@@ -1309,31 +1431,25 @@ select,
     }
 
     .balance-chart-card {
-        flex-direction: column;
-        padding: 18px 14px;
-        gap: 16px;
-        text-align: center;
+        padding: 16px 14px;
+        gap: 14px;
         min-height: 0;
     }
 
-    .balance-donut {
-        width: 140px;
-        max-width: 50vw;
-    }
-
-    .balance-legend {
-        min-width: 0;
-        width: 100%;
-        align-items: center;
+    .balance-graphic-header {
+        flex-direction: column;
+        align-items: flex-start;
         gap: 8px;
     }
 
-    .balance-legend h2 {
-        font-size: 17px;
+    .graphic-total-badge {
+        align-items: flex-start;
+        width: 100%;
     }
 
-    .balance-legend p {
-        font-size: 15px;
+    .balance-graphic-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
     }
 
     .investments-view {

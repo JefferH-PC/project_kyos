@@ -572,10 +572,9 @@ test('restores proportions of the 3 segment areas as direct children without are
   expect(document.querySelector('.area-column')).toBeNull();
 });
 
-test('adds asset with a past investment date and calculates accrued income up to today', async () => {
+test('adds asset without manual date picker and sets creationDate to simulatedDate', async () => {
   const today = new Date();
   const simulatedDateKey = getDateKey(today);
-  const pastDateKey = getDateKey(shiftDate(today, -5));
 
   window.localStorage.setItem('kyos-database', JSON.stringify({
     schemaVersion: 11,
@@ -599,32 +598,32 @@ test('adds asset with a past investment date and calculates accrued income up to
   const addBtn = screen.getByRole('button', { name: /add investment/i });
   await userEvent.click(addBtn);
 
-  // Fill in form with past date
+  // Verify that date picker is NOT present
+  expect(screen.queryByLabelText(/investment date/i)).toBeNull();
+
+  // Fill in form with name, yield, amount
   const nameInput = screen.getByPlaceholderText('Name');
   const yieldInput = screen.getByPlaceholderText('Yield %');
   const amountInput = screen.getByPlaceholderText('Invested amount');
-  const dateInput = screen.getByLabelText(/investment date/i);
 
   await userEvent.type(nameInput, 'CDB 110% CDI');
   await userEvent.type(yieldInput, '110');
   await userEvent.type(amountInput, '10000');
-  await userEvent.clear(dateInput);
-  await userEvent.type(dateInput, pastDateKey);
 
   // Submit form
   const assetFormEl = screen.getByPlaceholderText('Name').closest('form');
   const submitBtn = within(assetFormEl).getByRole('button', { name: 'Add' });
   await userEvent.click(submitBtn);
 
-  // Asset should be rendered with its investment date
+  // Asset should be rendered
   expect(await screen.findByText('CDB 110% CDI')).toBeInTheDocument();
 
-  // Verify that it accrued income from past date
+  // Verify that it saved with simulatedDate as creationDate
   const db = JSON.parse(window.localStorage.getItem('kyos-database'));
   expect(db.assets.length).toBe(1);
   expect(db.assets[0].name).toBe('CDB 110% CDI');
-  expect(db.assets[0].creationDate).toBe(pastDateKey);
-  expect(db.assets[0].investedAmount).toBeGreaterThanOrEqual(10000);
+  expect(db.assets[0].creationDate).toBe(simulatedDateKey);
+  expect(db.assets[0].investedAmount).toBe(10000);
 });
 
 test('exports database backup via the header export button', async () => {
@@ -754,12 +753,15 @@ test('balance section maintains stable 2-card layout without breaking when inves
   expect(balanceView.children[0]).toHaveClass('balance-year-grid');
   expect(balanceView.children[1]).toHaveClass('balance-chart-card');
 
-  // Verify Spent and Invested values render properly
-  expect(screen.getByText('R$ 25.000,00')).toBeInTheDocument();
-  expect(screen.getByText('R$ 5.000,00')).toBeInTheDocument();
+  // Verify Spent and Invested values render properly in cards and graphic
+  expect(screen.getAllByText('R$ 25.000,00').length).toBeGreaterThanOrEqual(1);
+  expect(screen.getAllByText('R$ 5.000,00').length).toBeGreaterThanOrEqual(1);
 
-  // Verify Donut Chart exists and has no extraneous layout breaking cards
-  expect(document.querySelector('.balance-donut')).toBeInTheDocument();
+  // Verify Graphic Card and proportional bar exist, donut is replaced, and no extraneous layout breaking cards
+  expect(document.querySelector('.balance-graphic-card')).toBeInTheDocument();
+  expect(document.querySelector('.balance-proportional-bar')).toBeInTheDocument();
+  expect(document.querySelector('.balance-graphic-grid')).toBeInTheDocument();
+  expect(document.querySelector('.balance-donut')).toBeNull();
   expect(document.querySelector('.portfolio-allocation-card')).toBeNull();
 });
 
