@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import './SimulationArea.css';
-import { formatMoney, formatDecimal } from '../../utils/formatters';
+import { formatMoney, formatDecimal, formatDateKey } from '../../utils/formatters';
 import {
   getDateKey,
   parseDateKey,
@@ -392,7 +392,7 @@ const SimulationArea = ({
         <div className="simulation-results-card">
           <div className="simulation-results-header">
             <h3>{t.projectionsTitle}</h3>
-            {targetDate && <span style={{ fontSize: '13px', color: '#90cdf4' }}>{t.targetDate}: {targetDate}</span>}
+            {targetDate && <span style={{ fontSize: '13px', color: 'var(--accent-blue)' }}>{t.targetDate}: {formatDateKey(targetDate, locale)}</span>}
           </div>
 
           {projection ? (

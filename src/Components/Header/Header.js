@@ -1,27 +1,94 @@
+import { useRef } from 'react';
 import './Header.css';
 
 const Header = (props) => {
+    const fileInputRef = useRef(null);
     const visibilityLabel = props.areValuesVisible ? props.labelSet.hideMoneyValues : props.labelSet.showMoneyValues;
+    const taxLabel = props.isTaxDeducted
+        ? (props.labelSet.disableTax || 'Taxes applied (IR/IOF). Click to disable.')
+        : (props.labelSet.enableTax || 'Deduct taxes (IR/IOF). Click to enable.');
+
+    const handleImportClick = () => {
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+            fileInputRef.current.click();
+        }
+    };
+
     return (
-        <div className='header'> 
+        <header className='header'> 
             <div className='logo'>
-            <svg className='coin-icon' xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#000000" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm40-68a28,28,0,0,1-28,28h-4v8a8,8,0,0,1-16,0v-8H104a8,8,0,0,1,0-16h36a12,12,0,0,0,0-24H116a28,28,0,0,1,0-56h4V72a8,8,0,0,1,16,0v8h16a8,8,0,0,1,0,16H116a12,12,0,0,0,0,24h24A28,28,0,0,1,168,148Z"></path></svg>
-            <h1>Kyos</h1>
+                <svg className='coin-icon' xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256">
+                    <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm40-68a28,28,0,0,1-28,28h-4v8a8,8,0,0,1-16,0v-8H104a8,8,0,0,1,0-16h36a12,12,0,0,0,0-24H116a28,28,0,0,1,0-56h4V72a8,8,0,0,1,16,0v8h16a8,8,0,0,1,0,16H116a12,12,0,0,0,0,24h24A28,28,0,0,1,168,148Z"></path>
+                </svg>
+                <h1>Kyos</h1>
             </div>
             <div className='header-actions'>
                 <button
-                    className='help-button'
+                    className={`tax-toggle-btn ${props.isTaxDeducted ? 'active' : ''}`}
+                    aria-label={taxLabel}
+                    title={taxLabel}
+                    aria-pressed={props.isTaxDeducted}
+                    onClick={props.onToggleTax}
+                    type='button'
+                >
+                    <span className='tax-pill-badge'>%</span>
+                    <span className='tax-pill-text'>{props.isTaxDeducted ? 'IR/IOF ON' : 'IR/IOF OFF'}</span>
+                </button>
+
+                <button
+                    className='action-icon-button'
+                    aria-label={props.labelSet.exportData || 'Export JSON backup'}
+                    title={props.labelSet.exportData || 'Export JSON backup'}
+                    onClick={props.onExportJSON}
+                    type='button'
+                >
+                    <svg aria-hidden='true' xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 256 256' fill='currentColor'>
+                        <path d="M216,144v48a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V144a8,8,0,0,1,16,0v48H200V144a8,8,0,0,1,16,0Zm-93.66,4.34a8,8,0,0,0,11.32,0l40-40a8,8,0,0,0-11.32-11.32L136,122.69V40a8,8,0,0,0-16,0v82.69L93.66,97.02a8,8,0,0,0-11.32,11.32Z" />
+                    </svg>
+                </button>
+
+                <button
+                    className='action-icon-button'
+                    aria-label={props.labelSet.importData || 'Import JSON backup'}
+                    title={props.labelSet.importData || 'Import JSON backup'}
+                    onClick={handleImportClick}
+                    type='button'
+                >
+                    <svg aria-hidden='true' xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 256 256' fill='currentColor'>
+                        <path d="M216,144v48a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V144a8,8,0,0,1,16,0v48H200V144a8,8,0,0,1,16,0Zm-93.66-85.66a8,8,0,0,1,11.32,0l40,40a8,8,0,0,1-11.32,11.32L136,83.31V160a8,8,0,0,1-16,0V83.31L93.66,109.66a8,8,0,0,1-11.32-11.32Z" />
+                    </svg>
+                </button>
+                <input
+                    type='file'
+                    ref={fileInputRef}
+                    onChange={props.onImportJSON}
+                    accept='.json'
+                    style={{ display: 'none' }}
+                    aria-hidden='true'
+                />
+
+                <button
+                    className='help-button action-icon-button'
                     aria-label={props.labelSet.aboutKyos || 'How Kyos works'}
                     title={props.labelSet.aboutKyos || 'How Kyos works'}
                     onClick={props.onOpenAbout}
                     type='button'
                 >
-                    <svg aria-hidden='true' xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 256 256' fill='currentColor'>
+                    <svg aria-hidden='true' xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 256 256' fill='currentColor'>
                         <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm12-40a12,12,0,1,1-12-12A12,12,0,0,1,140,176Zm-1.84-56.16A8,8,0,0,0,132,126.74V132a8,8,0,0,1-16,0v-5.26a24,24,0,0,1,18.49-23.41,12,12,0,1,0-13.63-12.75,8,8,0,0,1-16-.86,28,28,0,1,1,33.3,27.12Z" />
                     </svg>
                 </button>
-                <button className='visibility-button' aria-label={visibilityLabel} aria-pressed={!props.areValuesVisible} onClick={props.onToggleValues} type='button'>
-                    <svg aria-hidden='true' xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 256 256' fill='currentColor'>
+
+                <button
+                    className='visibility-button action-icon-button'
+                    aria-label={visibilityLabel}
+                    title={visibilityLabel}
+                    aria-pressed={!props.areValuesVisible}
+                    onClick={props.onToggleValues}
+                    type='button'
+                >
+                    <svg aria-hidden='true' xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 256 256' fill='currentColor'>
                         {props.areValuesVisible ? (
                             <path d='M128 56C63.3 56 16 128 16 128s47.3 72 112 72 112-72 112-72S192.7 56 128 56Zm0 120c-25.4 0-46-21.5-46-48s20.6-48 46-48 46 21.5 46 48-20.6 48-46 48Zm0-72a24 24 0 1 0 0 48 24 24 0 0 0 0-48Z'/>
                         ) : (
@@ -29,16 +96,31 @@ const Header = (props) => {
                         )}
                     </svg>
                 </button>
+
                 <label className='language-select-wrap' aria-label={props.locale === 'pt' ? 'Selecionar idioma' : 'Select language'}>
-                    <select className='language-select' value={props.locale} onChange={(event) => props.onChangeLocale?.(event.target.value)} aria-label={props.locale === 'pt' ? 'Selecionar idioma' : 'Select language'}>
+                    <select
+                        className='language-select'
+                        value={props.locale}
+                        onChange={(event) => props.onChangeLocale?.(event.target.value)}
+                        aria-label={props.locale === 'pt' ? 'Selecionar idioma' : 'Select language'}
+                    >
                         <option value='en'>English</option>
                         <option value='pt'>Português</option>
                     </select>
                 </label>
-                <button type='button' aria-label={props.labelSet.toggleTheme} onClick={props.onToggleTheme}>{props.isLightTheme ? '☾' : '☼'}</button>
+
+                <button
+                    type='button'
+                    className='theme-toggle-btn action-icon-button'
+                    aria-label={props.labelSet.toggleTheme}
+                    title={props.labelSet.toggleTheme}
+                    onClick={props.onToggleTheme}
+                >
+                    {props.isLightTheme ? '☾' : '☼'}
+                </button>
             </div>
-        </div>
-    )
-}
+        </header>
+    );
+};
 
 export default Header;

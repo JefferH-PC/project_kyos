@@ -3,6 +3,7 @@ import {
   calculateAnnualizedCDI,
   fetchHistoricalCDI,
   fetchLatestCDI,
+  calculateAssetAccrualSinceDate,
   DEFAULT_CDI_RATE,
   CDI_CACHE_KEY
 } from './cdi';
@@ -51,5 +52,35 @@ describe('cdi utilities', () => {
 
     const rate = await fetchHistoricalCDI('2026-09-10');
     expect(rate).toBeCloseTo(0.05166, 5);
+  });
+
+  test('calculateAssetAccrualSinceDate calculates yields across past business days', () => {
+    // Monday 2026-09-14 to Wednesday 2026-09-16 (3 business days: 14, 15, 16)
+    const asset = {
+      name: 'Tesouro Prefixado',
+      investedAmount: 10000,
+      initialInvestedAmount: 10000,
+      yieldRate: 100,
+      creationDate: '2026-09-14'
+    };
+    const targetDate = '2026-09-16';
+    const holidays = [];
+
+    const updated = calculateAssetAccrualSinceDate(asset, targetDate, holidays, 0.05);
+    expect(updated.investedAmount).toBeGreaterThan(10000);
+    expect(updated.totalIncome).toBeGreaterThan(0);
+    expect(Object.keys(updated.incomeHistory)).toEqual(['2026-09-14', '2026-09-15', '2026-09-16']);
+  });
+
+  test('calculateAssetAccrualSinceDate returns original when creationDate is today or future', () => {
+    const asset = {
+      investedAmount: 5000,
+      initialInvestedAmount: 5000,
+      yieldRate: 100,
+      creationDate: '2026-10-10'
+    };
+    const updated = calculateAssetAccrualSinceDate(asset, '2026-10-10', []);
+    expect(updated.investedAmount).toBe(5000);
+    expect(updated.totalIncome).toBe(0);
   });
 });

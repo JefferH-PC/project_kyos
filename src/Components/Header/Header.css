@@ -1,6 +1,5 @@
 .coin-icon {
     fill: var(--accent-green);
-    filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.4));
     background: none;
     transition: transform 0.2s ease;
 }
@@ -11,6 +10,8 @@
     align-items: center;
     justify-content: space-between;
     background: transparent;
+    flex-wrap: wrap;
+    gap: 12px;
 }
 
 .logo {
@@ -40,6 +41,7 @@
     gap: 8px;
     background: none;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .header-actions button,
@@ -63,6 +65,59 @@
     transform: translateY(-1px);
 }
 
+.tax-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.3px;
+    color: var(--text-secondary) !important;
+    border-color: var(--border-card) !important;
+}
+
+.tax-toggle-btn .tax-pill-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--bg-input);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.tax-toggle-btn.active {
+    background: var(--accent-blue-bg) !important;
+    border-color: var(--accent-blue) !important;
+    color: var(--accent-blue) !important;
+}
+
+.tax-toggle-btn.active .tax-pill-badge {
+    background: var(--accent-blue);
+    color: #ffffff;
+}
+
+.action-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 42px;
+    padding: 7px 10px !important;
+}
+
+.action-icon-button svg {
+    display: block;
+    fill: var(--text-secondary);
+    transition: fill 0.2s ease;
+}
+
+.action-icon-button:hover svg {
+    fill: var(--text-primary);
+}
+
 .language-select-wrap {
     display: inline-flex;
     align-items: center;
@@ -79,44 +134,18 @@
     background-position: right 10px center;
 }
 
-.header-actions .help-button,
-.header-actions .visibility-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 44px;
-    padding: 7px 10px;
-}
-
-.header-actions .help-button svg,
-.header-actions .visibility-button svg {
-    display: block;
-    fill: var(--text-secondary);
-    transition: fill 0.2s ease;
-}
-
-.header-actions .help-button:hover svg,
-.header-actions .visibility-button:hover svg {
-    fill: var(--text-primary);
-}
-
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     .header {
-        margin: 6px 2px 10px 2px;
-        gap: 8px;
-    }
-
-    .logo {
-        gap: 8px;
+        margin: 6px 4px 12px 4px;
     }
 
     .logo h1 {
-        font-size: 22px;
+        font-size: 24px;
     }
 
     .coin-icon {
-        width: 26px;
-        height: 26px;
+        width: 28px;
+        height: 28px;
     }
 
     .header-actions {
@@ -127,7 +156,6 @@
     .header-actions .language-select {
         padding: 6px 10px;
         font-size: 13px;
-        border-radius: 10px;
         min-height: 38px;
     }
 
@@ -137,27 +165,28 @@
         background-position: right 6px center;
     }
 
-    .header-actions .help-button,
-    .header-actions .visibility-button {
+    .action-icon-button {
         min-width: 38px;
-        padding: 6px 8px;
+        padding: 6px 8px !important;
     }
 }
 
-@media (max-width: 380px) {
+@media (max-width: 480px) {
+    .header {
+        justify-content: space-between;
+    }
+
     .logo h1 {
-        font-size: 19px;
+        font-size: 20px;
     }
 
     .coin-icon {
-        width: 22px;
-        height: 22px;
+        width: 24px;
+        height: 24px;
     }
 
-    .language-select {
-        min-width: 80px;
-        font-size: 12px;
-        padding: 5px 16px 5px 6px !important;
+    .header-actions {
+        gap: 4px;
     }
 
     .header-actions button {
@@ -166,9 +195,19 @@
         min-height: 36px;
     }
 
-    .header-actions .help-button,
-    .header-actions .visibility-button {
+    .tax-toggle-btn {
+        padding: 5px 8px !important;
+        font-size: 11px !important;
+    }
+
+    .tax-toggle-btn .tax-pill-badge {
+        width: 15px;
+        height: 15px;
+        font-size: 10px;
+    }
+
+    .action-icon-button {
         min-width: 36px;
+        padding: 5px 6px !important;
     }
 }
-

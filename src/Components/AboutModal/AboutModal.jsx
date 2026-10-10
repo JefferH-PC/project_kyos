@@ -45,6 +45,13 @@ const ABOUT_TEXT = {
         badge: '2nd Priority',
         title: 'Wishlist Funding',
         description: 'Queue up items you want to buy. Daily income amortizes the active item day-by-day. Once the remaining price hits R$ 0, it becomes "Ready", meaning it has been 100% funded by your investment returns.'
+      },
+      {
+        id: 'taxes',
+        icon: 'percent',
+        badge: 'Optional Tax Mode',
+        title: 'Tax & IOF Deductions',
+        description: 'Toggle optional tax deduction to project real net returns using Brazilian regressive Income Tax (IR from 22.5% to 15%) and IOF (which automatically hits 0% after 30 calendar days).'
       }
     ]
   },
@@ -91,6 +98,13 @@ const ABOUT_TEXT = {
         badge: '2ª Prioridade',
         title: 'Financiamento de Desejos',
         description: 'Adicione aquilo que deseja comprar. O rendimento diário reduz o saldo do item ativo dia após dia. Ao atingir R$ 0, ele fica "Pronto", financiado 100% pelos lucros dos seus investimentos.'
+      },
+      {
+        id: 'taxes',
+        icon: 'percent',
+        badge: 'Modo Opcional de Tributação',
+        title: 'Tributação e IOF Regressivo',
+        description: 'Ative a dedução opcional de impostos para ver o rendimento líquido real segundo o IR Regressivo (22,5% a 15%) e o IOF (que zera exatamente após 30 dias corridos).'
       }
     ]
   }
@@ -120,6 +134,12 @@ const renderIcon = (iconName) => {
       return (
         <svg aria-hidden="true" viewBox="0 0 256 256" width="24" height="24" fill="currentColor">
           <path d="M216,72H180.49A44,44,0,0,0,108,48a43.59,43.59,0,0,0-4,18.4A44,44,0,0,0,32,108a8,8,0,0,0,8,8h8v96a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V116h8a8,8,0,0,0,8-8V80A8,8,0,0,0,216,72ZM120,52a28,28,0,0,1,50.7,16.57A27.67,27.67,0,0,1,168.49,72H120ZM60,100a28,28,0,0,1,56-4.57A27.67,27.67,0,0,1,118.49,100H60Zm60,16h72v44H120Zm-16,0v44H48V116Zm0,60v48H64a4,4,0,0,1-4-4V176Zm16,48V176h72v44a4,4,0,0,1-4,4Zm96-120H136V88h80Z" />
+        </svg>
+      );
+    case 'percent':
+      return (
+        <svg aria-hidden="true" viewBox="0 0 256 256" width="24" height="24" fill="currentColor">
+          <path d="M205.66,61.66l-144,144a8,8,0,0,1-11.32-11.32l144-144a8,8,0,0,1,11.32,11.32ZM64,104A36,36,0,1,0,28,68,36,36,0,0,0,64,104Zm0-56A20,20,0,1,1,44,68,20,20,0,0,1,64,48Zm128,104a36,36,0,1,0,36,36A36,36,0,0,0,192,152Zm0,56a20,20,0,1,1,20-20A20,20,0,0,1,192,208Z" />
         </svg>
       );
     default:

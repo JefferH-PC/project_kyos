@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from './App';
 
@@ -478,4 +478,163 @@ test('displays About modal in Portuguese when locale is pt', async () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });
+
+test('toggles Tax & IOF deduction mode and updates header badge', async () => {
+  render(<App />);
+
+  const taxToggleBtn = await screen.findByRole('button', { name: /deduct taxes/i });
+  expect(taxToggleBtn).toHaveTextContent('IR/IOF OFF');
+
+  // Toggle on
+  await userEvent.click(taxToggleBtn);
+  expect(taxToggleBtn).toHaveTextContent('IR/IOF ON');
+  expect(window.localStorage.getItem('kyos-tax-deducted')).toBe('true');
+
+  // Toggle off
+  await userEvent.click(taxToggleBtn);
+  expect(taxToggleBtn).toHaveTextContent('IR/IOF OFF');
+  expect(window.localStorage.getItem('kyos-tax-deducted')).toBe('false');
+});
+
+test('adds asset with a past investment date and calculates accrued income up to today', async () => {
+  const today = new Date();
+  const simulatedDateKey = getDateKey(today);
+  const pastDateKey = getDateKey(shiftDate(today, -5));
+
+  window.localStorage.setItem('kyos-database', JSON.stringify({
+    schemaVersion: 11,
+    simulatedDate: simulatedDateKey,
+    wishlistSlots: [],
+    recoverySlots: [],
+    assets: [],
+    milestone: { target: 0 },
+    purchasedTotal: 0,
+    recoverySpentTotal: 0
+  }));
+  window.localStorage.setItem('kyos-last-opened-date', simulatedDateKey);
+
+  render(<App />);
+
+  // Go to Investments
+  const investmentsBtn = await screen.findByRole('button', { name: 'Investments' });
+  await userEvent.click(investmentsBtn);
+
+  // Click Add Investment
+  const addBtn = screen.getByRole('button', { name: /add investment/i });
+  await userEvent.click(addBtn);
+
+  // Fill in form with past date
+  const nameInput = screen.getByPlaceholderText('Name');
+  const yieldInput = screen.getByPlaceholderText('Yield %');
+  const amountInput = screen.getByPlaceholderText('Invested amount');
+  const dateInput = screen.getByLabelText(/investment date/i);
+
+  await userEvent.type(nameInput, 'CDB 110% CDI');
+  await userEvent.type(yieldInput, '110');
+  await userEvent.type(amountInput, '10000');
+  await userEvent.clear(dateInput);
+  await userEvent.type(dateInput, pastDateKey);
+
+  // Submit form
+  const assetFormEl = screen.getByPlaceholderText('Name').closest('form');
+  const submitBtn = within(assetFormEl).getByRole('button', { name: 'Add' });
+  await userEvent.click(submitBtn);
+
+  // Asset should be rendered with its investment date
+  expect(await screen.findByText('CDB 110% CDI')).toBeInTheDocument();
+
+  // Verify that it accrued income from past date
+  const db = JSON.parse(window.localStorage.getItem('kyos-database'));
+  expect(db.assets.length).toBe(1);
+  expect(db.assets[0].name).toBe('CDB 110% CDI');
+  expect(db.assets[0].creationDate).toBe(pastDateKey);
+  expect(db.assets[0].investedAmount).toBeGreaterThanOrEqual(10000);
+});
+
+test('exports database backup via the header export button', async () => {
+  render(<App />);
+
+  const exportBtn = await screen.findByRole('button', { name: /export backup/i });
+  expect(exportBtn).toBeInTheDocument();
+
+  // Mock document.createElement('a') click
+  const clickSpy = jest.fn();
+  const origCreateElement = document.createElement.bind(document);
+  jest.spyOn(document, 'createElement').mockImplementation((tag) => {
+    const el = origCreateElement(tag);
+    if (tag === 'a') {
+      el.click = clickSpy;
+    }
+    return el;
+  });
+
+  await userEvent.click(exportBtn);
+
+  expect(clickSpy).toHaveBeenCalled();
+  jest.restoreAllMocks();
+});
+
+test('switches mobile view tabs between wishlist, dashboard, and recovery', async () => {
+  render(<App />);
+
+  const wishlistTab = screen.getByRole('button', { name: /^wishlist/i });
+  const recoveryTab = screen.getByRole('button', { name: /^recovery/i });
+  const dashboardTab = screen.getByRole('button', { name: /^dashboard/i });
+
+  expect(wishlistTab).toBeInTheDocument();
+  expect(recoveryTab).toBeInTheDocument();
+  expect(dashboardTab).toBeInTheDocument();
+
+  await userEvent.click(wishlistTab);
+  expect(wishlistTab).toHaveClass('active');
+
+  await userEvent.click(recoveryTab);
+  expect(recoveryTab).toHaveClass('active');
+
+  await userEvent.click(dashboardTab);
+  expect(dashboardTab).toHaveClass('active');
+});
+
+test('displays asset investment date in BR format in Portuguese and USA format in English', async () => {
+  const simulatedDateKey = '2026-10-10';
+  const creationDateKey = '2026-04-21';
+
+  window.localStorage.setItem('kyos-database', JSON.stringify({
+    schemaVersion: 11,
+    simulatedDate: simulatedDateKey,
+    wishlistSlots: [],
+    recoverySlots: [],
+    assets: [{
+      id: 'asset-date-test',
+      name: 'Tesouro Prefixado',
+      yieldRate: 100,
+      investedAmount: 5000,
+      initialInvestedAmount: 5000,
+      totalIncome: 0,
+      creationDate: creationDateKey,
+      incomeHistory: {}
+    }],
+    milestone: { target: 0 },
+    purchasedTotal: 0,
+    recoverySpentTotal: 0
+  }));
+  window.localStorage.setItem('kyos-last-opened-date', simulatedDateKey);
+
+  render(<App />);
+
+  // Go to Investments
+  const investmentsBtn = await screen.findByRole('button', { name: 'Investments' });
+  await userEvent.click(investmentsBtn);
+
+  // In English: MM/DD/YYYY -> 04/21/2026
+  expect(screen.getByText('04/21/2026')).toBeInTheDocument();
+
+  // Switch to Portuguese
+  const localeSelect = screen.getByRole('combobox', { name: /select language/i });
+  await userEvent.selectOptions(localeSelect, 'pt');
+
+  // In Portuguese: DD/MM/YYYY -> 21/04/2026
+  expect(screen.getByText('21/04/2026')).toBeInTheDocument();
+});
+
 

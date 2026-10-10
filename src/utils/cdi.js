@@ -1,3 +1,5 @@
+import { getDateKey, isValidDateKey, getBusinessDaysInRange } from './calendar';
+
 export const DEFAULT_CDI_RATE = 0.051660;
 export const CDI_BUSINESS_DAYS = 252;
 export const CDI_LATEST_API_URL = 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados/ultimos/1?formato=json';
@@ -115,4 +117,54 @@ export const fetchHistoricalCDI = async (dateStr, fallbackRate = DEFAULT_CDI_RAT
 
   const latestRate = await fetchLatestCDI(fallbackRate);
   return latestRate;
+};
+
+/**
+ * Accrues daily yields for an asset from its creationDate up to targetDateKey
+ * across all valid business days, compounding and generating income history.
+ *
+ * @param {Object} asset Asset with initialInvestedAmount/investedAmount, yieldRate, and creationDate
+ * @param {string} targetDateKey Reference date key YYYY-MM-DD (typically today/simulatedDate)
+ * @param {Array} holidays Array of holiday dates or objects
+ * @param {number} fallbackCdi
+ * @returns {Object} Updated asset with computed investedAmount, totalIncome, and incomeHistory
+ */
+export const calculateAssetAccrualSinceDate = (asset, targetDateKey, holidays = [], fallbackCdi = DEFAULT_CDI_RATE) => {
+  const initial = Number(asset.initialInvestedAmount ?? asset.investedAmount) || 0;
+  const yieldRate = Number(asset.yieldRate) || 0;
+  const creationDate = asset.creationDate;
+
+  if (!creationDate || !isValidDateKey(creationDate) || !targetDateKey || creationDate >= targetDateKey) {
+    return {
+      ...asset,
+      investedAmount: initial,
+      initialInvestedAmount: initial,
+      totalIncome: 0,
+      incomeHistory: asset.incomeHistory || {}
+    };
+  }
+
+  const businessDays = getBusinessDaysInRange(creationDate, targetDateKey, holidays);
+  const cdiCache = getCDICache();
+
+  let currentPrincipal = initial;
+  let totalIncome = 0;
+  const incomeHistory = {};
+
+  for (const day of businessDays) {
+    const dayKey = getDateKey(day);
+    const dayRate = cdiCache[dayKey] || fallbackCdi;
+    const income = calculateDailyYield(currentPrincipal, yieldRate, dayRate);
+    incomeHistory[dayKey] = income;
+    currentPrincipal += income;
+    totalIncome += income;
+  }
+
+  return {
+    ...asset,
+    investedAmount: currentPrincipal,
+    initialInvestedAmount: initial,
+    totalIncome,
+    incomeHistory
+  };
 };
