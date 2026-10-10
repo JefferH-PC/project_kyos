@@ -52,38 +52,19 @@ describe('Progressive Web App (PWA) Verification', () => {
     expect(() => serviceWorkerRegistration.unregister()).not.toThrow();
   });
 
-  test('shows install button on beforeinstallprompt and handles installation', async () => {
+  test('header does not render an in-app download or install button while preserving PWA capabilities', async () => {
     render(<App />);
 
-    // Initially install button is not present
-    expect(screen.queryByRole('button', { name: /install app/i })).toBeNull();
+    // No install or download button in UI
+    expect(screen.queryByRole('button', { name: /install/i })).toBeNull();
+    expect(document.querySelector('.install-pwa-button')).toBeNull();
 
-    // Mock beforeinstallprompt event
-    const promptMock = jest.fn();
-    const userChoicePromise = Promise.resolve({ outcome: 'accepted' });
-    const installEvent = new Event('beforeinstallprompt');
-    installEvent.prompt = promptMock;
-    installEvent.userChoice = userChoicePromise;
-
-    act(() => {
-      window.dispatchEvent(installEvent);
-    });
-
-    // Install button should now be rendered in Header
-    const installBtn = await screen.findByRole('button', { name: /install app/i });
-    expect(installBtn).toBeInTheDocument();
-
-    // Click install button
-    await userEvent.click(installBtn);
-    expect(promptMock).toHaveBeenCalled();
-
-    // Trigger appinstalled event
+    // Trigger appinstalled event and verify toast
     act(() => {
       window.dispatchEvent(new Event('appinstalled'));
     });
 
-    // Button should disappear once installed
-    expect(screen.queryByRole('button', { name: /install app/i })).toBeNull();
+    expect(await screen.findByText(/app installed successfully/i)).toBeInTheDocument();
   });
 
   test('shows toast notifications on offline and online network changes', async () => {

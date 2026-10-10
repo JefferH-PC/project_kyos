@@ -84,23 +84,6 @@
     fill: var(--text-primary);
 }
 
-.install-pwa-button {
-    border-color: rgba(16, 185, 129, 0.4) !important;
-}
-
-.install-pwa-button svg {
-    fill: var(--accent-green) !important;
-}
-
-.install-pwa-button:hover {
-    background: rgba(16, 185, 129, 0.12) !important;
-    border-color: var(--accent-green) !important;
-}
-
-.install-pwa-button:hover svg {
-    fill: var(--accent-green) !important;
-}
-
 .language-select-wrap {
     display: inline-flex;
     align-items: center;

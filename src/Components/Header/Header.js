@@ -21,19 +21,6 @@ const Header = (props) => {
                 <h1>Kyos</h1>
             </div>
             <div className='header-actions'>
-                {props.canInstall && (
-                    <button
-                        className='action-icon-button install-pwa-button'
-                        aria-label={props.labelSet.installApp || 'Install App'}
-                        title={props.labelSet.installApp || 'Install App'}
-                        onClick={props.onInstallApp}
-                        type='button'
-                    >
-                        <svg aria-hidden='true' xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 256 256' fill='currentColor'>
-                            <path d="M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66-8.34a8,8,0,0,0,11.32,0l48-48a8,8,0,0,0-11.32-11.32L136,110.69V32a8,8,0,0,0-16,0v78.69L85.66,76.34A8,8,0,0,0,74.34,87.66Z" />
-                        </svg>
-                    </button>
-                )}
                 <button
                     className='action-icon-button'
                     aria-label={props.labelSet.exportData || 'Export JSON backup'}

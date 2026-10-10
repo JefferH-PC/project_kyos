@@ -340,8 +340,6 @@ function App() {
   cdiRateRef.current = cdiRate;
   const toastTimeoutRef = useRef(null);
 
-  const [deferredInstallPrompt, setDeferredInstallPrompt] = useState(null);
-
   const t = APP_TEXT[locale] || APP_TEXT.en;
 
   const showToast = useCallback((msg) => {
@@ -353,13 +351,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const handleBeforeInstallPrompt = (event) => {
-      event.preventDefault();
-      setDeferredInstallPrompt(event);
-    };
-
     const handleAppInstalled = () => {
-      setDeferredInstallPrompt(null);
       showToast(locale === 'pt' ? 'Aplicativo instalado com sucesso!' : 'App installed successfully!');
     };
 
@@ -371,31 +363,16 @@ function App() {
       showToast(locale === 'pt' ? 'Conexão online restabelecida' : 'Online connection restored');
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
     window.addEventListener('offline', handleOffline);
     window.addEventListener('online', handleOnline);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
       window.removeEventListener('offline', handleOffline);
       window.removeEventListener('online', handleOnline);
     };
   }, [locale, showToast]);
-
-  const handleInstallApp = async () => {
-    if (!deferredInstallPrompt) return;
-    deferredInstallPrompt.prompt();
-    try {
-      const choiceResult = await deferredInstallPrompt.userChoice;
-      if (choiceResult && choiceResult.outcome === 'accepted') {
-        setDeferredInstallPrompt(null);
-      }
-    } catch {
-      setDeferredInstallPrompt(null);
-    }
-  };
 
   useEffect(() => {
     window.localStorage.setItem('kyos-database', JSON.stringify(database));
@@ -1282,8 +1259,6 @@ function App() {
         onExportJSON={handleExportJSON}
         onImportJSON={handleImportJSON}
         labelSet={t}
-        canInstall={Boolean(deferredInstallPrompt)}
-        onInstallApp={handleInstallApp}
       ></Header>
 
       {/* Mobile Area Switcher */}
