@@ -1,20 +1,55 @@
 {
   "short_name": "Kyos",
-  "name": "Project Kyos",
+  "name": "Project Kyos - Personal Finance & Investments",
+  "description": "Personal finance planner, debt recovery, and daily CDI investment yield simulator.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "window-controls-overlay", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "theme_color": "#0f172a",
+  "background_color": "#0b0f19",
+  "categories": ["finance", "productivity", "utilities"],
   "icons": [
     {
-      "src": "money-logo.svg",
-      "sizes": "any",
-      "type": "image/svg+xml"
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
     },
     {
       "src": "money-logo.svg",
+      "sizes": "any",
       "type": "image/svg+xml",
-      "sizes": "any"
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "shortcuts": [
+    {
+      "name": "Investments",
+      "short_name": "Investments",
+      "description": "View and manage investments and daily CDI yield",
+      "url": "./#investments",
+      "icons": [{ "src": "money-logo.svg", "sizes": "any" }]
+    },
+    {
+      "name": "Simulation",
+      "short_name": "Simulation",
+      "description": "Simulate future yields and milestone projections",
+      "url": "./#simulation",
+      "icons": [{ "src": "money-logo.svg", "sizes": "any" }]
+    }
+  ]
 }
