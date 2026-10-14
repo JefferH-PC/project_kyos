@@ -9,6 +9,7 @@ import {
   fetchBrazilianHolidays
 } from '../../utils/calendar';
 import { calculateDailyYield, calculateAnnualizedCDI, DEFAULT_CDI_RATE } from '../../utils/cdi';
+import { distributeDailyIncome } from '../../utils/incomeDistribution';
 
 const MONTH_NAMES = {
   en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
@@ -237,44 +238,16 @@ const SimulationArea = ({
 
       totalProjectedIncome += dayTotalYield;
 
-      // Distribute yield to recovery first
-      const recoveryIndex = recoverySlots.findIndex((s) => s.type === 'recovery' && s.isProcessing);
-      const wishlistProcessingIndex = wishlistSlots.findIndex((s) => s.type === 'processing');
-      const wishlistIndex = recoveryIndex === -1
-        ? wishlistProcessingIndex >= 0
-          ? wishlistProcessingIndex
-          : wishlistSlots.findIndex((s) => s.type === 'expense')
-        : -1;
-
-      if (recoveryIndex >= 0) {
-        const slot = recoverySlots[recoveryIndex];
-        const nextPrice = Math.max((Number(slot.price) || 0) - dayTotalYield, 0);
-        if (nextPrice === 0) {
-          completedSlots.push({
-            id: slot.id,
-            name: slot.expenseName,
-            price: slot.originalPrice || slot.price,
-            type: 'recovery'
-          });
-          recoverySlots = recoverySlots
-            .filter((_, idx) => idx !== recoveryIndex)
-            .map((item, idx) => idx === 0 ? { ...item, isProcessing: true } : item);
-        } else {
-          recoverySlots = recoverySlots.map((item, idx) => idx === recoveryIndex ? { ...item, price: nextPrice } : item);
-        }
-      } else if (wishlistIndex >= 0) {
-        const slot = wishlistSlots[wishlistIndex];
-        const nextPrice = Math.max((Number(slot.price) || 0) - dayTotalYield, 0);
-        if (nextPrice === 0) {
-          completedSlots.push({
-            id: slot.id,
-            name: slot.expenseName,
-            price: slot.originalPrice || slot.price,
-            type: 'wishlist'
-          });
-          wishlistSlots = wishlistSlots.map((item, idx) => idx === wishlistIndex ? { ...item, type: 'ready', price: 0 } : item);
-        } else {
-          wishlistSlots = wishlistSlots.map((item, idx) => idx === wishlistIndex ? { ...item, type: 'processing', price: nextPrice } : item);
+      if (dayTotalYield > 0) {
+        const distributionResult = distributeDailyIncome({
+          recoverySlots,
+          wishlistSlots,
+          dailyYield: dayTotalYield
+        });
+        recoverySlots = distributionResult.recoverySlots;
+        wishlistSlots = distributionResult.wishlistSlots;
+        if (distributionResult.completedSlots.length > 0) {
+          completedSlots.push(...distributionResult.completedSlots);
         }
       }
     });

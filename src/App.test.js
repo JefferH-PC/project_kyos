@@ -815,4 +815,131 @@ test('balance section maintains stable 2-card layout without breaking when inves
   expect(document.querySelector('.portfolio-allocation-card')).toBeNull();
 });
 
+test('carryover: during catch-up, leftover income carries over to next wishlist item and moves it to processing lane on the same day', async () => {
+  const RealDate = Date;
+  class MockDate extends RealDate {
+    constructor(...args) {
+      if (args.length === 0) {
+        super('2026-09-16T12:00:00Z');
+      } else {
+        super(...args);
+      }
+    }
+    static now() {
+      return new RealDate('2026-09-16T12:00:00Z').getTime();
+    }
+  }
+  global.Date = MockDate;
+
+  try {
+    window.localStorage.setItem('kyos-last-opened-date', '2026-09-15');
+    window.localStorage.setItem('kyos-database', JSON.stringify({
+      schemaVersion: 11,
+      simulatedDate: '2026-09-15',
+      wishlistSlots: [
+        { id: 'wish-item-1', type: 'processing', expenseName: 'Mechanical Keycaps', price: 3, originalPrice: 3 },
+        { id: 'wish-item-2', type: 'expense', expenseName: 'Ergonomic Mouse', price: 10, originalPrice: 10 }
+      ],
+      recoverySlots: [],
+      assets: [{
+        id: 'asset-carryover-test',
+        name: 'Tesouro Selic',
+        yieldRate: 100,
+        investedAmount: 10000,
+        initialInvestedAmount: 10000,
+        totalIncome: 0,
+        incomeHistory: {}
+      }],
+      milestone: { target: 0 },
+      purchasedTotal: 0,
+      recoverySpentTotal: 0
+    }));
+
+    render(<App />);
+
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toBeInTheDocument();
+
+    expect(screen.getByText('Mechanical Keycaps')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /continue/i }));
+
+    const savedDb = JSON.parse(window.localStorage.getItem('kyos-database'));
+    const item1 = savedDb.wishlistSlots.find((s) => s.id === 'wish-item-1');
+    const item2 = savedDb.wishlistSlots.find((s) => s.id === 'wish-item-2');
+
+    expect(item1.type).toBe('ready');
+    expect(item1.price).toBe(0);
+
+    expect(item2.type).toBe('processing');
+    expect(item2.price).toBeLessThan(10);
+    expect(item2.price).toBeCloseTo(7.83, 1);
+  } finally {
+    global.Date = RealDate;
+  }
+});
+
+test('carryover: during catch-up, leftover income carries over to next recovery item and keeps it in processing lane on the same day', async () => {
+  const RealDate = Date;
+  class MockDate extends RealDate {
+    constructor(...args) {
+      if (args.length === 0) {
+        super('2026-09-16T12:00:00Z');
+      } else {
+        super(...args);
+      }
+    }
+    static now() {
+      return new RealDate('2026-09-16T12:00:00Z').getTime();
+    }
+  }
+  global.Date = MockDate;
+
+  try {
+    window.localStorage.setItem('kyos-last-opened-date', '2026-09-15');
+    window.localStorage.setItem('kyos-database', JSON.stringify({
+      schemaVersion: 11,
+      simulatedDate: '2026-09-15',
+      recoverySlots: [
+        { id: 'rec-item-1', type: 'recovery', isProcessing: true, expenseName: 'Small Debt', price: 2, originalPrice: 2 },
+        { id: 'rec-item-2', type: 'recovery', isProcessing: false, expenseName: 'Larger Debt', price: 10, originalPrice: 10 }
+      ],
+      wishlistSlots: [],
+      assets: [{
+        id: 'asset-carryover-test-rec',
+        name: 'Tesouro Selic',
+        yieldRate: 100,
+        investedAmount: 10000,
+        initialInvestedAmount: 10000,
+        totalIncome: 0,
+        incomeHistory: {}
+      }],
+      milestone: { target: 0 },
+      purchasedTotal: 0,
+      recoverySpentTotal: 0
+    }));
+
+    render(<App />);
+
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toBeInTheDocument();
+
+    expect(screen.getByText('Small Debt')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /continue/i }));
+
+    const savedDb = JSON.parse(window.localStorage.getItem('kyos-database'));
+    expect(savedDb.recoverySlots.find((s) => s.id === 'rec-item-1')).toBeUndefined();
+
+    const rec2 = savedDb.recoverySlots.find((s) => s.id === 'rec-item-2');
+    expect(rec2).toBeDefined();
+    expect(rec2.isProcessing).toBe(true);
+    expect(rec2.price).toBeLessThan(10);
+    expect(rec2.price).toBeCloseTo(6.83, 1);
+  } finally {
+    global.Date = RealDate;
+  }
+});
+
+
 
