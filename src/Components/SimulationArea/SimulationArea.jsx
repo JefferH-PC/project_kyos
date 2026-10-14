@@ -9,6 +9,7 @@ import {
   fetchBrazilianHolidays
 } from '../../utils/calendar';
 import { calculateDailyYield, calculateAnnualizedCDI, DEFAULT_CDI_RATE } from '../../utils/cdi';
+import { calculateTaxBreakdown } from '../../utils/tax';
 import { distributeDailyIncome } from '../../utils/incomeDistribution';
 
 const MONTH_NAMES = {
@@ -228,7 +229,10 @@ const SimulationArea = ({
 
       assets = assets.map((asset) => {
         const yieldAmount = calculateDailyYield(asset.investedAmount, asset.yieldRate, rateToUse);
-        dayTotalYield += yieldAmount;
+        const effectiveYield = asset.applyTax
+          ? calculateTaxBreakdown(yieldAmount, asset.creationDate, dayDate).netYield
+          : yieldAmount;
+        dayTotalYield += effectiveYield;
         return {
           ...asset,
           investedAmount: Number(asset.investedAmount || 0) + yieldAmount,

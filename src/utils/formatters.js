@@ -1,10 +1,22 @@
-const numberFormatter = new Intl.NumberFormat('pt-BR', {
+const ptFormatter = new Intl.NumberFormat('pt-BR', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
 });
 
-export const formatMoney = (value) => numberFormatter.format(Number(value) || 0);
-export const formatDecimal = (value) => numberFormatter.format(Number(value) || 0);
+const enFormatter = new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+});
+
+export const formatMoney = (value, locale = 'pt') => {
+    const formatter = locale === 'en' ? enFormatter : ptFormatter;
+    return formatter.format(Number(value) || 0);
+};
+
+export const formatDecimal = (value, locale = 'pt') => {
+    const formatter = locale === 'en' ? enFormatter : ptFormatter;
+    return formatter.format(Number(value) || 0);
+};
 
 /**
  * Formats a YYYY-MM-DD date key according to locale.

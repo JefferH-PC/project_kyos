@@ -3,9 +3,9 @@ import './MiddleMilestoneCard.css';
 const MiddleMilestoneCard = (props) => {
     return (
         <div className='middle-milestone'>
-            <h2 className='milestone-title'>{props.title}</h2>
-            <h2>R${props.next}</h2>
-            <h2>R${props.remaining}</h2>
+            <span className='milestone-title'>{props.title}</span>
+            <div className='milestone-target'>R$ {props.next}</div>
+            <div className='milestone-badge'>R$ {props.remaining}</div>
         </div>
     );
 }

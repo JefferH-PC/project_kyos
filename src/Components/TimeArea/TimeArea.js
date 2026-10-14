@@ -45,7 +45,7 @@ const TimeArea = (props) => {
         const removedSlot = slots.find((slot) => slot.id === id);
         const remainingSlots = slots.filter((slot) => slot.id !== id);
         if (isRecoveryArea && removedSlot && isManualRemoval) {
-            props.onRemove?.(removedSlot.originalPrice ?? removedSlot.price);
+            props.onRemove?.(removedSlot.price ?? removedSlot.originalPrice);
         }
         if (isRecoveryArea && removedSlot?.isProcessing) {
             const nextRecovery = remainingSlots.find((slot) => slot.type === 'recovery');
@@ -81,11 +81,19 @@ const TimeArea = (props) => {
 
     const renderSlot = (slot, index, list) => {
         const position = list.length === 1 ? 'slot-single' : index === 0 ? 'slot-first' : index === list.length - 1 ? 'slot-last' : 'slot-middle';
+        const origPrice = Number(slot.originalPrice ?? slot.price ?? 0);
+        const currentPrice = Number(slot.price ?? 0);
+        const fundedAmount = Math.max(0, origPrice - currentPrice);
+        const progressPercent = origPrice > 0 ? Math.min(100, Math.round((fundedAmount / origPrice) * 100)) : 100;
+
         const slotProps = {
             expenseName: slot.expenseName,
             price: formatMoney(slot.price),
+            originalPrice: formatMoney(origPrice),
             days: getDays(slot.price),
             daysLabel: labels.days,
+            progressPercent,
+            hasProgress: origPrice > currentPrice && currentPrice > 0,
             position,
             removeLabel: labels.removeSlot,
             buyLabel: labels.completeSlot,
@@ -126,10 +134,10 @@ const TimeArea = (props) => {
                 {regularSlots.map((slot, index, list) => renderSlot(slot, index, list))}
             </div>
             <div className="processing-area">
-                {processingSlots.slice(0, isRecoveryArea ? 1 : 1).map((slot, index, list) => renderSlot(slot, index, list))}
+                {processingSlots.slice(0, 1).map((slot, index, list) => renderSlot(slot, index, list))}
             </div>
             <div className="total">
-                <h3>{labels.total}: R${formatMoney(props.total)} - {getDays(props.total)} {labels.days}</h3>
+                <h3>{labels.total}: R$ {formatMoney(props.total)} - {getDays(props.total)} {labels.days}</h3>
             </div>
         </div >
     );

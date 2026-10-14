@@ -4,6 +4,8 @@ import {
   fetchHistoricalCDI,
   fetchLatestCDI,
   calculateAssetAccrualSinceDate,
+  getHistoricalFallbackRateForDate,
+  fetchCDIRatesForDateRange,
   DEFAULT_CDI_RATE,
   CDI_CACHE_KEY
 } from './cdi';
@@ -72,15 +74,54 @@ describe('cdi utilities', () => {
     expect(Object.keys(updated.incomeHistory)).toEqual(['2026-09-14', '2026-09-15', '2026-09-16']);
   });
 
-  test('calculateAssetAccrualSinceDate returns original when creationDate is today or future', () => {
+  test('getHistoricalFallbackRateForDate returns accurate official benchmark for given year', () => {
+    expect(getHistoricalFallbackRateForDate('2016-05-10')).toBeCloseTo(0.0520, 3);
+    expect(getHistoricalFallbackRateForDate('2020-08-01')).toBeCloseTo(0.0108, 3);
+    expect(getHistoricalFallbackRateForDate('2023-11-15')).toBeCloseTo(0.0486, 3);
+  });
+
+  test('fetchCDIRatesForDateRange fetches, parses, and caches multiple years of BCB rates', async () => {
+    global.fetch = jest.fn().mockImplementation((url) => {
+      const urlStr = String(url);
+      if (urlStr.includes('2016')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([
+            { data: '04/01/2016', valor: '0.052496' },
+            { data: '05/01/2016', valor: '0.052496' }
+          ])
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve([
+          { data: '02/01/2017', valor: '0.052496' }
+        ])
+      });
+    });
+
+    const rates = await fetchCDIRatesForDateRange('2016-01-01', '2017-01-10');
+    expect(rates['2016-01-04']).toBeCloseTo(0.052496, 5);
+    expect(rates['2017-01-02']).toBeCloseTo(0.052496, 5);
+
+    const cached = JSON.parse(window.localStorage.getItem(CDI_CACHE_KEY));
+    expect(cached['2016-01-04']).toBeCloseTo(0.052496, 5);
+  });
+
+  test('calculateAssetAccrualSinceDate computes accurate compounding across a 10-year span (e.g. 2016 to 2026)', () => {
     const asset = {
-      investedAmount: 5000,
-      initialInvestedAmount: 5000,
+      name: 'Tesouro 10 Years',
+      investedAmount: 10000,
+      initialInvestedAmount: 10000,
       yieldRate: 100,
-      creationDate: '2026-10-10'
+      creationDate: '2016-01-04'
     };
-    const updated = calculateAssetAccrualSinceDate(asset, '2026-10-10', []);
-    expect(updated.investedAmount).toBe(5000);
-    expect(updated.totalIncome).toBe(0);
+    const targetDate = '2026-01-04';
+    const holidays = [];
+
+    const updated = calculateAssetAccrualSinceDate(asset, targetDate, holidays);
+    expect(updated.investedAmount).toBeGreaterThan(20000); // 10 years of Brazilian CDI doubles principal
+    expect(updated.totalIncome).toBeGreaterThan(10000);
+    expect(Object.keys(updated.incomeHistory).length).toBeGreaterThan(2000);
   });
 });

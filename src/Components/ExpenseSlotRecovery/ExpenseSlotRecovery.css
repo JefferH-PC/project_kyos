@@ -29,6 +29,77 @@
     overflow-wrap: anywhere;
 }
 
+.expense-slot-recovery .slot-info {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.expense-slot-recovery .slot-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+}
+
+.expense-slot-recovery .slot-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.expense-slot-recovery .slot-days-pill.recovery {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent-red);
+    background: var(--accent-red-bg);
+    border: 1px solid var(--accent-red-border);
+    padding: 2px 6px;
+    border-radius: 6px;
+    white-space: nowrap;
+}
+
+.expense-slot-recovery .slot-amount-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.expense-slot-recovery .slot-price.recovery {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--accent-red);
+    font-variant-numeric: tabular-nums;
+}
+
+.expense-slot-recovery .slot-original-price {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-decoration: line-through;
+    font-variant-numeric: tabular-nums;
+}
+
+.expense-slot-recovery .slot-progress-bar-wrap {
+    width: 100%;
+    height: 4px;
+    background: var(--border-subtle);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 3px;
+}
+
+.expense-slot-recovery .slot-progress-fill.recovery {
+    height: 100%;
+    background: var(--accent-red);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
 .expense-slot-recovery .remove {
     border-radius: 8px;
 }

@@ -53,6 +53,10 @@ export const fetchBrazilianHolidays = async (year) => {
   const yearKey = String(year);
   const cache = getHolidaysCache();
 
+  if (Array.isArray(cache[yearKey]) && cache[yearKey].length > 0) {
+    return cache[yearKey];
+  }
+
   try {
     const response = await fetch(`https://brasilapi.com.br/api/feriados/v1/${yearKey}`);
     if (!response.ok) {
@@ -75,6 +79,53 @@ export const fetchBrazilianHolidays = async (year) => {
     }
     throw error;
   }
+};
+
+/**
+ * Returns fixed national holidays for a given year as offline fallback.
+ * @param {number|string} year
+ * @returns {Array<{ date: string, name: string }>}
+ */
+export const getFixedNationalHolidays = (year) => {
+  const y = Number(year);
+  if (!Number.isFinite(y)) return [];
+  return [
+    { date: `${y}-01-01`, name: 'Confraternização Universal' },
+    { date: `${y}-04-21`, name: 'Tiradentes' },
+    { date: `${y}-05-01`, name: 'Dia do Trabalho' },
+    { date: `${y}-09-07`, name: 'Independência do Brasil' },
+    { date: `${y}-10-12`, name: 'Nossa Senhora Aparecida' },
+    { date: `${y}-11-02`, name: 'Finados' },
+    { date: `${y}-11-15`, name: 'Proclamação da República' },
+    { date: `${y}-11-20`, name: 'Dia da Consciência Negra' },
+    { date: `${y}-12-25`, name: 'Natal' }
+  ];
+};
+
+/**
+ * Fetches holidays across multiple years, using cached data where available.
+ *
+ * @param {number|string} startYear
+ * @param {number|string} endYear
+ * @returns {Promise<Array<{ date: string, name: string, type?: string }>>}
+ */
+export const fetchHolidaysForYearRange = async (startYear, endYear) => {
+  const start = Math.min(Number(startYear), Number(endYear));
+  const end = Math.max(Number(startYear), Number(endYear));
+  const allHolidays = [];
+
+  for (let y = start; y <= end; y += 1) {
+    try {
+      const holidays = await fetchBrazilianHolidays(y);
+      if (Array.isArray(holidays)) {
+        allHolidays.push(...holidays);
+      }
+    } catch {
+      allHolidays.push(...getFixedNationalHolidays(y));
+    }
+  }
+
+  return allHolidays;
 };
 
 /**

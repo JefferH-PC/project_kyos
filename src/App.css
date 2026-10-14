@@ -58,7 +58,8 @@
 body {
     background-color: var(--bg-app);
     color: var(--text-primary);
-    overflow: hidden;
+    min-height: 100dvh;
+    overflow-x: hidden;
 }
 
 button,
@@ -82,8 +83,8 @@ select,
 }
 
 .app {
+    min-height: 100dvh;
     height: 100vh;
-    overflow: hidden;
     padding: 0 16px 14px;
     background-color: var(--bg-app);
     color: var(--text-primary);
@@ -601,18 +602,20 @@ select,
 
 /* Add Asset Form */
 .asset-form {
-    display: grid;
-    grid-template-columns: 1.4fr 1fr 1fr auto;
-    gap: 8px;
-    padding: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 10px;
+    padding: 14px;
     border: 1px solid var(--border-card);
     border-radius: 12px;
     background: var(--bg-surface-elevated);
     animation: reveal .2s ease both;
 }
 
-.asset-form input {
-    min-width: 0;
+.asset-form > input {
+    flex: 1 1 140px;
+    min-width: 120px;
     padding: 8px 12px;
     border: 1px solid var(--border-card);
     border-radius: 8px;
@@ -622,10 +625,60 @@ select,
     font-size: 14px;
 }
 
-.asset-form input:focus {
+.asset-form > input:focus,
+.asset-date-input-label input:focus {
     outline: none;
     border-color: var(--accent-blue);
     box-shadow: 0 0 0 2px var(--accent-blue-bg);
+}
+
+.asset-date-input-label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1 1 150px;
+    min-width: 130px;
+    background: transparent;
+}
+
+.asset-date-input-label span {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    letter-spacing: 0.4px;
+}
+
+.asset-date-input-label input {
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px solid var(--border-card);
+    border-radius: 8px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.asset-tax-checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    user-select: none;
+    background: transparent;
+    padding: 4px 0;
+}
+
+.asset-tax-checkbox-label input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent-green);
+    cursor: pointer;
 }
 
 .asset-form button {
@@ -637,6 +690,7 @@ select,
     font: inherit;
     font-weight: 700;
     cursor: pointer;
+    align-self: flex-end;
 }
 
 .asset-form button:hover {
@@ -951,6 +1005,86 @@ select,
 
 .flow-mini-bar.spent {
     background: var(--accent-red);
+}
+
+/* Balance Asset Breakdown */
+.balance-asset-breakdown {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.asset-breakdown-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.asset-breakdown-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+}
+
+.asset-breakdown-count {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.breakdown-track {
+    display: flex;
+    height: 8px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--bg-surface-elevated);
+    gap: 2px;
+}
+
+.breakdown-segment {
+    height: 100%;
+    transition: width 0.3s ease;
+    border-radius: 999px;
+}
+
+.breakdown-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 11px;
+}
+
+.breakdown-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.legend-color-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.legend-asset-name {
+    color: var(--text-secondary);
+    max-width: 120px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.legend-asset-pct {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
 }
 
 /* Asset Date & Tax Details */

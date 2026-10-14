@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import './App.css';
 import Header from './Components/Header/Header';
 import MiddleMilestoneCard from './Components/MiddleMilestoneCard/MiddleMilestoneCard';
@@ -17,14 +17,15 @@ import {
   shiftDate,
   isValidDateKey,
   getBusinessDaysInRange,
-  fetchBrazilianHolidays
+  fetchBrazilianHolidays,
+  fetchHolidaysForYearRange
 } from './utils/calendar';
 import {
   calculateDailyYield,
-  fetchHistoricalCDI,
   fetchLatestCDI,
   calculateAnnualizedCDI,
   calculateAssetAccrualSinceDate,
+  fetchCDIRatesForDateRange,
   DEFAULT_CDI_RATE
 } from './utils/cdi';
 import { calculateTaxBreakdown, getCalendarDaysElapsed } from './utils/tax';
@@ -313,6 +314,7 @@ function App() {
     name: '',
     yieldRate: '',
     investedAmount: '',
+    creationDate: '',
     applyTax: false
   }));
   const [cdiRate, setCdiRate] = useState(DEFAULT_CDI_RATE);
@@ -332,6 +334,7 @@ function App() {
     name: '',
     yieldRate: '',
     investedAmount: '',
+    creationDate: '',
     applyTax: false
   });
 
@@ -440,11 +443,9 @@ function App() {
 
     window.localStorage.setItem('kyos-last-opened-date', currentDateKey);
 
-    const dayRates = {};
-    for (const day of businessDaysList) {
-      const key = getDateKey(day);
-      dayRates[key] = await fetchHistoricalCDI(key, currentCdi);
-    }
+    const startKey = getDateKey(startDate);
+    const endKey = getDateKey(endDate);
+    const dayRates = await fetchCDIRatesForDateRange(startKey, endKey, currentCdi);
 
     const currentDb = readDatabase();
     let assets = JSON.parse(JSON.stringify(currentDb.assets || []));
@@ -458,20 +459,29 @@ function App() {
     for (const day of businessDaysList) {
       const dayKey = getDateKey(day);
       const dayRate = dayRates[dayKey] || currentCdi;
-      let dayYield = 0;
+      let dayYieldForDistribution = 0;
 
-      assets = assets.map((asset) => {
+      const updatedAssets = [];
+      for (const asset of assets) {
         if (asset.incomeHistory && typeof asset.incomeHistory[dayKey] === 'number') {
-          return asset;
+          updatedAssets.push(asset);
+          continue;
         }
 
         if (asset.creationDate && asset.creationDate > dayKey) {
-          return asset;
+          updatedAssets.push(asset);
+          continue;
         }
 
         const income = calculateDailyYield(asset.investedAmount, asset.yieldRate, dayRate);
-        dayYield += income;
-        return {
+        const netIncome = asset.applyTax
+          ? calculateTaxBreakdown(income, asset.creationDate, day).netYield
+          : income;
+
+        dayYieldForDistribution += netIncome;
+        accruedSum += income;
+
+        updatedAssets.push({
           ...asset,
           investedAmount: Number(asset.investedAmount || 0) + income,
           totalIncome: Number(asset.totalIncome || 0) + income,
@@ -479,16 +489,15 @@ function App() {
             ...(asset.incomeHistory || {}),
             [dayKey]: income
           }
-        };
-      });
+        });
+      }
+      assets = updatedAssets;
 
-      accruedSum += dayYield;
-
-      if (dayYield > 0) {
+      if (dayYieldForDistribution > 0) {
         const distributionResult = distributeDailyIncome({
           recoverySlots,
           wishlistSlots,
-          dailyYield: dayYield
+          dailyYield: dayYieldForDistribution
         });
         recoverySlots = distributionResult.recoverySlots;
         wishlistSlots = distributionResult.wishlistSlots;
@@ -541,8 +550,8 @@ function App() {
         const lastYear = parseDateKey(lastOpened).getFullYear();
         if (lastYear !== currentYear) {
           try {
-            const prevHolidays = await fetchBrazilianHolidays(lastYear);
-            holidays = [...holidays, ...prevHolidays];
+            const rangeHolidays = await fetchHolidaysForYearRange(Math.min(lastYear, currentYear), Math.max(lastYear, currentYear));
+            holidays = rangeHolidays;
           } catch {
             // Non-blocking
           }
@@ -636,34 +645,43 @@ function App() {
   const actualDate = parseDateKey(database.simulatedDate);
   const totalCdiRate = calculateAnnualizedCDI(cdiRate);
 
-  const getIncomeForDate = (date) => {
-    return database.assets.reduce((total, asset) => total + Number(asset.incomeHistory?.[getDateKey(date)] || 0), 0);
-  };
+  const {
+    weekIncome,
+    previousWeekIncome,
+    monthIncome,
+    previousMonthIncome,
+    yearIncome,
+    previousYearIncome
+  } = useMemo(() => {
+    const history = database.incomeHistory || {};
+    const refDate = parseDateKey(database.simulatedDate);
+    const sumRange = (start, end) => {
+      let sum = 0;
+      for (let d = new Date(start); d <= end; d = shiftDate(d, 1)) {
+        sum += Number(history[getDateKey(d)] || 0);
+      }
+      return sum;
+    };
 
-  const getIncomeBetween = (startDate, endDate) => {
-    let total = 0;
-    for (let date = new Date(startDate); date <= endDate; date = shiftDate(date, 1)) {
-      total += getIncomeForDate(date);
-    }
-    return total;
-  };
+    const startOfWeek = shiftDate(refDate, -(refDate.getDay() === 0 ? 6 : refDate.getDay() - 1));
+    const startOfMonth = new Date(refDate.getFullYear(), refDate.getMonth(), 1);
+    const startOfYear = new Date(refDate.getFullYear(), 0, 1);
+    const previousWeekStart = shiftDate(startOfWeek, -7);
+    const previousWeekEnd = shiftDate(startOfWeek, -1);
+    const previousMonthStart = new Date(refDate.getFullYear(), refDate.getMonth() - 1, 1);
+    const previousMonthEnd = new Date(refDate.getFullYear(), refDate.getMonth(), 0);
+    const previousYearStart = new Date(refDate.getFullYear() - 1, 0, 1);
+    const previousYearEnd = new Date(refDate.getFullYear() - 1, 11, 31);
 
-  const startOfWeek = shiftDate(actualDate, -(actualDate.getDay() === 0 ? 6 : actualDate.getDay() - 1));
-  const startOfMonth = new Date(actualDate.getFullYear(), actualDate.getMonth(), 1);
-  const startOfYear = new Date(actualDate.getFullYear(), 0, 1);
-  const previousWeekStart = shiftDate(startOfWeek, -7);
-  const previousWeekEnd = shiftDate(startOfWeek, -1);
-  const previousMonthStart = new Date(actualDate.getFullYear(), actualDate.getMonth() - 1, 1);
-  const previousMonthEnd = new Date(actualDate.getFullYear(), actualDate.getMonth(), 0);
-  const previousYearStart = new Date(actualDate.getFullYear() - 1, 0, 1);
-  const previousYearEnd = new Date(actualDate.getFullYear() - 1, 11, 31);
-
-  const weekIncome = getIncomeBetween(startOfWeek, actualDate);
-  const previousWeekIncome = getIncomeBetween(previousWeekStart, previousWeekEnd);
-  const monthIncome = getIncomeBetween(startOfMonth, actualDate);
-  const previousMonthIncome = getIncomeBetween(previousMonthStart, previousMonthEnd);
-  const yearIncome = getIncomeBetween(startOfYear, actualDate);
-  const previousYearIncome = getIncomeBetween(previousYearStart, previousYearEnd);
+    return {
+      weekIncome: sumRange(startOfWeek, refDate),
+      previousWeekIncome: sumRange(previousWeekStart, previousWeekEnd),
+      monthIncome: sumRange(startOfMonth, refDate),
+      previousMonthIncome: sumRange(previousMonthStart, previousMonthEnd),
+      yearIncome: sumRange(startOfYear, refDate),
+      previousYearIncome: sumRange(previousYearStart, previousYearEnd)
+    };
+  }, [database.incomeHistory, database.simulatedDate]);
 
   // Daily incomes calculation (per-asset tax deduction if asset.applyTax is true)
   const totalDailyIncome = database.assets.reduce((total, asset) => {
@@ -707,25 +725,42 @@ function App() {
 
   const updateSlots = (key, slots) => setDatabase((current) => ({ ...current, [key]: slots }));
 
-  const addAsset = (event) => {
+  const addAsset = async (event) => {
     event.preventDefault();
     if (!assetForm.name.trim() || !assetForm.investedAmount) return;
 
-    const baseAmount = Number(assetForm.investedAmount);
-    const creationDate = database.simulatedDate;
+    const baseAmount = Math.max(Number(assetForm.investedAmount) || 0, 0);
+    const yieldRate = Math.max(Number(assetForm.yieldRate) || 0, 0);
+    const targetDate = (assetForm.creationDate && isValidDateKey(assetForm.creationDate))
+      ? assetForm.creationDate
+      : database.simulatedDate;
     const applyTax = Boolean(assetForm.applyTax);
 
-    const newAsset = {
+    let newAsset = {
       id: `${Date.now()}-${Math.random()}`,
       name: assetForm.name.trim(),
-      yieldRate: Number(assetForm.yieldRate || 0),
+      yieldRate,
       investedAmount: baseAmount,
       initialInvestedAmount: baseAmount,
       totalIncome: 0,
       incomeHistory: {},
-      creationDate,
+      creationDate: targetDate,
       applyTax
     };
+
+    if (targetDate < database.simulatedDate) {
+      const startYear = parseDateKey(targetDate).getFullYear();
+      const endYear = parseDateKey(database.simulatedDate).getFullYear();
+      const rangeHolidays = await fetchHolidaysForYearRange(startYear, endYear);
+      const cdiRates = await fetchCDIRatesForDateRange(targetDate, database.simulatedDate, cdiRate);
+      newAsset = calculateAssetAccrualSinceDate(
+        newAsset,
+        database.simulatedDate,
+        rangeHolidays,
+        cdiRate,
+        cdiRates
+      );
+    }
 
     setDatabase((current) => {
       const updatedAssets = [...current.assets, newAsset];
@@ -740,6 +775,7 @@ function App() {
       name: '',
       yieldRate: '',
       investedAmount: '',
+      creationDate: '',
       applyTax: false
     });
     setIsAssetFormOpen(false);
@@ -775,48 +811,57 @@ function App() {
       name: asset.name || '',
       yieldRate: String(asset.yieldRate ?? 0),
       investedAmount: String(asset.initialInvestedAmount ?? asset.investedAmount ?? 0),
+      creationDate: asset.creationDate || database.simulatedDate,
       applyTax: Boolean(asset.applyTax)
     });
   };
 
   const cancelEditAsset = () => {
     setEditingAssetId(null);
-    setEditAssetForm({ name: '', yieldRate: '', investedAmount: '', applyTax: false });
+    setEditAssetForm({ name: '', yieldRate: '', investedAmount: '', creationDate: '', applyTax: false });
   };
 
-  const saveAssetEdit = (event) => {
+  const saveAssetEdit = async (event) => {
     event.preventDefault();
     if (!editAssetForm.name.trim() || !editAssetForm.investedAmount) return;
     const newInitial = Math.max(Number(editAssetForm.investedAmount) || 0, 0);
     const newYield = Math.max(Number(editAssetForm.yieldRate) || 0, 0);
+    const targetCreationDate = (editAssetForm.creationDate && isValidDateKey(editAssetForm.creationDate))
+      ? editAssetForm.creationDate
+      : database.simulatedDate;
     const editedApplyTax = Boolean(editAssetForm.applyTax);
+
+    const currentAsset = database.assets.find((a) => a.id === editingAssetId);
+    let editedAsset = {
+      ...(currentAsset || {}),
+      id: editingAssetId,
+      name: editAssetForm.name.trim(),
+      yieldRate: newYield,
+      initialInvestedAmount: newInitial,
+      investedAmount: newInitial,
+      creationDate: targetCreationDate,
+      applyTax: editedApplyTax,
+      totalIncome: 0,
+      incomeHistory: {}
+    };
+
+    if (targetCreationDate < database.simulatedDate) {
+      const startYear = parseDateKey(targetCreationDate).getFullYear();
+      const endYear = parseDateKey(database.simulatedDate).getFullYear();
+      const rangeHolidays = await fetchHolidaysForYearRange(startYear, endYear);
+      const cdiRates = await fetchCDIRatesForDateRange(targetCreationDate, database.simulatedDate, cdiRate);
+      editedAsset = calculateAssetAccrualSinceDate(
+        editedAsset,
+        database.simulatedDate,
+        rangeHolidays,
+        cdiRate,
+        cdiRates
+      );
+    }
 
     setDatabase((current) => {
       const assets = current.assets.map((asset) => {
         if (asset.id !== editingAssetId) return asset;
-        const creationDate = asset.creationDate || current.simulatedDate;
-        let editedAsset = {
-          ...asset,
-          name: editAssetForm.name.trim(),
-          yieldRate: newYield,
-          initialInvestedAmount: newInitial,
-          investedAmount: newInitial,
-          creationDate,
-          applyTax: editedApplyTax
-        };
-
-        if (creationDate < current.simulatedDate) {
-          editedAsset = calculateAssetAccrualSinceDate(
-            editedAsset,
-            current.simulatedDate,
-            holidaysList,
-            cdiRate
-          );
-        } else {
-          editedAsset.totalIncome = 0;
-          editedAsset.incomeHistory = {};
-        }
-
         return editedAsset;
       });
 
@@ -901,6 +946,16 @@ function App() {
                   onChange={(event) => setAssetForm({ ...assetForm, investedAmount: event.target.value })}
                   required
                 />
+                <label className='asset-date-input-label'>
+                  <span>{t.investmentDate}</span>
+                  <input
+                    type='date'
+                    aria-label={t.investmentDate}
+                    max={database.simulatedDate}
+                    value={assetForm.creationDate || ''}
+                    onChange={(event) => setAssetForm({ ...assetForm, creationDate: event.target.value })}
+                  />
+                </label>
                 <label className='asset-tax-checkbox-label'>
                   <input
                     type='checkbox'
@@ -953,6 +1008,16 @@ function App() {
                             onChange={(e) => setEditAssetForm({ ...editAssetForm, investedAmount: e.target.value })}
                             placeholder={t.investedAmount}
                             required
+                          />
+                        </label>
+                        <label className='asset-edit-label'>
+                          <span>{t.investmentDate}</span>
+                          <input
+                            type='date'
+                            aria-label={t.investmentDate}
+                            max={database.simulatedDate}
+                            value={editAssetForm.creationDate || ''}
+                            onChange={(e) => setEditAssetForm({ ...editAssetForm, creationDate: e.target.value })}
                           />
                         </label>
                         <label className='asset-tax-checkbox-label'>
@@ -1153,6 +1218,58 @@ function App() {
                 </div>
               </div>
             </div>
+
+            {database.assets.length > 0 && investedTotal > 0 && (
+              <div className='balance-asset-breakdown'>
+                <div className='asset-breakdown-header'>
+                  <span className='asset-breakdown-title'>{locale === 'pt' ? 'Composição dos Investimentos' : 'Investment Portfolio Breakdown'}</span>
+                  <span className='asset-breakdown-count'>{database.assets.length} {t.investmentsCount}</span>
+                </div>
+                <div className='breakdown-track' role='progressbar' aria-label={locale === 'pt' ? 'Composição dos Investimentos' : 'Investment Portfolio Breakdown'}>
+                  {database.assets.map((asset, index) => {
+                    const ratio = investedTotal > 0 ? (asset.investedAmount / investedTotal) * 100 : 0;
+                    const colors = [
+                      'hsl(156, 72%, 46%)',
+                      'hsl(190, 85%, 48%)',
+                      'hsl(215, 85%, 60%)',
+                      'hsl(280, 75%, 65%)',
+                      'hsl(42, 90%, 55%)',
+                      'hsl(340, 80%, 60%)'
+                    ];
+                    const color = colors[index % colors.length];
+                    return (
+                      <div
+                        key={asset.id}
+                        className='breakdown-segment'
+                        style={{ width: `${Math.max(ratio, 1.5)}%`, backgroundColor: color }}
+                        title={`${asset.name}: R$ ${displayMoney(asset.investedAmount)} (${formatDecimal(ratio)}%)`}
+                      />
+                    );
+                  })}
+                </div>
+                <div className='breakdown-legend'>
+                  {database.assets.map((asset, index) => {
+                    const ratio = investedTotal > 0 ? (asset.investedAmount / investedTotal) * 100 : 0;
+                    const colors = [
+                      'hsl(156, 72%, 46%)',
+                      'hsl(190, 85%, 48%)',
+                      'hsl(215, 85%, 60%)',
+                      'hsl(280, 75%, 65%)',
+                      'hsl(42, 90%, 55%)',
+                      'hsl(340, 80%, 60%)'
+                    ];
+                    const color = colors[index % colors.length];
+                    return (
+                      <div key={asset.id} className='breakdown-legend-item'>
+                        <span className='legend-color-dot' style={{ backgroundColor: color }} />
+                        <span className='legend-asset-name'>{asset.name}</span>
+                        <strong className='legend-asset-pct'>{formatDecimal(ratio)}%</strong>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       );

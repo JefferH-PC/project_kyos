@@ -378,7 +378,7 @@ test('catch-up modal displays accurate non-zero accrued income and completed slo
     expect(accruedMetric).not.toHaveTextContent('R$ 0,00');
 
     // Verify completed item is listed in the modal
-    expect(screen.getByText('Artisan Coffee')).toBeInTheDocument();
+    expect(within(dialog).getByText('Artisan Coffee')).toBeInTheDocument();
   } finally {
     global.Date = RealDate;
   }
@@ -622,7 +622,7 @@ test('restores proportions of the 3 segment areas as direct children without are
   expect(document.querySelector('.area-column')).toBeNull();
 });
 
-test('adds asset without manual date picker and sets creationDate to simulatedDate', async () => {
+test('adds asset with date picker defaulting to simulatedDate when unselected', async () => {
   const today = new Date();
   const simulatedDateKey = getDateKey(today);
 
@@ -648,8 +648,9 @@ test('adds asset without manual date picker and sets creationDate to simulatedDa
   const addBtn = screen.getByRole('button', { name: /add investment/i });
   await userEvent.click(addBtn);
 
-  // Verify that date picker is NOT present
-  expect(screen.queryByLabelText(/investment date/i)).toBeNull();
+  // Verify that date picker IS present with correct accessibility label
+  const datePicker = screen.getByLabelText(/investment date/i);
+  expect(datePicker).toBeInTheDocument();
 
   // Fill in form with name, yield, amount
   const nameInput = screen.getByPlaceholderText('Name');
@@ -674,6 +675,67 @@ test('adds asset without manual date picker and sets creationDate to simulatedDa
   expect(db.assets[0].name).toBe('CDB 110% CDI');
   expect(db.assets[0].creationDate).toBe(simulatedDateKey);
   expect(db.assets[0].investedAmount).toBe(10000);
+});
+
+test('adds asset with a past date (10 years ago) and calculates accurate CDI compounding for every business day', async () => {
+  const simulatedDateKey = '2026-10-14';
+  const pastDateKey = '2016-01-04'; // 10+ years ago
+
+  window.localStorage.setItem('kyos-database', JSON.stringify({
+    schemaVersion: 11,
+    simulatedDate: simulatedDateKey,
+    wishlistSlots: [],
+    recoverySlots: [],
+    assets: [],
+    milestone: { target: 0 },
+    purchasedTotal: 0,
+    recoverySpentTotal: 0
+  }));
+  window.localStorage.setItem('kyos-last-opened-date', simulatedDateKey);
+
+  render(<App />);
+
+  // Go to Investments
+  const investmentsBtn = await screen.findByRole('button', { name: 'Investments' });
+  await userEvent.click(investmentsBtn);
+
+  // Click Add Investment
+  const addBtn = screen.getByRole('button', { name: /add investment/i });
+  await userEvent.click(addBtn);
+
+  // Fill in form with name, yield, amount, and 10-year past date
+  const nameInput = screen.getByPlaceholderText('Name');
+  const yieldInput = screen.getByPlaceholderText('Yield %');
+  const amountInput = screen.getByPlaceholderText('Invested amount');
+  const dateInput = screen.getByLabelText(/investment date/i);
+
+  await userEvent.type(nameInput, 'Tesouro 100% CDI 2016');
+  await userEvent.type(yieldInput, '100');
+  await userEvent.type(amountInput, '10000');
+  await userEvent.clear(dateInput);
+  await userEvent.type(dateInput, pastDateKey);
+
+  // Submit form
+  const assetFormEl = screen.getByPlaceholderText('Name').closest('form');
+  const submitBtn = within(assetFormEl).getByRole('button', { name: 'Add' });
+  await userEvent.click(submitBtn);
+
+  // Asset should be rendered with accurate historical accrual
+  expect(await screen.findByText('Tesouro 100% CDI 2016')).toBeInTheDocument();
+
+  const db = JSON.parse(window.localStorage.getItem('kyos-database'));
+  expect(db.assets.length).toBe(1);
+  const asset = db.assets[0];
+  expect(asset.creationDate).toBe(pastDateKey);
+  expect(asset.initialInvestedAmount).toBe(10000);
+
+  // Over 10 years of compounding CDI, R$ 10,000 has more than doubled
+  expect(asset.totalIncome).toBeGreaterThan(10000);
+  expect(asset.investedAmount).toBeGreaterThan(20000);
+
+  // Every single business day over the 10-year period has an individual income history entry
+  const historyKeys = Object.keys(asset.incomeHistory);
+  expect(historyKeys.length).toBeGreaterThan(2000);
 });
 
 test('exports database backup via the header export button', async () => {
@@ -860,7 +922,7 @@ test('carryover: during catch-up, leftover income carries over to next wishlist 
     const dialog = await screen.findByRole('dialog');
     expect(dialog).toBeInTheDocument();
 
-    expect(screen.getByText('Mechanical Keycaps')).toBeInTheDocument();
+    expect(within(dialog).getByText('Mechanical Keycaps')).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: /continue/i }));
 
@@ -924,7 +986,7 @@ test('carryover: during catch-up, leftover income carries over to next recovery 
     const dialog = await screen.findByRole('dialog');
     expect(dialog).toBeInTheDocument();
 
-    expect(screen.getByText('Small Debt')).toBeInTheDocument();
+    expect(within(dialog).getByText('Small Debt')).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: /continue/i }));
 
