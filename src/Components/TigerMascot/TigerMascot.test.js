@@ -15,12 +15,12 @@ afterEach(() => {
 describe('TigerMascot Living Companion', () => {
   test('renders tiger mascot with name, role and avatar in Portuguese and English', () => {
     const { rerender } = render(<TigerMascot locale="pt" />);
-    expect(screen.getByText('Tora, o Tigre do Kyos')).toBeInTheDocument();
+    expect(screen.getByText('Herby, o Tigre do Kyos')).toBeInTheDocument();
     expect(screen.getByText('Guardião do Patrimônio')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /alimentar/i })).toBeInTheDocument();
 
     rerender(<TigerMascot locale="en" />);
-    expect(screen.getByText('Tora, the Kyos Tiger')).toBeInTheDocument();
+    expect(screen.getByText('Herby, the Kyos Tiger')).toBeInTheDocument();
     expect(screen.getByText('Wealth Guardian')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /feed/i })).toBeInTheDocument();
   });

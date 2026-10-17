@@ -3,12 +3,12 @@ import './TigerMascot.css';
 
 const TIGER_DIALOGUES = {
   pt: {
-    name: 'Tora, o Tigre do Kyos',
+    name: 'Herby, o Tigre do Kyos',
     role: 'Guardião do Patrimônio',
     feedBtn: 'Alimentar 🪙',
     coinsFedLabel: 'Moedas guardadas',
     minimize: 'Minimizar mascote',
-    expand: 'Expandir Tora',
+    expand: 'Expandir Herby',
     petMe: 'Clique para fazer carinho!',
     reactions: {
       default: [
@@ -58,12 +58,12 @@ const TIGER_DIALOGUES = {
     }
   },
   en: {
-    name: 'Tora, the Kyos Tiger',
+    name: 'Herby, the Kyos Tiger',
     role: 'Wealth Guardian',
     feedBtn: 'Feed 🪙',
     coinsFedLabel: 'Coins vaulted',
     minimize: 'Minimize mascot',
-    expand: 'Expand Tora',
+    expand: 'Expand Herby',
     petMe: 'Click to pet me!',
     reactions: {
       default: [
@@ -519,7 +519,7 @@ const TigerMascot = ({
                 type="button"
                 className="tiger-feed-btn"
                 onClick={handleFeedCoin}
-                title="Feed a coin to Tora"
+                title="Feed a coin to Herby"
                 data-testid="tiger-feed-btn"
               >
                 {strings.feedBtn}
