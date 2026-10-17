@@ -2,13 +2,11 @@ import {
   calculateDailyYield,
   calculateAnnualizedCDI,
   fetchHistoricalCDI,
-  fetchLatestCDI,
   calculateAssetAccrualSinceDate,
   synchronizeAllAssetsIncomes,
   getHistoricalFallbackRateForDate,
   getCDIRateForDate,
   fetchCDIRatesForDateRange,
-  DEFAULT_CDI_RATE,
   CDI_CACHE_KEY
 } from './cdi';
 

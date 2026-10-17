@@ -6,7 +6,6 @@ import {
   getLatestSettledBankingDate,
   fetchBrazilianHolidays,
   getDateKey,
-  shiftDate,
   HOLIDAYS_CACHE_KEY
 } from './calendar';
 

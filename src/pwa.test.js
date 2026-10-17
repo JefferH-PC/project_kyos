@@ -1,6 +1,5 @@
 import React from 'react';
 import { render, screen, act } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import App from './App';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import fs from 'fs';
@@ -57,7 +56,7 @@ describe('Progressive Web App (PWA) Verification', () => {
 
     // No install or download button in UI
     expect(screen.queryByRole('button', { name: /install/i })).toBeNull();
-    expect(document.querySelector('.install-pwa-button')).toBeNull();
+    expect(screen.queryByRole('button', { name: /download/i })).toBeNull();
 
     // Trigger appinstalled event and verify toast
     act(() => {
