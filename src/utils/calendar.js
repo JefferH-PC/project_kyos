@@ -190,3 +190,37 @@ export const getBusinessDaysInRange = (startDate, endDate, holidays) => {
 
   return businessDays;
 };
+
+/**
+ * Calculates the exact sequence of business days on which fixed-income yields accrue
+ * and are credited, starting strictly after the effective application date up to targetDate.
+ *
+ * Rules:
+ * 1. An application made on a business day begins earning overnight yield from that day to the next business day.
+ *    The first yield is credited on that next business day. Day 0 (the application date) yields R$ 0.
+ * 2. An application made on a weekend or holiday becomes effective on the next Brazilian business day.
+ *    Its first yield is credited on the subsequent business day.
+ * 3. Returns an array of Date objects for each business day that earns/credits yield.
+ *
+ * @param {Date|string} creationDate Date of deposit / investment (data da aplicação)
+ * @param {Date|string} targetDate Reference date (e.g. today / simulatedDate)
+ * @param {Set<string>|Array<string>|Array<{ date: string }>} [holidays=[]]
+ * @returns {Date[]}
+ */
+export const getAccrualBusinessDays = (creationDate, targetDate, holidays = []) => {
+  if (!creationDate || !targetDate) return [];
+  const start = parseDateKey(creationDate);
+  const end = parseDateKey(targetDate);
+  if (start >= end) return [];
+
+  let effectiveAppDate = new Date(start);
+  while (!isBusinessDay(effectiveAppDate, holidays)) {
+    effectiveAppDate = shiftDate(effectiveAppDate, 1);
+  }
+
+  const firstAccrualDate = shiftDate(effectiveAppDate, 1);
+  if (firstAccrualDate > end) return [];
+
+  return getBusinessDaysInRange(firstAccrualDate, end, holidays);
+};
+

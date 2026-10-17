@@ -1,4 +1,4 @@
-import { getDateKey, isValidDateKey, getBusinessDaysInRange } from './calendar';
+import { getDateKey, isValidDateKey, getAccrualBusinessDays } from './calendar';
 
 export const DEFAULT_CDI_RATE = 0.051660;
 export const CDI_BUSINESS_DAYS = 252;
@@ -116,6 +116,10 @@ export const HISTORICAL_CDI_BENCHMARKS = {
 export const getHistoricalFallbackRateForDate = (dateStr, defaultRate = DEFAULT_CDI_RATE) => {
   if (typeof dateStr === 'string' && dateStr.length >= 4) {
     const year = Number(dateStr.slice(0, 4));
+    const currentYear = new Date().getFullYear();
+    if (year === currentYear && Number.isFinite(defaultRate) && defaultRate > 0) {
+      return defaultRate;
+    }
     if (HISTORICAL_CDI_BENCHMARKS[year] !== undefined) {
       return HISTORICAL_CDI_BENCHMARKS[year];
     }
@@ -254,21 +258,31 @@ export const calculateAssetAccrualSinceDate = (
   fallbackCdi = DEFAULT_CDI_RATE,
   ratesMap = null
 ) => {
-  const initial = Number(asset.initialInvestedAmount ?? asset.investedAmount) || 0;
+  const invested = Number(asset.investedAmount) || 0;
+  const prevIncome = Number(asset.totalIncome) || 0;
+  const initial = Number(asset.initialInvestedAmount ?? (prevIncome > 0 ? Math.max(0, invested - prevIncome) : invested)) || 0;
   const yieldRate = Number(asset.yieldRate) || 0;
+  if (yieldRate <= 0) {
+    return asset;
+  }
+
   const creationDate = asset.creationDate;
 
-  if (!creationDate || !isValidDateKey(creationDate) || !targetDateKey || creationDate >= targetDateKey) {
+  if (!creationDate || !isValidDateKey(creationDate) || !targetDateKey) {
+    return asset;
+  }
+
+  if (creationDate >= targetDateKey) {
     return {
       ...asset,
       investedAmount: initial,
       initialInvestedAmount: initial,
       totalIncome: 0,
-      incomeHistory: asset.incomeHistory || {}
+      incomeHistory: {}
     };
   }
 
-  const businessDays = getBusinessDaysInRange(creationDate, targetDateKey, holidays);
+  const businessDays = getAccrualBusinessDays(creationDate, targetDateKey, holidays);
   const cdiCache = ratesMap || getCDICache();
 
   let currentPrincipal = initial;
@@ -292,3 +306,34 @@ export const calculateAssetAccrualSinceDate = (
     incomeHistory
   };
 };
+
+/**
+ * Synchronizes all existing assets from their creation dates up to targetDateKey,
+ * recalculating compound interest, total income, and income histories coherently.
+ *
+ * @param {Array<Object>} assets Array of asset objects
+ * @param {string} targetDateKey Reference date (e.g. today)
+ * @param {Array} holidays Array of holiday objects or strings
+ * @param {number} fallbackCdi Live or default CDI rate
+ * @param {Record<string, number>} [ratesMap] Pre-fetched historical rates
+ * @returns {Array<Object>} Synchronized assets
+ */
+export const synchronizeAllAssetsIncomes = (
+  assets = [],
+  targetDateKey,
+  holidays = [],
+  fallbackCdi = DEFAULT_CDI_RATE,
+  ratesMap = null
+) => {
+  if (!Array.isArray(assets)) return [];
+  return assets.map((asset) => {
+    return calculateAssetAccrualSinceDate(
+      asset,
+      targetDateKey,
+      holidays,
+      fallbackCdi,
+      ratesMap
+    );
+  });
+};
+

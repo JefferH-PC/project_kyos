@@ -25,6 +25,7 @@ import {
   fetchLatestCDI,
   calculateAnnualizedCDI,
   calculateAssetAccrualSinceDate,
+  synchronizeAllAssetsIncomes,
   fetchCDIRatesForDateRange,
   DEFAULT_CDI_RATE
 } from './utils/cdi';
@@ -124,6 +125,9 @@ const APP_TEXT = {
     investmentDate: 'Investment Date',
     investedSince: 'Invested on',
     calendarDaysCount: 'days elapsed',
+    syncIncomes: 'Sync Incomes',
+    syncIncomesTip: 'Recalculate and update all existing incomes coherently from their creation dates to today',
+    syncedSuccess: 'Incomes synchronized coherently!',
     iofRateLabel: 'IOF',
     irRateLabel: 'IR',
     taxDeductedBadge: 'Net (IR & IOF Deducted)',
@@ -213,6 +217,9 @@ const APP_TEXT = {
     investmentDate: 'Data do Investimento',
     investedSince: 'Investido em',
     calendarDaysCount: 'dias decorridos',
+    syncIncomes: 'Sincronizar Rendimentos',
+    syncIncomesTip: 'Recalcular e atualizar todos os rendimentos de forma coerente desde a data de criação até hoje',
+    syncedSuccess: 'Rendimentos sincronizados com sucesso!',
     iofRateLabel: 'IOF',
     irRateLabel: 'IR',
     taxDeductedBadge: 'Líquido (IR e IOF Deduzidos)',
@@ -533,6 +540,72 @@ function App() {
     });
   }, [database.simulatedDate]);
 
+  const syncExistingAssetsIncomes = useCallback(async (holidays, currentCdi) => {
+    const today = new Date();
+    const currentDateKey = getDateKey(today);
+    const currentDb = readDatabase();
+    const assets = currentDb.assets || [];
+    if (!Array.isArray(assets) || assets.length === 0) return currentDb;
+
+    const lastOpenedKey = window.localStorage.getItem('kyos-last-opened-date');
+    const targetDateKey = (currentDb.simulatedDate && isValidDateKey(currentDb.simulatedDate) && (currentDb.simulatedDate >= currentDateKey || lastOpenedKey === currentDb.simulatedDate))
+      ? currentDb.simulatedDate
+      : currentDateKey;
+
+    let earliestDate = targetDateKey;
+    for (const asset of assets) {
+      if (asset.creationDate && isValidDateKey(asset.creationDate) && asset.creationDate < earliestDate) {
+        earliestDate = asset.creationDate;
+      }
+    }
+
+    const startYear = parseDateKey(earliestDate).getFullYear();
+    const endYear = parseDateKey(targetDateKey).getFullYear();
+    let rangeHolidays = holidays || [];
+    if (startYear < endYear) {
+      try {
+        const h = await fetchHolidaysForYearRange(startYear, endYear);
+        if (Array.isArray(h) && h.length > 0) rangeHolidays = h;
+      } catch {
+        // Non-blocking fallback
+      }
+    }
+
+    let cdiRates = {};
+    if (earliestDate < targetDateKey) {
+      try {
+        cdiRates = await fetchCDIRatesForDateRange(earliestDate, targetDateKey, currentCdi);
+      } catch {
+        // Non-blocking fallback
+      }
+    }
+
+    const updatedAssets = synchronizeAllAssetsIncomes(
+      assets,
+      targetDateKey,
+      rangeHolidays,
+      currentCdi,
+      cdiRates
+    );
+
+    const updatedIncomeHistory = rebuildIncomeHistory(updatedAssets);
+    const updatedDb = {
+      ...currentDb,
+      assets: updatedAssets,
+      simulatedDate: targetDateKey,
+      incomeHistory: updatedIncomeHistory
+    };
+
+    setDatabase(updatedDb);
+    try {
+      window.localStorage.setItem('kyos-database', JSON.stringify(updatedDb));
+      window.localStorage.setItem('kyos-last-opened-date', targetDateKey);
+    } catch {
+      // Ignore localStorage errors
+    }
+    return updatedDb;
+  }, []);
+
   const loadHolidaysAndCatchUp = useCallback(async (forced = false) => {
     if (isCatchingUpRef.current) return;
     if (!forced && hasRunCatchUpRef.current) return;
@@ -567,10 +640,11 @@ function App() {
 
     try {
       await processMissedDays(holidays, cdiRateRef.current);
+      await syncExistingAssetsIncomes(holidays, cdiRateRef.current);
     } finally {
       isCatchingUpRef.current = false;
     }
-  }, [processMissedDays]);
+  }, [processMissedDays, syncExistingAssetsIncomes]);
 
   useEffect(() => {
     loadHolidaysAndCatchUp();
@@ -876,6 +950,15 @@ function App() {
     showToast(locale === 'pt' ? 'Investimento atualizado!' : 'Investment updated!');
   };
 
+  const handleManualSync = async () => {
+    try {
+      await syncExistingAssetsIncomes(holidaysList, cdiRate);
+      showToast(locale === 'pt' ? 'Rendimentos atualizados com o banco!' : 'Incomes synced with bank!');
+    } catch {
+      showToast(locale === 'pt' ? 'Erro ao sincronizar' : 'Failed to sync');
+    }
+  };
+
   const recordWishlistPurchase = (amount) => {
     setDatabase((current) => ({ ...current, purchasedTotal: Number(current.purchasedTotal || 0) + Number(amount || 0) }));
   };
@@ -919,7 +1002,21 @@ function App() {
               <span className='total-daily-income'>
                 {t.totalDailyIncome}: R$ {displayMoney(totalDailyIncome)}
               </span>
-              <AddMoreButton label={t.addInvestment} onClick={() => setIsAssetFormOpen((current) => !current)}></AddMoreButton>
+              <div className='assets-heading-actions'>
+                <button
+                  type='button'
+                  className='sync-incomes-btn'
+                  onClick={handleManualSync}
+                  title={t.syncIncomesTip}
+                  aria-label={t.syncIncomes}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 256 256" fill="currentColor">
+                    <path d="M224,128a96,96,0,0,1-96,96A95.8,95.8,0,0,1,64,195.9V216a8,8,0,0,1-16,0V168a8,8,0,0,1,8-8h48a8,8,0,0,1,0,16H76.7A79.9,79.9,0,0,0,128,208a80,80,0,0,0,80-80,8,8,0,0,1,16,0ZM48,88a8,8,0,0,1,8-8H84.3A79.9,79.9,0,0,1,128,48a80,80,0,0,1,80,80,8,8,0,0,1,16,0A96,96,0,0,0,64,60.1V40a8,8,0,0,1-16,0V88A8,8,0,0,1,48,88Z"/>
+                  </svg>
+                  <span>{t.syncIncomes}</span>
+                </button>
+                <AddMoreButton label={t.addInvestment} onClick={() => setIsAssetFormOpen((current) => !current)}></AddMoreButton>
+              </div>
             </div>
             {isAssetFormOpen && (
               <form className='asset-form' onSubmit={addAsset}>

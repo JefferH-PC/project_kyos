@@ -1003,5 +1003,136 @@ test('carryover: during catch-up, leftover income carries over to next recovery 
   }
 });
 
+test('updates already existing assets coherently from their creation dates up to today upon application load', async () => {
+  const RealDate = global.Date;
+  class MockDate extends RealDate {
+    constructor(...args) {
+      if (args.length === 0) {
+        super('2026-09-18T12:00:00Z');
+      } else {
+        super(...args);
+      }
+    }
+    static now() {
+      return new RealDate('2026-09-18T12:00:00Z').getTime();
+    }
+  }
+  global.Date = MockDate;
+
+  try {
+    const simulatedDateKey = '2026-09-18'; // Friday
+    const pastCreationDateKey = '2026-09-14'; // Monday
+
+    window.localStorage.setItem('kyos-database', JSON.stringify({
+      schemaVersion: 11,
+      simulatedDate: simulatedDateKey,
+      wishlistSlots: [],
+      recoverySlots: [],
+      assets: [{
+        id: 'existing-cdb-inter',
+        name: 'CDB Inter 100%',
+        yieldRate: 100,
+        investedAmount: 10000,
+        initialInvestedAmount: 10000,
+        totalIncome: 0,
+        creationDate: pastCreationDateKey,
+        incomeHistory: {}
+      }],
+      milestone: { target: 0 },
+      purchasedTotal: 0,
+      recoverySpentTotal: 0
+    }));
+    window.localStorage.setItem('kyos-last-opened-date', simulatedDateKey);
+
+    render(<App />);
+
+    // Navigate to Investments tab
+    const investmentsBtn = await screen.findByRole('button', { name: 'Investments' });
+    await userEvent.click(investmentsBtn);
+
+    // Asset should be visible
+    expect(await screen.findByText('CDB Inter 100%')).toBeInTheDocument();
+
+    // The database in localStorage must have been updated coherently
+    const db = JSON.parse(window.localStorage.getItem('kyos-database'));
+    const asset = db.assets.find((a) => a.id === 'existing-cdb-inter');
+    expect(asset).toBeDefined();
+    expect(asset.totalIncome).toBeGreaterThan(0);
+    expect(asset.investedAmount).toBeGreaterThan(10000);
+
+    // From Mon 14 to Fri 18: accrual begins strictly after Mon 14 (on Tue 15, Wed 16, Thu 17, Fri 18 = 4 days)
+    expect(Object.keys(asset.incomeHistory)).toEqual(['2026-09-15', '2026-09-16', '2026-09-17', '2026-09-18']);
+    expect(asset.incomeHistory['2026-09-14']).toBeUndefined(); // Day 0 yields R$ 0,00, matching bank statements
+  } finally {
+    global.Date = RealDate;
+  }
+});
+
+test('sync incomes button triggers coherent update and displays confirmation toast', async () => {
+  const RealDate = global.Date;
+  class MockDate extends RealDate {
+    constructor(...args) {
+      if (args.length === 0) {
+        super('2026-09-16T12:00:00Z');
+      } else {
+        super(...args);
+      }
+    }
+    static now() {
+      return new RealDate('2026-09-16T12:00:00Z').getTime();
+    }
+  }
+  global.Date = MockDate;
+
+  try {
+    const simulatedDateKey = '2026-09-16'; // Wednesday
+    const pastCreationDateKey = '2026-09-14'; // Monday
+
+    window.localStorage.setItem('kyos-database', JSON.stringify({
+      schemaVersion: 11,
+      simulatedDate: simulatedDateKey,
+      wishlistSlots: [],
+      recoverySlots: [],
+      assets: [{
+        id: 'existing-cdb-nubank',
+        name: 'CDB Nubank 100%',
+        yieldRate: 100,
+        investedAmount: 5000,
+        initialInvestedAmount: 5000,
+        totalIncome: 0,
+        creationDate: pastCreationDateKey,
+        incomeHistory: {}
+      }],
+      milestone: { target: 0 },
+      purchasedTotal: 0,
+      recoverySpentTotal: 0
+    }));
+    window.localStorage.setItem('kyos-last-opened-date', simulatedDateKey);
+
+    render(<App />);
+
+    // Go to Investments
+    const investmentsBtn = await screen.findByRole('button', { name: 'Investments' });
+    await userEvent.click(investmentsBtn);
+
+    // Click Sync Incomes button
+    const syncBtn = await screen.findByRole('button', { name: /sync incomes/i });
+    expect(syncBtn).toBeInTheDocument();
+    await userEvent.click(syncBtn);
+
+    // Verify toast
+    expect(await screen.findByText(/incomes synced with bank/i)).toBeInTheDocument();
+
+    // Verify localStorage update
+    const db = JSON.parse(window.localStorage.getItem('kyos-database'));
+    const asset = db.assets.find((a) => a.id === 'existing-cdb-nubank');
+    expect(asset.totalIncome).toBeGreaterThan(0);
+    expect(Object.keys(asset.incomeHistory)).toEqual(['2026-09-15', '2026-09-16']);
+  } finally {
+    global.Date = RealDate;
+  }
+});
+
+
 
 

@@ -28,7 +28,7 @@ export const getCalendarDaysElapsed = (startDate, referenceDate = new Date()) =>
   const end = parseDateKey(referenceDate);
   const diffTime = end.getTime() - start.getTime();
   if (diffTime <= 0) return 0;
-  return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  return Math.round(diffTime / (1000 * 60 * 60 * 24));
 };
 
 /**

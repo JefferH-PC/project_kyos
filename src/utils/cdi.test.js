@@ -4,6 +4,7 @@ import {
   fetchHistoricalCDI,
   fetchLatestCDI,
   calculateAssetAccrualSinceDate,
+  synchronizeAllAssetsIncomes,
   getHistoricalFallbackRateForDate,
   fetchCDIRatesForDateRange,
   DEFAULT_CDI_RATE,
@@ -57,7 +58,7 @@ describe('cdi utilities', () => {
   });
 
   test('calculateAssetAccrualSinceDate calculates yields across past business days', () => {
-    // Monday 2026-09-14 to Wednesday 2026-09-16 (3 business days: 14, 15, 16)
+    // Monday 2026-09-14 deposit to Wednesday 2026-09-16 (2 accrual business days: 15, 16)
     const asset = {
       name: 'Tesouro Prefixado',
       investedAmount: 10000,
@@ -71,8 +72,15 @@ describe('cdi utilities', () => {
     const updated = calculateAssetAccrualSinceDate(asset, targetDate, holidays, 0.05);
     expect(updated.investedAmount).toBeGreaterThan(10000);
     expect(updated.totalIncome).toBeGreaterThan(0);
-    expect(Object.keys(updated.incomeHistory)).toEqual(['2026-09-14', '2026-09-15', '2026-09-16']);
+    expect(Object.keys(updated.incomeHistory)).toEqual(['2026-09-15', '2026-09-16']);
+
+    // Same day deposit yields 0
+    const sameDay = calculateAssetAccrualSinceDate(asset, '2026-09-14', holidays, 0.05);
+    expect(sameDay.totalIncome).toBe(0);
+    expect(sameDay.investedAmount).toBe(10000);
+    expect(Object.keys(sameDay.incomeHistory)).toEqual([]);
   });
+
 
   test('getHistoricalFallbackRateForDate returns accurate official benchmark for given year', () => {
     expect(getHistoricalFallbackRateForDate('2016-05-10')).toBeCloseTo(0.0520, 3);
@@ -124,4 +132,42 @@ describe('cdi utilities', () => {
     expect(updated.totalIncome).toBeGreaterThan(10000);
     expect(Object.keys(updated.incomeHistory).length).toBeGreaterThan(2000);
   });
+
+  test('synchronizeAllAssetsIncomes recalculates and updates all existing assets coherently from creation date to target date', () => {
+    const assets = [
+      {
+        id: 'cdb-1',
+        name: 'CDB Banco Inter',
+        investedAmount: 10000,
+        initialInvestedAmount: 10000,
+        totalIncome: 0,
+        yieldRate: 100,
+        creationDate: '2026-09-14'
+      },
+      {
+        id: 'cdb-2',
+        name: 'CDB Nubank',
+        investedAmount: 5000,
+        initialInvestedAmount: 5000,
+        totalIncome: 0,
+        yieldRate: 100,
+        creationDate: '2026-09-15'
+      }
+    ];
+
+    const targetDate = '2026-09-18'; // Friday
+    const synced = synchronizeAllAssetsIncomes(assets, targetDate, [], 0.05);
+
+    expect(synced.length).toBe(2);
+    // Asset 1 (created Mon 14): accrual days are 15, 16, 17, 18 (4 days)
+    expect(Object.keys(synced[0].incomeHistory)).toEqual(['2026-09-15', '2026-09-16', '2026-09-17', '2026-09-18']);
+    expect(synced[0].totalIncome).toBeGreaterThan(0);
+    expect(synced[0].investedAmount).toBeGreaterThan(10000);
+
+    // Asset 2 (created Tue 15): accrual days are 16, 17, 18 (3 days)
+    expect(Object.keys(synced[1].incomeHistory)).toEqual(['2026-09-16', '2026-09-17', '2026-09-18']);
+    expect(synced[1].totalIncome).toBeGreaterThan(0);
+    expect(synced[1].investedAmount).toBeGreaterThan(5000);
+  });
 });
+

@@ -1,6 +1,7 @@
 import {
   isBusinessDay,
   getBusinessDaysInRange,
+  getAccrualBusinessDays,
   fetchBrazilianHolidays,
   getDateKey,
   shiftDate,
@@ -69,4 +70,31 @@ describe('calendar utilities', () => {
 
     await expect(fetchBrazilianHolidays(2026)).rejects.toThrow('Network offline');
   });
+
+  test('getAccrualBusinessDays calculates accrual business days starting strictly after effective application date', () => {
+    const holidays = [{ date: '2026-09-07', name: 'Independência do Brasil' }];
+
+    // Same day deposit yields 0 days
+    expect(getAccrualBusinessDays('2026-09-14', '2026-09-14', holidays).map(getDateKey)).toEqual([]);
+
+    // Mon to Tue yields 1 day (Tue)
+    expect(getAccrualBusinessDays('2026-09-14', '2026-09-15', holidays).map(getDateKey)).toEqual(['2026-09-15']);
+
+    // Mon to Wed yields 2 days (Tue, Wed)
+    expect(getAccrualBusinessDays('2026-09-14', '2026-09-16', holidays).map(getDateKey)).toEqual(['2026-09-15', '2026-09-16']);
+
+    // Fri to Mon yields 1 day (Mon)
+    expect(getAccrualBusinessDays('2026-09-11', '2026-09-14', holidays).map(getDateKey)).toEqual(['2026-09-14']);
+
+    // Sat deposit becomes effective Mon, so on Mon yields 0 days
+    expect(getAccrualBusinessDays('2026-09-12', '2026-09-14', holidays).map(getDateKey)).toEqual([]);
+
+    // Sat deposit becomes effective Mon, yields first time on Tue
+    expect(getAccrualBusinessDays('2026-09-12', '2026-09-15', holidays).map(getDateKey)).toEqual(['2026-09-15']);
+
+    // Holiday deposit: 2026-09-07 is holiday. Effective date is Tue 2026-09-08. First yield is Wed 2026-09-09.
+    expect(getAccrualBusinessDays('2026-09-07', '2026-09-08', holidays).map(getDateKey)).toEqual([]);
+    expect(getAccrualBusinessDays('2026-09-07', '2026-09-09', holidays).map(getDateKey)).toEqual(['2026-09-09']);
+  });
 });
+
