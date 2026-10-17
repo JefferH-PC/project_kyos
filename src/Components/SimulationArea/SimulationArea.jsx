@@ -302,6 +302,14 @@ const SimulationArea = ({
     }
   };
 
+  const handleQuickHorizon = (days) => {
+    const target = shiftDate(baselineDateObj, days);
+    const key = getDateKey(target);
+    setTargetDate(key);
+    setCalendarYear(target.getFullYear());
+    setCalendarMonth(target.getMonth());
+  };
+
   // Projection calculation with date-coherent inflation adjustment
   const projection = useMemo(() => {
     if (!targetDate) return null;
@@ -730,10 +738,36 @@ const SimulationArea = ({
               </div>
             </>
           ) : (
-            <div style={{ padding: '24px 0', textAlign: 'center', color: '#888888', fontStyle: 'italic' }}>
-              {targetDate
-                ? (locale === 'pt' ? 'Selecione uma data após a data base.' : 'Select a date after the baseline date.')
-                : (locale === 'pt' ? 'Clique em uma data futura no calendário para simular rendimentos.' : 'Click any future date on the calendar to project yield.')}
+            <div className="simulation-empty-state">
+              <div className="sim-empty-icon" aria-hidden="true">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                  <circle cx="12" cy="15" r="2" />
+                </svg>
+              </div>
+              <h4>{locale === 'pt' ? 'Escolha uma Data Alvo' : 'Select Target Date'}</h4>
+              <p>
+                {locale === 'pt'
+                  ? 'Clique em um dia útil no calendário ou use um dos atalhos rápidos abaixo para projetar rendimentos e poder de compra.'
+                  : 'Click any business day on the calendar or pick a quick horizon shortcut below to simulate wealth growth.'}
+              </p>
+              <div className="sim-quick-chips">
+                <button type="button" className="sim-quick-chip" onClick={() => handleQuickHorizon(30)}>
+                  +30 {locale === 'pt' ? 'dias' : 'days'}
+                </button>
+                <button type="button" className="sim-quick-chip" onClick={() => handleQuickHorizon(90)}>
+                  +90 {locale === 'pt' ? 'dias' : 'days'}
+                </button>
+                <button type="button" className="sim-quick-chip" onClick={() => handleQuickHorizon(180)}>
+                  +6 {locale === 'pt' ? 'meses' : 'months'}
+                </button>
+                <button type="button" className="sim-quick-chip" onClick={() => handleQuickHorizon(365)}>
+                  +1 {locale === 'pt' ? 'ano' : 'year'}
+                </button>
+              </div>
             </div>
           )}
         </div>

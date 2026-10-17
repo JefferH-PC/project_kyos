@@ -54,7 +54,13 @@ const TIGER_DIALOGUES = {
         'NHAC! 🪙 Mais um aporte alimentando o efeito bola de neve!',
         'Obrigado! Moeda guardada com sucesso no cofre do tigre!',
         'Adoro moedas de ouro! Elas rendem que é uma beleza!'
-      ]
+      ],
+      hideValues: '🙈 Shhh! Valores protegidos a sete chaves!',
+      showValues: '👀 Olhos bem abertos no patrimônio!',
+      sectionSimulation: '🔮 Simulando o futuro! Juros compostos acelerando!',
+      sectionBalance: '📈 Olha essa curva de rendimentos crescendo!',
+      sectionInvestments: '💼 Cada aporte fortalece a bola de neve!',
+      sectionNetWorth: '🦁 Guardando o patrimônio com garras afiadas!'
     }
   },
   en: {
@@ -109,7 +115,13 @@ const TIGER_DIALOGUES = {
         'CHOMP! 🪙 Another deposit feeding the compound snowball effect!',
         'Thank you! Coin safely vaulted in the tiger safe!',
         'Love gold coins! They compound like a charm!'
-      ]
+      ],
+      hideValues: '🙈 Shhh! Values locked away safely!',
+      showValues: '👀 Eyes wide open on our wealth!',
+      sectionSimulation: '🔮 Simulating the future! Compound interest in action!',
+      sectionBalance: '📈 Tracking our ascending yield trajectory!',
+      sectionInvestments: '💼 Every investment powers up the snowball!',
+      sectionNetWorth: '🦁 Guarding our net worth with sharp claws!'
     }
   }
 };
@@ -126,7 +138,11 @@ const TigerMascot = ({
   hasRecovery = false,
   hasReadyWishlist = false,
   isMilestoneClose = false,
-  locale = 'pt'
+  areValuesVisible = true,
+  activeSection = 'Net Worth',
+  locale = 'pt',
+  inline = false,
+  className = ''
 }) => {
   const strings = TIGER_DIALOGUES[locale] || TIGER_DIALOGUES.en;
 
@@ -148,14 +164,14 @@ const TigerMascot = ({
 
   const [bubbleText, setBubbleText] = useState('');
   const [isBubbleVisible, setIsBubbleVisible] = useState(false);
-  const [tigerEmotion, setTigerEmotion] = useState('idle'); // 'idle' | 'happy' | 'fed' | 'celebrating' | 'guarding'
+  const [tigerEmotion, setTigerEmotion] = useState('idle'); // 'idle' | 'happy' | 'fed' | 'celebrating' | 'guarding' | 'hiding'
   const [particles, setParticles] = useState([]);
 
   const bubbleTimeoutRef = useRef(null);
   const emotionTimeoutRef = useRef(null);
 
   // Determine current ambient state
-  const isSleeping = isWeekendOrHoliday && tigerEmotion !== 'happy' && tigerEmotion !== 'fed';
+  const isSleeping = isWeekendOrHoliday && tigerEmotion !== 'happy' && tigerEmotion !== 'fed' && tigerEmotion !== 'hiding';
 
   // Persist minimized state
   useEffect(() => {
@@ -176,6 +192,7 @@ const TigerMascot = ({
   }, [coinsFed]);
 
   const showSpeechBubble = (text, durationMs = 4500) => {
+    if (!text) return;
     setBubbleText(text);
     setIsBubbleVisible(true);
     if (bubbleTimeoutRef.current) clearTimeout(bubbleTimeoutRef.current);
@@ -206,6 +223,51 @@ const TigerMascot = ({
     }
     prevSyncingRef.current = isSyncing;
   }, [isSyncing, strings]);
+
+  // React to visibility toggles (player clicks eye icon)
+  const prevValuesVisibleRef = useRef(areValuesVisible);
+  useEffect(() => {
+    if (prevValuesVisibleRef.current !== undefined && prevValuesVisibleRef.current !== areValuesVisible) {
+      if (!areValuesVisible) {
+        setTigerEmotion('hiding');
+        showSpeechBubble(strings.reactions.hideValues, 3500);
+        if (emotionTimeoutRef.current) clearTimeout(emotionTimeoutRef.current);
+        emotionTimeoutRef.current = setTimeout(() => {
+          setTigerEmotion('idle');
+        }, 3200);
+      } else {
+        setTigerEmotion('happy');
+        showSpeechBubble(strings.reactions.showValues, 3000);
+        if (emotionTimeoutRef.current) clearTimeout(emotionTimeoutRef.current);
+        emotionTimeoutRef.current = setTimeout(() => {
+          setTigerEmotion('idle');
+        }, 2500);
+      }
+    }
+    prevValuesVisibleRef.current = areValuesVisible;
+  }, [areValuesVisible, strings]);
+
+  // React to section navigation changes (player clicks tabs)
+  const prevSectionRef = useRef(activeSection);
+  useEffect(() => {
+    if (prevSectionRef.current !== undefined && prevSectionRef.current !== activeSection && activeSection) {
+      setTigerEmotion('happy');
+      if (activeSection === 'Simulation') {
+        showSpeechBubble(strings.reactions.sectionSimulation, 3500);
+      } else if (activeSection === 'Balance') {
+        showSpeechBubble(strings.reactions.sectionBalance, 3500);
+      } else if (activeSection === 'Investments') {
+        showSpeechBubble(strings.reactions.sectionInvestments, 3500);
+      } else if (activeSection === 'Net Worth') {
+        showSpeechBubble(strings.reactions.sectionNetWorth, 3500);
+      }
+      if (emotionTimeoutRef.current) clearTimeout(emotionTimeoutRef.current);
+      emotionTimeoutRef.current = setTimeout(() => {
+        setTigerEmotion('idle');
+      }, 3000);
+    }
+    prevSectionRef.current = activeSection;
+  }, [activeSection, strings]);
 
   // Handle clicking on the Tiger (Petting / Interaction)
   const handlePetTiger = () => {
@@ -257,12 +319,13 @@ const TigerMascot = ({
     if (isMilestoneClose) return 'crown';
     if (hasRecovery) return 'shield';
     if (hasReadyWishlist) return 'gift';
+    if (activeSection === 'Simulation') return 'glasses';
     return null;
-  }, [isSyncing, isMilestoneClose, hasRecovery, hasReadyWishlist]);
+  }, [isSyncing, isMilestoneClose, hasRecovery, hasReadyWishlist, activeSection]);
 
   return (
     <aside
-      className={`tiger-companion-dock ${isMinimized ? 'minimized' : ''} ${isSleeping ? 'sleeping' : ''} emotion-${tigerEmotion}`}
+      className={`tiger-companion-dock ${inline ? 'inline-companion' : ''} ${isMinimized ? 'minimized' : ''} ${isSleeping ? 'sleeping' : ''} emotion-${tigerEmotion} ${className}`}
       aria-label={strings.name}
       data-testid="tiger-mascot-container"
     >
@@ -352,6 +415,11 @@ const TigerMascot = ({
             {accessory === 'stopwatch' && (
               <div className="tiger-accessory stopwatch" title="Sincronizando..." aria-hidden="true" data-testid="accessory-stopwatch">
                 ⏱️
+              </div>
+            )}
+            {accessory === 'glasses' && (
+              <div className="tiger-accessory glasses" title="Modo Simulação Ativo" aria-hidden="true" data-testid="accessory-glasses">
+                👓
               </div>
             )}
 
@@ -457,7 +525,15 @@ const TigerMascot = ({
                 <line x1="72" y1="67" x2="83" y2="68" stroke="#94a3b8" strokeWidth="1.2" strokeLinecap="round" />
 
                 {/* Expressive Eyes */}
-                {isSleeping ? (
+                {tigerEmotion === 'hiding' ? (
+                  /* Paws over eyes when hiding values */
+                  <g className="tiger-eyes-hiding" data-testid="tiger-paws-hiding">
+                    <ellipse cx="48" cy="49" rx="9" ry="7" fill="url(#tigerCreamGrad)" stroke="#d97706" strokeWidth="1.2" />
+                    <ellipse cx="72" cy="49" rx="9" ry="7" fill="url(#tigerCreamGrad)" stroke="#d97706" strokeWidth="1.2" />
+                    <circle cx="48" cy="49" r="3" fill="#fbcfe8" />
+                    <circle cx="72" cy="49" r="3" fill="#fbcfe8" />
+                  </g>
+                ) : isSleeping ? (
                   /* Sleeping eyes */
                   <g className="tiger-eyes-sleeping" data-testid="tiger-eyes-sleeping">
                     <path d="M 45,50 Q 50,54 55,50" fill="none" stroke="#1e293b" strokeWidth="2.5" strokeLinecap="round" />

@@ -11,6 +11,7 @@ import CatchUpModal from './Components/CatchUpModal/CatchUpModal';
 import AboutModal from './Components/AboutModal/AboutModal';
 import SyncModal from './Components/SyncModal/SyncModal';
 import SimulationArea from './Components/SimulationArea/SimulationArea';
+import MoneyBalanceChart from './Components/MoneyBalanceChart/MoneyBalanceChart';
 import { formatDecimal, formatMoney, formatDateKey } from './utils/formatters';
 import {
   getDateKey,
@@ -806,6 +807,14 @@ function App() {
   const milestoneDays = totalDailyIncome > 0 ? Math.ceil(milestoneRemaining / totalDailyIncome) : 0;
   const displayMoney = (value) => areValuesVisible ? formatMoney(value) : '****';
 
+  const isWeekend = actualDate.getDay() === 0 || actualDate.getDay() === 6;
+  const isHoliday = (holidaysList || []).some((h) => h && h.date === database.simulatedDate);
+  const isWeekendOrHoliday = isWeekend || isHoliday;
+  const isMilestoneClose = milestoneDays > 0 && milestoneDays <= 10;
+  const hasRecovery = (database.recoverySlots || []).some((s) => s.type === 'recovery');
+  const hasReadyWishlist = (database.wishlistSlots || []).some((s) => s.type === 'ready');
+  const isSyncing = Boolean(syncModalData.isOpen);
+
   const getTrend = (current, previous) => current === previous
     ? { symbol: '→', className: 'trend-same' }
     : current > previous
@@ -1272,19 +1281,16 @@ function App() {
           </div>
 
           <div className='balance-chart-card balance-graphic-card'>
-            <div className='balance-graphic-header'>
-              <div className='graphic-title-group'>
-                <h2>{t.moneyBalance}</h2>
-                <span className='graphic-subtitle'>{t.capitalAllocation}</span>
-              </div>
-              <div className='graphic-total-badge'>
-                <span className='total-badge-label'>{t.totalFlow}</span>
-                <strong>R$ {displayMoney(totalBalance)}</strong>
-              </div>
-            </div>
+            <MoneyBalanceChart
+              database={database}
+              investedTotal={investedTotal}
+              spentTotal={spentTotal}
+              locale={locale}
+              areValuesVisible={areValuesVisible}
+            />
 
-            <div className='balance-visual-track-wrap'>
-              <div className='balance-track-header'>
+            <div className='balance-proportional-bar-wrapper'>
+              <div className='track-header'>
                 <span className='track-marker invested-marker'>
                   <span className='marker-dot invested'></span>
                   {t.invested}: <strong>{formatDecimal(investedRatio)}%</strong>
@@ -1479,6 +1485,12 @@ function App() {
         locale={locale}
         isLightTheme={isLightTheme}
         areValuesVisible={areValuesVisible}
+        activeSection={activeSection}
+        isWeekendOrHoliday={isWeekendOrHoliday}
+        isSyncing={isSyncing}
+        hasRecovery={hasRecovery}
+        hasReadyWishlist={hasReadyWishlist}
+        isMilestoneClose={isMilestoneClose}
         onToggleValues={() => setAreValuesVisible((current) => !current)}
         onToggleTheme={() => setIsLightTheme((current) => !current)}
         onChangeLocale={(nextLocale) => setLocale(nextLocale)}
@@ -1513,7 +1525,7 @@ function App() {
         </button>
       </nav>
 
-      <div className={`app-areas mobile-tab-${mobileArea}`}>
+      <div className={`app-areas mobile-tab-${mobileArea} section-${activeSection.toLowerCase().replace(/\s+/g, '-')}`}>
         <TimeArea
           title={t.wishlist}
           area='wishlist'

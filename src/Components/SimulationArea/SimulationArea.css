@@ -1,11 +1,12 @@
 .simulation-area {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    height: auto;
-    flex: 1 1 auto;
+    gap: 14px;
+    height: 100%;
+    max-height: 100%;
+    flex: 1 1 0;
     min-height: 0;
-    padding: 18px;
+    padding: 16px;
     border: 1px solid var(--border-card);
     border-radius: 16px;
     background: var(--bg-surface);
@@ -311,11 +312,12 @@
 
 .simulation-content {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.2fr);
     gap: 16px;
     background: transparent;
     flex: 1 1 auto;
     min-height: 0;
+    align-items: stretch;
 }
 
 /* Calendar Card */
@@ -328,6 +330,7 @@
     flex-direction: column;
     gap: 14px;
     box-shadow: var(--shadow-card);
+    min-height: 380px;
 }
 
 .calendar-header {
@@ -499,6 +502,76 @@
     gap: 14px;
     overflow-y: auto;
     box-shadow: var(--shadow-card);
+    min-height: 380px;
+    height: 100%;
+}
+
+/* Rich Simulation Empty State */
+.simulation-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 28px 16px;
+    height: 100%;
+    min-height: 280px;
+    gap: 12px;
+}
+
+.sim-empty-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--border-card);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-blue);
+    margin-bottom: 2px;
+}
+
+.simulation-empty-state h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.simulation-empty-state p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+    max-width: 320px;
+    line-height: 1.45;
+}
+
+.sim-quick-chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.sim-quick-chip {
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--border-card);
+    color: var(--text-primary);
+    border-radius: 999px;
+    padding: 6px 13px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sim-quick-chip:hover {
+    background: var(--border-hover);
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
+    transform: translateY(-1px);
 }
 
 .simulation-results-header {
@@ -751,7 +824,7 @@
     color: var(--accent-red);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 720px) {
     .simulation-content {
         grid-template-columns: 1fr;
     }

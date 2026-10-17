@@ -101,6 +101,15 @@ select,
     flex: 1 1 auto;
 }
 
+@media (min-width: 1024px) {
+    .app-areas.section-simulation .time-area,
+    .app-areas.section-balance .time-area {
+        width: 250px;
+        min-width: 220px;
+        transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+}
+
 .middle {
     flex: 1 1 auto;
     min-width: 0;

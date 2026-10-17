@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import './Header.css';
+import TigerMascot from '../TigerMascot/TigerMascot';
 
 const Header = (props) => {
     const fileInputRef = useRef(null);
@@ -20,6 +21,19 @@ const Header = (props) => {
                 </svg>
                 <h1>Kyos</h1>
             </div>
+
+            <TigerMascot
+                locale={props.locale}
+                areValuesVisible={props.areValuesVisible}
+                activeSection={props.activeSection}
+                isWeekendOrHoliday={props.isWeekendOrHoliday}
+                isSyncing={props.isSyncing}
+                hasRecovery={props.hasRecovery}
+                hasReadyWishlist={props.hasReadyWishlist}
+                isMilestoneClose={props.isMilestoneClose}
+                inline={true}
+            />
+
             <div className='header-actions'>
                 <button
                     className='action-icon-button'

@@ -86,5 +86,29 @@ describe('TigerMascot Living Companion', () => {
 
     rerender(<TigerMascot isSyncing={true} locale="pt" />);
     expect(screen.getByTestId('accessory-stopwatch')).toBeInTheDocument();
+
+    rerender(<TigerMascot activeSection="Simulation" locale="pt" />);
+    expect(screen.getByTestId('accessory-glasses')).toBeInTheDocument();
+  });
+
+  test('covers eyes with paws and displays speech bubble when player hides values', () => {
+    const { rerender } = render(<TigerMascot areValuesVisible={true} locale="pt" />);
+    expect(screen.queryByTestId('tiger-paws-hiding')).not.toBeInTheDocument();
+
+    rerender(<TigerMascot areValuesVisible={false} locale="pt" />);
+    expect(screen.getByTestId('tiger-paws-hiding')).toBeInTheDocument();
+    expect(screen.getByTestId('tiger-speech-bubble')).toBeInTheDocument();
+    expect(screen.getByText('🙈 Shhh! Valores protegidos a sete chaves!')).toBeInTheDocument();
+  });
+
+  test('reacts to section navigation clicks with contextual speech and accessories', () => {
+    const { rerender } = render(<TigerMascot activeSection="Net Worth" locale="pt" />);
+
+    rerender(<TigerMascot activeSection="Simulation" locale="pt" />);
+    expect(screen.getByTestId('accessory-glasses')).toBeInTheDocument();
+    expect(screen.getByText('🔮 Simulando o futuro! Juros compostos acelerando!')).toBeInTheDocument();
+
+    rerender(<TigerMascot activeSection="Balance" locale="pt" />);
+    expect(screen.getByText('📈 Olha essa curva de rendimentos crescendo!')).toBeInTheDocument();
   });
 });

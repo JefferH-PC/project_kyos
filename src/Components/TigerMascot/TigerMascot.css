@@ -12,6 +12,124 @@
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Embedded / Header Living Companion Placement */
+.header .tiger-companion-dock,
+.tiger-companion-dock.inline-companion {
+  position: relative;
+  bottom: auto;
+  right: auto;
+  z-index: 100;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  pointer-events: auto;
+}
+
+.header .tiger-companion-dock .tiger-living-card,
+.tiger-companion-dock.inline-companion .tiger-living-card {
+  width: auto;
+  min-width: 0;
+  padding: 4px 12px 4px 6px;
+  flex-direction: row;
+  border-radius: 14px;
+  gap: 8px;
+  box-shadow: var(--shadow-card);
+  align-items: center;
+}
+
+.header .tiger-companion-dock .tiger-avatar-stage,
+.tiger-companion-dock.inline-companion .tiger-avatar-stage {
+  width: 44px;
+  height: 44px;
+  margin-bottom: 0;
+}
+
+.header .tiger-companion-dock .tiger-svg,
+.tiger-companion-dock.inline-companion .tiger-svg {
+  width: 44px;
+  height: 44px;
+}
+
+.header .tiger-companion-dock .tiger-info-bar,
+.tiger-companion-dock.inline-companion .tiger-info-bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  width: auto;
+}
+
+.header .tiger-companion-dock .tiger-title-wrap,
+.tiger-companion-dock.inline-companion .tiger-title-wrap {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.header .tiger-companion-dock .tiger-name,
+.tiger-companion-dock.inline-companion .tiger-name {
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.header .tiger-companion-dock .tiger-role,
+.tiger-companion-dock.inline-companion .tiger-role {
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.header .tiger-companion-dock .tiger-actions-row,
+.tiger-companion-dock.inline-companion .tiger-actions-row {
+  margin-top: 0;
+  gap: 6px;
+}
+
+.header .tiger-companion-dock .tiger-dock-minimize-btn,
+.tiger-companion-dock.inline-companion .tiger-dock-minimize-btn {
+  position: static;
+  margin-left: 2px;
+  font-size: 16px;
+  padding: 2px 4px;
+  opacity: 0.5;
+}
+
+.header .tiger-companion-dock .tiger-dock-minimize-btn:hover,
+.tiger-companion-dock.inline-companion .tiger-dock-minimize-btn:hover {
+  opacity: 1;
+}
+
+.header .tiger-companion-dock .tiger-speech-bubble,
+.tiger-companion-dock.inline-companion .tiger-speech-bubble {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 0;
+  width: max-content;
+  max-width: 300px;
+  z-index: 1200;
+}
+
+.header .tiger-companion-dock .tiger-bubble-tail,
+.tiger-companion-dock.inline-companion .tiger-bubble-tail {
+  top: -6px;
+  bottom: auto;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%) rotate(45deg);
+  border-right: none;
+  border-bottom: none;
+  border-left: 1px solid var(--border-hover, rgba(255, 255, 255, 0.22));
+  border-top: 1px solid var(--border-hover, rgba(255, 255, 255, 0.22));
+}
+
+.header .tiger-companion-dock .tiger-minimized-paw-btn,
+.tiger-companion-dock.inline-companion .tiger-minimized-paw-btn {
+  width: 38px;
+  height: 38px;
+  font-size: 20px;
+}
+
 /* Floating Interactive Speech Bubble */
 .tiger-speech-bubble {
   pointer-events: auto;
