@@ -11,7 +11,6 @@ import CatchUpModal from './Components/CatchUpModal/CatchUpModal';
 import AboutModal from './Components/AboutModal/AboutModal';
 import SyncModal from './Components/SyncModal/SyncModal';
 import SimulationArea from './Components/SimulationArea/SimulationArea';
-import TigerMascot from './Components/TigerMascot/TigerMascot';
 import { formatDecimal, formatMoney, formatDateKey } from './utils/formatters';
 import {
   getDateKey,
@@ -807,14 +806,6 @@ function App() {
   const milestoneDays = totalDailyIncome > 0 ? Math.ceil(milestoneRemaining / totalDailyIncome) : 0;
   const displayMoney = (value) => areValuesVisible ? formatMoney(value) : '****';
 
-  const isWeekend = actualDate.getDay() === 0 || actualDate.getDay() === 6;
-  const isHoliday = (holidaysList || []).some((h) => h && h.date === database.simulatedDate);
-  const isWeekendOrHoliday = isWeekend || isHoliday;
-  const isMilestoneClose = milestoneDays > 0 && milestoneDays <= 10;
-  const hasRecovery = (database.recoverySlots || []).some((s) => s.type === 'recovery');
-  const hasReadyWishlist = (database.wishlistSlots || []).some((s) => s.type === 'ready');
-  const isSyncing = Boolean(syncModalData.isOpen);
-
   const getTrend = (current, previous) => current === previous
     ? { symbol: '→', className: 'trend-same' }
     : current > previous
@@ -1583,15 +1574,6 @@ function App() {
         initialPrincipal={syncModalData.initialPrincipal}
         businessDays={syncModalData.businessDays}
         referenceDate={syncModalData.referenceDate}
-        locale={locale}
-      />
-
-      <TigerMascot
-        isWeekendOrHoliday={isWeekendOrHoliday}
-        isSyncing={isSyncing}
-        hasRecovery={hasRecovery}
-        hasReadyWishlist={hasReadyWishlist}
-        isMilestoneClose={isMilestoneClose}
         locale={locale}
       />
     </div>
