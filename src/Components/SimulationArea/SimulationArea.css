@@ -60,6 +60,24 @@
     color: #ffffff;
 }
 
+.simulation-btn.btn-add-sim-asset {
+    color: var(--accent-green);
+    background: var(--accent-green-bg);
+    border-color: var(--accent-green-border);
+}
+
+.simulation-btn.btn-add-sim-asset:hover {
+    background: var(--accent-green);
+    color: #ffffff;
+}
+
+.simulation-controls-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+}
+
 .simulation-cdi-control {
     display: flex;
     align-items: center;
@@ -101,6 +119,179 @@
     padding: 4px 8px;
     border-radius: 6px;
     border: 1px solid var(--accent-blue-border);
+}
+
+/* Inflation (IPCA) Control */
+.simulation-inflation-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: transparent;
+    flex-wrap: wrap;
+}
+
+.simulation-inflation-toggle-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    user-select: none;
+}
+
+.simulation-inflation-toggle-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent-green);
+    cursor: pointer;
+}
+
+.simulation-inflation-input-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.simulation-inflation-input-wrap label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.simulation-ipca-input {
+    width: 68px;
+    padding: 6px 8px;
+    border: 1px solid var(--border-card);
+    border-radius: 6px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.simulation-ipca-input:focus {
+    outline: none;
+    border-color: var(--accent-green);
+    box-shadow: 0 0 0 2px var(--accent-green-bg);
+}
+
+/* Add Simulation Asset Form Drawer */
+.sim-add-asset-form {
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--border-card);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    animation: reveal 0.2s ease both;
+}
+
+.sim-form-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sim-form-header h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.sim-form-close {
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    line-height: 1;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0 4px;
+}
+
+.sim-form-close:hover {
+    color: var(--text-primary);
+}
+
+.sim-form-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+}
+
+.sim-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sim-form-field label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sim-form-field input[type="text"],
+.sim-form-field input[type="number"],
+.sim-form-field input[type="date"] {
+    padding: 8px 10px;
+    border: 1px solid var(--border-card);
+    border-radius: 8px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.sim-form-field input:focus {
+    outline: none;
+    border-color: var(--accent-green);
+    box-shadow: 0 0 0 2px var(--accent-green-bg);
+}
+
+.sim-form-field.checkbox-field {
+    justify-content: flex-end;
+}
+
+.sim-form-field.checkbox-field label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+.sim-form-field.checkbox-field input {
+    accent-color: var(--accent-green);
+    width: 16px;
+    height: 16px;
+}
+
+.sim-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.sim-form-actions .btn-save {
+    background: var(--accent-green);
+    color: #ffffff;
+    border-color: var(--accent-green);
+}
+
+.sim-form-actions .btn-save:hover {
+    background: #059669;
 }
 
 .simulation-content {
@@ -390,6 +581,159 @@
     background-color: var(--accent-red-bg);
     color: var(--accent-red);
     border: 1px solid var(--accent-red-border);
+}
+
+/* Inflation metrics styling */
+.sim-metric-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+}
+
+.sim-badge {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+}
+
+.sim-badge.real {
+    background: var(--accent-green-bg);
+    color: var(--accent-green);
+    border: 1px solid var(--accent-green-border);
+}
+
+.sim-metric-subtext {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.simulation-metric.highlight-ipca {
+    background: var(--bg-surface);
+    border: 1px dashed var(--border-hover);
+}
+
+.sim-badge-pill {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent-blue);
+    background: var(--accent-blue-bg);
+    padding: 2px 6px;
+    border-radius: 6px;
+}
+
+.sim-inflation-details {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.sim-inflation-details strong {
+    font-size: 14px;
+    color: var(--accent-green);
+}
+
+/* Simulation Assets Section */
+.simulation-assets-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-subtle);
+    background: transparent;
+}
+
+.sim-assets-header {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.sim-assets-header h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.sim-assets-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.sim-assets-chips-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.sim-asset-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--border-card);
+    border-radius: 10px;
+    padding: 8px 12px;
+    transition: all 0.2s ease;
+}
+
+.sim-asset-chip.is-simulated {
+    border-left: 3px solid var(--accent-green);
+    background: var(--bg-surface-card);
+}
+
+.sim-chip-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.sim-chip-info strong {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.sim-chip-info span {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.sim-chip-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sim-asset-tag {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--accent-green);
+    background: var(--accent-green-bg);
+    border: 1px solid var(--accent-green-border);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.sim-chip-delete {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: color 0.15s ease;
+}
+
+.sim-chip-delete:hover {
+    color: var(--accent-red);
 }
 
 @media (max-width: 900px) {
