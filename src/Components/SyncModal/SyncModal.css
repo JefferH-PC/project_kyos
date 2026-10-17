@@ -1,0 +1,349 @@
+/* SyncModal.css - Premium Glassmorphism Stopwatch Sync Animation */
+
+@keyframes syncModalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes syncModalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.2), inset 0 0 15px rgba(16, 185, 129, 0.05);
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(16, 185, 129, 0.4), inset 0 0 25px rgba(16, 185, 129, 0.15);
+  }
+}
+
+@keyframes stopwatchTickRing {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes badgePop {
+  0% {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.sync-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(7, 10, 16, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 16px;
+  animation: syncModalFadeIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.sync-modal-card {
+  background: linear-gradient(165deg, rgba(20, 26, 38, 0.96) 0%, rgba(13, 17, 25, 0.98) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 24px;
+  padding: 32px 28px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75), 0 0 40px rgba(16, 185, 129, 0.12);
+  overflow-y: auto;
+  position: relative;
+  animation: syncModalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Header with Stopwatch Badge */
+.sync-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sync-stopwatch-icon-wrapper {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-green, #10b981);
+  flex-shrink: 0;
+}
+
+.sync-stopwatch-icon-wrapper.animating {
+  animation: pulseGlow 1.8s infinite ease-in-out;
+}
+
+.sync-stopwatch-ring {
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2px dashed rgba(16, 185, 129, 0.5);
+  pointer-events: none;
+}
+
+.sync-stopwatch-ring.spinning {
+  animation: stopwatchTickRing 8s linear infinite;
+}
+
+.sync-stopwatch-icon {
+  width: 26px;
+  height: 26px;
+}
+
+.sync-modal-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.sync-modal-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary, #f8fafc);
+  letter-spacing: -0.3px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sync-stopwatch-timer-badge {
+  font-size: 13px;
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 700;
+  color: var(--accent-green, #10b981);
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+}
+
+.sync-modal-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary, #94a3b8);
+  margin: 0;
+}
+
+/* Central Stopwatch Money Display Card */
+.sync-money-hero-card {
+  background: radial-gradient(circle at center 40%, rgba(16, 185, 129, 0.12) 0%, rgba(15, 20, 30, 0.8) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 18px;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.sync-money-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--text-muted, #64748b);
+}
+
+.sync-money-counter-display {
+  font-size: 40px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -1px;
+  background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #6ee7b7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 16px rgba(16, 185, 129, 0.35));
+  line-height: 1.1;
+  transition: transform 0.05s ease-out;
+  margin: 4px 0;
+}
+
+.sync-money-hero-card.completed .sync-money-counter-display {
+  filter: drop-shadow(0 0 24px rgba(16, 185, 129, 0.6));
+}
+
+/* Live Compound Progress Bar */
+.sync-progress-bar-wrapper {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 8px;
+  position: relative;
+}
+
+.sync-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #059669 0%, #10b981 60%, #34d399 100%);
+  border-radius: 999px;
+  transition: width 0.05s linear;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+}
+
+/* Dynamic Live Status Ticker */
+.sync-status-ticker {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary, #94a3b8);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.sync-status-ticker.completed {
+  color: var(--accent-green, #10b981);
+  font-weight: 700;
+  animation: badgePop 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.sync-status-indicator-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--accent-green, #10b981);
+  box-shadow: 0 0 6px var(--accent-green, #10b981);
+}
+
+/* Secondary Metrics Grid */
+.sync-modal-metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.sync-submetric-card {
+  background-color: var(--bg-surface-elevated, #1a2230);
+  border: 1px solid var(--border-card, rgba(255, 255, 255, 0.12));
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sync-submetric-card span {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted, #64748b);
+}
+
+.sync-submetric-card strong {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary, #f8fafc);
+  font-variant-numeric: tabular-nums;
+}
+
+.sync-submetric-card.highlight strong {
+  color: var(--accent-green, #10b981);
+}
+
+/* Footer & Actions */
+.sync-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.sync-btn-done {
+  width: 100%;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
+}
+
+.sync-btn-done:hover {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 22px rgba(16, 185, 129, 0.45);
+}
+
+.sync-btn-done:active {
+  transform: translateY(0);
+}
+
+/* Light theme overrides */
+.light-theme .sync-modal-overlay {
+  background-color: rgba(15, 23, 42, 0.45);
+}
+
+.light-theme .sync-modal-card {
+  background: linear-gradient(165deg, #ffffff 0%, #f8fafc 100%);
+  border-color: rgba(16, 185, 129, 0.35);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.15), 0 0 30px rgba(16, 185, 129, 0.1);
+}
+
+.light-theme .sync-money-hero-card {
+  background: radial-gradient(circle at center 40%, rgba(16, 185, 129, 0.08) 0%, rgba(248, 250, 252, 0.95) 100%);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+@media (max-width: 480px) {
+  .sync-modal-card {
+    padding: 24px 18px;
+    gap: 18px;
+  }
+  .sync-money-counter-display {
+    font-size: 32px;
+  }
+  .sync-modal-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}

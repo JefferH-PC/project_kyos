@@ -9,6 +9,7 @@ import AddMoreButton from './Components/AddMoreButton/AddMoreButton';
 import RemoveButton from './Components/RemoveButton/RemoveButton';
 import CatchUpModal from './Components/CatchUpModal/CatchUpModal';
 import AboutModal from './Components/AboutModal/AboutModal';
+import SyncModal from './Components/SyncModal/SyncModal';
 import SimulationArea from './Components/SimulationArea/SimulationArea';
 import { formatDecimal, formatMoney, formatDateKey } from './utils/formatters';
 import {
@@ -17,6 +18,7 @@ import {
   shiftDate,
   isValidDateKey,
   getBusinessDaysInRange,
+  getAccrualBusinessDays,
   fetchBrazilianHolidays,
   fetchHolidaysForYearRange,
   getLatestSettledBankingDate
@@ -343,6 +345,14 @@ function App() {
     calendarDays: 0,
     totalAccrued: 0,
     completedSlots: []
+  });
+  const [syncModalData, setSyncModalData] = useState({
+    isOpen: false,
+    targetIncome: 0,
+    targetTotal: 0,
+    initialPrincipal: 0,
+    businessDays: 0,
+    referenceDate: ''
   });
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
   const [editingAssetId, setEditingAssetId] = useState(null);
@@ -961,7 +971,29 @@ function App() {
 
   const handleManualSync = async () => {
     try {
-      await syncExistingAssetsIncomes(holidaysList, cdiRate);
+      const updatedDb = await syncExistingAssetsIncomes(holidaysList, cdiRate);
+      const assets = updatedDb?.assets || [];
+      const totalInc = assets.reduce((sum, a) => sum + (Number(a.totalIncome) || 0), 0);
+      const totalInv = assets.reduce((sum, a) => sum + (Number(a.investedAmount) || 0), 0);
+      const initialPrinc = assets.reduce((sum, a) => sum + (Number(a.initialInvestedAmount) || 0), 0);
+      const targetDateKey = updatedDb?.simulatedDate || getDateKey(new Date());
+
+      let earliestDate = targetDateKey;
+      for (const asset of assets) {
+        if (asset.creationDate && isValidDateKey(asset.creationDate) && asset.creationDate < earliestDate) {
+          earliestDate = asset.creationDate;
+        }
+      }
+      const bDays = getAccrualBusinessDays(earliestDate, targetDateKey, holidaysList).length;
+
+      setSyncModalData({
+        isOpen: true,
+        targetIncome: totalInc,
+        targetTotal: totalInv,
+        initialPrincipal: initialPrinc,
+        businessDays: bDays,
+        referenceDate: targetDateKey
+      });
       showToast(locale === 'pt' ? 'Rendimentos atualizados com o banco!' : 'Incomes synced with bank!');
     } catch {
       showToast(locale === 'pt' ? 'Erro ao sincronizar' : 'Failed to sync');
@@ -1531,6 +1563,17 @@ function App() {
       <AboutModal
         isOpen={isAboutModalOpen}
         onClose={() => setIsAboutModalOpen(false)}
+        locale={locale}
+      />
+
+      <SyncModal
+        isOpen={syncModalData.isOpen}
+        onClose={() => setSyncModalData((cur) => ({ ...cur, isOpen: false }))}
+        targetIncome={syncModalData.targetIncome}
+        targetTotal={syncModalData.targetTotal}
+        initialPrincipal={syncModalData.initialPrincipal}
+        businessDays={syncModalData.businessDays}
+        referenceDate={syncModalData.referenceDate}
         locale={locale}
       />
     </div>

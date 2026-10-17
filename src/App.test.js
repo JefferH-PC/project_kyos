@@ -1123,6 +1123,10 @@ test('sync incomes button triggers coherent update and displays confirmation toa
     // Verify toast
     expect(await screen.findByText(/incomes synced with bank/i)).toBeInTheDocument();
 
+    // Verify SyncModal is opened
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByTestId('sync-money-display')).toBeInTheDocument();
+
     // Verify localStorage update
     const db = JSON.parse(window.localStorage.getItem('kyos-database'));
     const asset = db.assets.find((a) => a.id === 'existing-cdb-nubank');
@@ -1132,6 +1136,52 @@ test('sync incomes button triggers coherent update and displays confirmation toa
     global.Date = RealDate;
   }
 });
+
+test('clicking sync incomes button opens SyncModal with stopwatch animation and calculates income for long-invested asset', async () => {
+  const todayKey = getDateKey(new Date());
+  window.localStorage.setItem('kyos-database', JSON.stringify({
+    schemaVersion: 11,
+    simulatedDate: todayKey,
+    wishlistSlots: [],
+    recoverySlots: [],
+    assets: [{
+      id: 'user-lci-inter',
+      name: 'LCI 88% CDI Inter',
+      yieldRate: 88,
+      investedAmount: 69249,
+      initialInvestedAmount: 69249,
+      totalIncome: 0,
+      creationDate: '2024-06-06',
+      incomeHistory: {}
+    }],
+    milestone: { target: 0 },
+    purchasedTotal: 0,
+    recoverySpentTotal: 0
+  }));
+  window.localStorage.setItem('kyos-last-opened-date', todayKey);
+
+  render(<App />);
+
+  const investmentsBtn = await screen.findByRole('button', { name: 'Investments' });
+  await userEvent.click(investmentsBtn);
+
+  const syncBtn = await screen.findByRole('button', { name: /sync incomes/i });
+  await userEvent.click(syncBtn);
+
+  // Modal opens immediately with stopwatch money display
+  const moneyCounter = await screen.findByTestId('sync-money-display');
+  expect(moneyCounter).toBeInTheDocument();
+
+  // Close modal via Done button
+  const doneBtn = screen.getByRole('button', { name: /done/i });
+  await userEvent.click(doneBtn);
+  expect(screen.queryByTestId('sync-money-display')).not.toBeInTheDocument();
+
+  // Verify asset was updated to exact bank amount
+  const db = JSON.parse(window.localStorage.getItem('kyos-database'));
+  expect(db.assets[0].investedAmount).toBeCloseTo(89966.36, 1);
+});
+
 
 
 
