@@ -1,8 +1,8 @@
 /* eslint-disable no-restricted-globals */
 
 // Kyos PWA Service Worker
-const CACHE_NAME = 'kyos-cache-v1';
-const DATA_CACHE_NAME = 'kyos-data-cache-v1';
+const CACHE_NAME = 'kyos-cache-v2';
+const DATA_CACHE_NAME = 'kyos-data-cache-v2';
 
 const STATIC_PRECACHE_URLS = [
   './',
