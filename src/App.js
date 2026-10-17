@@ -18,7 +18,8 @@ import {
   isValidDateKey,
   getBusinessDaysInRange,
   fetchBrazilianHolidays,
-  fetchHolidaysForYearRange
+  fetchHolidaysForYearRange,
+  getLatestSettledBankingDate
 } from './utils/calendar';
 import {
   calculateDailyYield,
@@ -555,9 +556,10 @@ function App() {
     const assets = currentDb.assets || [];
     if (!Array.isArray(assets) || assets.length === 0) return currentDb;
 
-    const targetDateKey = (currentDb.simulatedDate && isValidDateKey(currentDb.simulatedDate) && currentDb.simulatedDate > currentDateKey)
+    const settledBankingDate = getLatestSettledBankingDate(currentDateKey, holidays);
+    const targetDateKey = (currentDb.simulatedDate && isValidDateKey(currentDb.simulatedDate) && currentDb.simulatedDate !== currentDateKey)
       ? currentDb.simulatedDate
-      : currentDateKey;
+      : settledBankingDate;
 
     let earliestDate = targetDateKey;
     for (const asset of assets) {
@@ -599,14 +601,14 @@ function App() {
     const updatedDb = {
       ...currentDb,
       assets: updatedAssets,
-      simulatedDate: targetDateKey,
+      simulatedDate: currentDb.simulatedDate || currentDateKey,
       incomeHistory: updatedIncomeHistory
     };
 
     setDatabase(updatedDb);
     try {
       window.localStorage.setItem('kyos-database', JSON.stringify(updatedDb));
-      window.localStorage.setItem('kyos-last-opened-date', targetDateKey);
+      window.localStorage.setItem('kyos-last-opened-date', currentDateKey);
     } catch {
       // Ignore localStorage errors
     }

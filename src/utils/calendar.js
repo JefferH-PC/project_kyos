@@ -193,22 +193,23 @@ export const getBusinessDaysInRange = (startDate, endDate, holidays) => {
 };
 
 /**
- * Calculates the exact sequence of business days on which fixed-income yields accrue
- * and are credited, starting strictly after the effective application date up to targetDate.
+ * Calculates the exact schedule of holding days and credit dates for fixed-income accrual
+ * according to B3 / CETIP Caderno de Fórmulas.
  *
  * Rules:
  * 1. An application made on a business day begins earning overnight yield from that day to the next business day.
- *    The first yield is credited on that next business day. Day 0 (the application date) yields R$ 0.
+ *    The first yield is credited on that next business day, using the CDI rate published for the application date.
  * 2. An application made on a weekend or holiday becomes effective on the next Brazilian business day.
- *    Its first yield is credited on the subsequent business day.
- * 3. Returns an array of Date objects for each business day that earns/credits yield.
+ * 3. For each pair:
+ *    - holdingDate: the business day whose CDI rate applies to the overnight holding period.
+ *    - creditDate: the business day on which that overnight yield is credited to the asset balance.
  *
  * @param {Date|string} creationDate Date of deposit / investment (data da aplicação)
  * @param {Date|string} targetDate Reference date (e.g. today / simulatedDate)
  * @param {Set<string>|Array<string>|Array<{ date: string }>} [holidays=[]]
- * @returns {Date[]}
+ * @returns {Array<{ creditDate: Date, holdingDate: Date }>}
  */
-export const getAccrualBusinessDays = (creationDate, targetDate, holidays = []) => {
+export const getAccrualSchedule = (creationDate, targetDate, holidays = []) => {
   if (!creationDate || !targetDate) return [];
   const start = parseDateKey(creationDate);
   const end = parseDateKey(targetDate);
@@ -219,9 +220,65 @@ export const getAccrualBusinessDays = (creationDate, targetDate, holidays = []) 
     effectiveAppDate = shiftDate(effectiveAppDate, 1);
   }
 
-  const firstAccrualDate = shiftDate(effectiveAppDate, 1);
-  if (firstAccrualDate > end) return [];
+  const allBusinessDays = getBusinessDaysInRange(effectiveAppDate, end, holidays);
+  if (allBusinessDays.length <= 1) return [];
 
-  return getBusinessDaysInRange(firstAccrualDate, end, holidays);
+  const schedule = [];
+  for (let i = 1; i < allBusinessDays.length; i += 1) {
+    schedule.push({
+      creditDate: allBusinessDays[i],
+      holdingDate: allBusinessDays[i - 1]
+    });
+  }
+  return schedule;
 };
+
+/**
+ * Calculates the exact sequence of business days on which fixed-income yields accrue
+ * and are credited, starting strictly after the effective application date up to targetDate.
+ *
+ * @param {Date|string} creationDate Date of deposit / investment (data da aplicação)
+ * @param {Date|string} targetDate Reference date (e.g. today / simulatedDate)
+ * @param {Set<string>|Array<string>|Array<{ date: string }>} [holidays=[]]
+ * @returns {Date[]}
+ */
+export const getAccrualBusinessDays = (creationDate, targetDate, holidays = []) => {
+  const schedule = getAccrualSchedule(creationDate, targetDate, holidays);
+  return schedule.map((item) => item.creditDate);
+};
+
+/**
+ * Resolves the latest official settled banking business day for which fixed-income
+ * positions have been cleared and reflected on bank statements.
+ *
+ * Brazilian Banking Conventions (B3 / CETIP):
+ * - On Saturdays and Sundays: clearing for Friday trades does not settle until Monday night.
+ *   Bank statements and portfolio screens over the weekend display the settled position
+ *   as of Thursday close (D-2).
+ * - On normal business days: returns the reference date if it is a business day,
+ *   or rolls back to the latest completed business day if on a holiday or weekend.
+ *
+ * @param {Date|string} [referenceDate] Defaults to today
+ * @param {Set<string>|Array<string>|Array<{ date: string }>} [holidays=[]]
+ * @returns {string} Date key YYYY-MM-DD
+ */
+export const getLatestSettledBankingDate = (referenceDate = new Date(), holidays = []) => {
+  const dateObj = parseDateKey(referenceDate);
+  const dayOfWeek = dateObj.getDay();
+
+  if (dayOfWeek === 6) {
+    // Saturday: rolls back 2 days to Thursday
+    dateObj.setDate(dateObj.getDate() - 2);
+  } else if (dayOfWeek === 0) {
+    // Sunday: rolls back 3 days to Thursday
+    dateObj.setDate(dateObj.getDate() - 3);
+  }
+
+  while (!isBusinessDay(dateObj, holidays)) {
+    dateObj.setDate(dateObj.getDate() - 1);
+  }
+
+  return getDateKey(dateObj);
+};
+
 

@@ -2,6 +2,8 @@ import {
   isBusinessDay,
   getBusinessDaysInRange,
   getAccrualBusinessDays,
+  getAccrualSchedule,
+  getLatestSettledBankingDate,
   fetchBrazilianHolidays,
   getDateKey,
   shiftDate,
@@ -95,6 +97,27 @@ describe('calendar utilities', () => {
     // Holiday deposit: 2026-09-07 is holiday. Effective date is Tue 2026-09-08. First yield is Wed 2026-09-09.
     expect(getAccrualBusinessDays('2026-09-07', '2026-09-08', holidays).map(getDateKey)).toEqual([]);
     expect(getAccrualBusinessDays('2026-09-07', '2026-09-09', holidays).map(getDateKey)).toEqual(['2026-09-09']);
+  });
+
+  test('getAccrualSchedule pairs holding dates with credit dates accurately', () => {
+    const schedule = getAccrualSchedule('2026-09-14', '2026-09-16');
+    expect(schedule.length).toBe(2);
+    expect(getDateKey(schedule[0].creditDate)).toBe('2026-09-15');
+    expect(getDateKey(schedule[0].holdingDate)).toBe('2026-09-14');
+    expect(getDateKey(schedule[1].creditDate)).toBe('2026-09-16');
+    expect(getDateKey(schedule[1].holdingDate)).toBe('2026-09-15');
+  });
+
+  test('getLatestSettledBankingDate resolves weekend and holiday settlement positions', () => {
+    // Saturday 2026-10-17 rolls back to Thursday 2026-10-15
+    expect(getLatestSettledBankingDate('2026-10-17')).toBe('2026-10-15');
+    // Sunday 2026-10-18 rolls back to Thursday 2026-10-15
+    expect(getLatestSettledBankingDate('2026-10-18')).toBe('2026-10-15');
+    // Thursday 2026-10-15 stays 2026-10-15
+    expect(getLatestSettledBankingDate('2026-10-15')).toBe('2026-10-15');
+    // Holiday Monday 2026-10-12 rolls back to Friday 2026-10-09
+    const holidays = [{ date: '2026-10-12', name: 'Nossa Senhora Aparecida' }];
+    expect(getLatestSettledBankingDate('2026-10-12', holidays)).toBe('2026-10-09');
   });
 });
 

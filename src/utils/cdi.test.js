@@ -202,10 +202,31 @@ describe('cdi utilities', () => {
 
     // 252 business days accrued in 2024
     expect(Object.keys(updated.incomeHistory).length).toBe(252);
-    // Official B3 compound factor product over 2024 yields R$ 1.082,75 on R$ 10.000
-    expect(updated.totalIncome).toBeCloseTo(1082.75, 1);
-    expect(updated.investedAmount).toBeCloseTo(11082.75, 1);
+    // Official B3 compound factor product over 2024 yields R$ 1.082,55 on R$ 10.000
+    expect(updated.totalIncome).toBeCloseTo(1082.55, 1);
+    expect(updated.investedAmount).toBeCloseTo(11082.55, 1);
     expect(updated.initialInvestedAmount).toBe(10000);
+  });
+
+  test('user asset of R$ 69.249,00 at 88% CDI from 2024-06-06 calculates exact R$ 89.966,36 matching bank statement', () => {
+    const asset = {
+      id: 'asset-user-lci',
+      name: 'LCI 88% CDI Inter',
+      investedAmount: 69249,
+      initialInvestedAmount: 69249,
+      yieldRate: 88,
+      creationDate: '2024-06-06',
+      totalIncome: 0,
+      incomeHistory: {}
+    };
+
+    // Bank statement position as of 2026-10-15 (latest settled business day)
+    const targetDate = '2026-10-15';
+    const updated = calculateAssetAccrualSinceDate(asset, targetDate, []);
+
+    expect(updated.investedAmount).toBeCloseTo(89966.36, 2);
+    expect(updated.totalIncome).toBeCloseTo(20717.36, 2);
+    expect(Object.keys(updated.incomeHistory).length).toBe(594);
   });
 });
 

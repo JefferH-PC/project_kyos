@@ -1,4 +1,4 @@
-import { getDateKey, isValidDateKey, getAccrualBusinessDays } from './calendar';
+import { getDateKey, isValidDateKey, getAccrualSchedule } from './calendar';
 import { OFFICIAL_HISTORICAL_CDI_RATES, LATEST_BUNDLED_CDI_DATE } from './historicalCdiData';
 
 export { OFFICIAL_HISTORICAL_CDI_RATES, LATEST_BUNDLED_CDI_DATE };
@@ -322,17 +322,27 @@ export const calculateAssetAccrualSinceDate = (
     };
   }
 
-  const businessDays = getAccrualBusinessDays(creationDate, targetDateKey, holidays);
+  const schedule = getAccrualSchedule(creationDate, targetDateKey, holidays);
+  if (schedule.length === 0) {
+    return {
+      ...asset,
+      investedAmount: initial,
+      initialInvestedAmount: initial,
+      totalIncome: 0,
+      incomeHistory: {}
+    };
+  }
 
   let currentPrincipal = initial;
   let totalIncome = 0;
   const incomeHistory = {};
 
-  for (const day of businessDays) {
-    const dayKey = getDateKey(day);
-    const dayRate = getCDIRateForDate(dayKey, fallbackCdi, ratesMap);
+  for (const item of schedule) {
+    const creditDayKey = getDateKey(item.creditDate);
+    const holdingDayKey = getDateKey(item.holdingDate);
+    const dayRate = getCDIRateForDate(holdingDayKey, fallbackCdi, ratesMap);
     const income = calculateDailyYield(currentPrincipal, yieldRate, dayRate);
-    incomeHistory[dayKey] = income;
+    incomeHistory[creditDayKey] = income;
     currentPrincipal += income;
     totalIncome += income;
   }
