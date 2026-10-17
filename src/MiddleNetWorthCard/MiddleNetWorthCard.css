@@ -1,14 +1,14 @@
 .middle-net-worth {
     width: auto;
-    height: 154px;
+    min-height: 154px;
+    height: auto;
     display: flex;
     flex-direction: column;
     border-radius: 14px;
-    border: 1px solid var(--border-card);
+    border: 1px solid var(--accent-green-border);
     padding: 16px 20px;
     margin-bottom: 0;
     background: linear-gradient(135deg, var(--bg-surface-card), rgba(16, 185, 129, 0.05));
-    border-color: rgba(16, 185, 129, 0.25);
     justify-content: space-between;
     box-shadow: var(--shadow-card);
 }

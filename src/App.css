@@ -248,7 +248,8 @@ select,
 }
 
 .today-card {
-    height: 154px;
+    min-height: 154px;
+    height: auto;
     background: var(--bg-surface-card);
     border-color: var(--border-card);
 }
@@ -273,7 +274,8 @@ select,
 }
 
 .cdi-card {
-    height: 154px;
+    min-height: 154px;
+    height: auto;
     align-items: center;
     justify-content: center;
     gap: 8px;
@@ -320,8 +322,9 @@ select,
 }
 
 .period-card {
-    height: 154px;
-    background: var(--bg-surface);
+    min-height: 154px;
+    height: auto;
+    background: var(--bg-surface-card);
     border: 1px solid var(--border-card);
 }
 
@@ -767,8 +770,8 @@ select,
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px;
-    min-height: 0;
-    flex: 1 1 0;
+    flex: 0 0 auto;
+    width: 100%;
 }
 
 .balance-card,
@@ -780,12 +783,14 @@ select,
 }
 
 .balance-card {
-    padding: 18px;
+    padding: 18px 20px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     min-width: 0;
     gap: 8px;
+    min-height: 140px;
+    height: auto;
 }
 
 .balance-card h2,
@@ -817,16 +822,17 @@ select,
 }
 
 .balance-chart-card {
-    flex: 1 1 0;
-    min-height: 0;
-    padding: 22px 24px;
+    flex: 0 0 auto;
+    min-height: min-content;
+    height: auto;
+    padding: 24px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    gap: 16px;
-    background: var(--bg-surface);
+    gap: 20px;
+    background: var(--bg-surface-card);
     border-radius: 14px;
-    border: 1px solid var(--border-subtle);
+    border: 1px solid var(--border-card);
+    box-shadow: var(--shadow-card);
 }
 
 .balance-graphic-header {
@@ -885,8 +891,12 @@ select,
 .balance-visual-track-wrap {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     width: 100%;
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 16px;
 }
 
 .balance-track-header {
@@ -973,18 +983,20 @@ select,
 }
 
 .graphic-flow-card {
-    background: var(--bg-surface-card);
+    background: var(--bg-surface-elevated);
     border: 1px solid var(--border-subtle);
     border-radius: 12px;
-    padding: 14px 16px;
+    padding: 16px 18px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
+    min-height: 110px;
+    height: auto;
     transition: border-color 0.2s ease, transform 0.15s ease;
 }
 
 .graphic-flow-card:hover {
-    border-color: var(--border-strong);
+    border-color: var(--border-hover);
 }
 
 .flow-card-top {
@@ -1074,12 +1086,14 @@ select,
 
 /* Balance Asset Breakdown */
 .balance-asset-breakdown {
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px solid var(--border-subtle);
+    margin-top: 2px;
+    padding: 18px;
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
     width: 100%;
 }
 
