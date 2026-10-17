@@ -106,18 +106,18 @@
 
 .simulation-cdi-input:focus {
     outline: none;
-    border-color: var(--accent-blue);
-    box-shadow: 0 0 0 2px var(--accent-blue-bg);
+    border-color: var(--accent-green);
+    box-shadow: 0 0 0 2px var(--accent-green-bg);
 }
 
 .simulation-cdi-annual {
     font-size: 13px;
     font-weight: 600;
-    color: var(--accent-blue);
-    background: var(--accent-blue-bg);
+    color: var(--accent-green);
+    background: var(--accent-green-bg);
     padding: 4px 8px;
     border-radius: 6px;
-    border: 1px solid var(--accent-blue-border);
+    border: 1px solid var(--accent-green-border);
 }
 
 /* Inflation (IPCA) Control */

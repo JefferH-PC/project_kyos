@@ -1,12 +1,12 @@
 .coin-icon {
     fill: var(--accent-green);
     background: none;
-    transition: transform 0.2s ease;
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .header {
     display: flex;
-    margin: 8px 6px 14px 6px;
+    margin: 8px 4px 14px 4px;
     align-items: center;
     justify-content: space-between;
     background: transparent;
@@ -23,16 +23,14 @@
 }
 
 .logo:hover .coin-icon {
-    transform: rotate(15deg) scale(1.05);
+    transform: rotate(12deg) scale(1.06);
 }
 
 .logo h1 {
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 800;
-    letter-spacing: -0.5px;
-    background: linear-gradient(135deg, var(--text-primary) 30%, var(--text-secondary));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.6px;
+    color: var(--text-primary);
     margin: 0;
 }
 
@@ -46,23 +44,28 @@
 
 .header-actions button,
 .header-actions .language-select {
-    color: var(--text-primary);
+    color: var(--text-secondary);
     background: var(--bg-surface);
-    border: 1px solid var(--border-card);
-    border-radius: 12px;
-    padding: 7px 14px;
-    font-size: 14px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 7px 13px;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
     box-shadow: var(--shadow-card);
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
 }
 
 .header-actions button:hover,
 .header-actions .language-select:hover {
+    color: var(--text-primary);
     background: var(--bg-surface-elevated);
     border-color: var(--border-hover);
     transform: translateY(-1px);
+}
+
+.header-actions button:active {
+    transform: translateY(0);
 }
 
 
