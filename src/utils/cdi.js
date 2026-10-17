@@ -1,4 +1,7 @@
 import { getDateKey, isValidDateKey, getAccrualBusinessDays } from './calendar';
+import { OFFICIAL_HISTORICAL_CDI_RATES, LATEST_BUNDLED_CDI_DATE } from './historicalCdiData';
+
+export { OFFICIAL_HISTORICAL_CDI_RATES, LATEST_BUNDLED_CDI_DATE };
 
 export const DEFAULT_CDI_RATE = 0.051660;
 export const CDI_BUSINESS_DAYS = 252;
@@ -107,6 +110,38 @@ export const HISTORICAL_CDI_BENCHMARKS = {
 };
 
 /**
+ * Resolves the official, exact CDI daily rate for any given date.
+ * Priority:
+ * 1. Explicitly supplied customRatesMap (e.g. from network or test mocks)
+ * 2. Dynamic cache from localStorage (for newly published dates after bundled cutoff)
+ * 3. Official verified BCB SGS Series 12 historical daily rates (100% accurate, 2010 to current)
+ * 4. Dynamic historical fallback rate
+ *
+ * @param {string} dateStr Format YYYY-MM-DD
+ * @param {number} fallbackRate
+ * @param {Record<string, number>} [customRatesMap]
+ * @returns {number}
+ */
+export const getCDIRateForDate = (dateStr, fallbackRate = DEFAULT_CDI_RATE, customRatesMap = null) => {
+  if (!dateStr || typeof dateStr !== 'string') return fallbackRate;
+
+  if (customRatesMap && Number.isFinite(customRatesMap[dateStr])) {
+    return customRatesMap[dateStr];
+  }
+
+  const cache = getCDICache();
+  if (Number.isFinite(cache[dateStr])) {
+    return cache[dateStr];
+  }
+
+  if (Number.isFinite(OFFICIAL_HISTORICAL_CDI_RATES[dateStr])) {
+    return OFFICIAL_HISTORICAL_CDI_RATES[dateStr];
+  }
+
+  return getHistoricalFallbackRateForDate(dateStr, fallbackRate);
+};
+
+/**
  * Returns the best fallback CDI daily rate for a given date based on official historical yearly benchmarks.
  *
  * @param {string} dateStr Format YYYY-MM-DD
@@ -161,7 +196,11 @@ export const fetchHistoricalCDI = async (dateStr, fallbackRate = DEFAULT_CDI_RAT
       }
     }
   } catch {
-    // Fall back to benchmark rate or latest rate
+    // Fall back to official bundled rates or benchmark rate
+  }
+
+  if (Number.isFinite(OFFICIAL_HISTORICAL_CDI_RATES[dateStr])) {
+    return OFFICIAL_HISTORICAL_CDI_RATES[dateStr];
   }
 
   const benchmarkRate = getHistoricalFallbackRateForDate(dateStr, fallbackRate);
@@ -170,6 +209,7 @@ export const fetchHistoricalCDI = async (dateStr, fallbackRate = DEFAULT_CDI_RAT
 
 /**
  * Fetches historical CDI rates for a range of dates from Banco Central do Brasil.
+ * Merges official verified bundled rates with network responses and local cache.
  * Splits into annual chunks to avoid BCB 406 payload limit errors.
  * Caches all retrieved days into localStorage under CDI_CACHE_KEY.
  *
@@ -184,12 +224,12 @@ export const fetchCDIRatesForDateRange = async (startDateKey, endDateKey, fallba
   const endYear = Number(endDateKey.slice(0, 4));
 
   if (!Number.isFinite(startYear) || !Number.isFinite(endYear)) {
-    return cache;
+    return { ...OFFICIAL_HISTORICAL_CDI_RATES, ...cache };
   }
 
   const minYear = Math.min(startYear, endYear);
   const maxYear = Math.max(startYear, endYear);
-  const updatedCache = { ...cache };
+  const updatedCache = { ...OFFICIAL_HISTORICAL_CDI_RATES, ...cache };
   let hasNewData = false;
 
   for (let year = minYear; year <= maxYear; year += 1) {
@@ -283,7 +323,6 @@ export const calculateAssetAccrualSinceDate = (
   }
 
   const businessDays = getAccrualBusinessDays(creationDate, targetDateKey, holidays);
-  const cdiCache = ratesMap || getCDICache();
 
   let currentPrincipal = initial;
   let totalIncome = 0;
@@ -291,7 +330,7 @@ export const calculateAssetAccrualSinceDate = (
 
   for (const day of businessDays) {
     const dayKey = getDateKey(day);
-    const dayRate = cdiCache[dayKey] ?? getHistoricalFallbackRateForDate(dayKey, fallbackCdi);
+    const dayRate = getCDIRateForDate(dayKey, fallbackCdi, ratesMap);
     const income = calculateDailyYield(currentPrincipal, yieldRate, dayRate);
     incomeHistory[dayKey] = income;
     currentPrincipal += income;

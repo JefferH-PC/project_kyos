@@ -130,6 +130,10 @@ const APP_TEXT = {
     syncedSuccess: 'Incomes synchronized coherently!',
     iofRateLabel: 'IOF',
     irRateLabel: 'IR',
+    appliedAmount: 'Principal Invested',
+    grossBalance: 'Gross Balance',
+    netBalance: 'Net Balance',
+    currentBalance: 'Current Balance',
     taxDeductedBadge: 'Net (IR & IOF Deducted)',
     mobileNavWishlist: 'Wishlist',
     mobileNavDashboard: 'Dashboard',
@@ -222,6 +226,10 @@ const APP_TEXT = {
     syncedSuccess: 'Rendimentos sincronizados com sucesso!',
     iofRateLabel: 'IOF',
     irRateLabel: 'IR',
+    appliedAmount: 'Valor Aplicado',
+    grossBalance: 'Saldo Bruto',
+    netBalance: 'Saldo Líquido',
+    currentBalance: 'Saldo Atual',
     taxDeductedBadge: 'Líquido (IR e IOF Deduzidos)',
     mobileNavWishlist: 'Lista de Desejos',
     mobileNavDashboard: 'Painel',
@@ -547,8 +555,7 @@ function App() {
     const assets = currentDb.assets || [];
     if (!Array.isArray(assets) || assets.length === 0) return currentDb;
 
-    const lastOpenedKey = window.localStorage.getItem('kyos-last-opened-date');
-    const targetDateKey = (currentDb.simulatedDate && isValidDateKey(currentDb.simulatedDate) && (currentDb.simulatedDate >= currentDateKey || lastOpenedKey === currentDb.simulatedDate))
+    const targetDateKey = (currentDb.simulatedDate && isValidDateKey(currentDb.simulatedDate) && currentDb.simulatedDate > currentDateKey)
       ? currentDb.simulatedDate
       : currentDateKey;
 

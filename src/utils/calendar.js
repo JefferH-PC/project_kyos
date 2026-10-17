@@ -1,3 +1,5 @@
+import { OFFICIAL_HISTORICAL_CDI_RATES, LATEST_BUNDLED_CDI_DATE } from './historicalCdiData';
+
 export const HOLIDAYS_CACHE_KEY = 'kyos-holidays-cache';
 
 export const getDateKey = (date) => {
@@ -146,20 +148,19 @@ export const isBusinessDay = (date, holidays) => {
 
   const dateStr = getDateKey(dateObj);
 
-  if (!holidays) {
-    return true;
-  }
-
   if (holidays instanceof Set) {
-    return !holidays.has(dateStr);
+    if (holidays.has(dateStr)) return false;
+  } else if (Array.isArray(holidays) && holidays.length > 0) {
+    if (typeof holidays[0] === 'string') {
+      if (holidays.includes(dateStr)) return false;
+    } else if (holidays.some((item) => item && item.date === dateStr)) {
+      return false;
+    }
   }
 
-  if (Array.isArray(holidays)) {
-    if (holidays.length === 0) return true;
-    if (typeof holidays[0] === 'string') {
-      return !holidays.includes(dateStr);
-    }
-    return !holidays.some((item) => item && item.date === dateStr);
+  // Official ground truth: if within verified BCB series 12 dataset, exact presence verifies banking business day
+  if (dateStr <= LATEST_BUNDLED_CDI_DATE && dateStr >= '2010-01-04') {
+    return OFFICIAL_HISTORICAL_CDI_RATES[dateStr] !== undefined;
   }
 
   return true;

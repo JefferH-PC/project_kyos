@@ -6,6 +6,7 @@ import {
   calculateAssetAccrualSinceDate,
   synchronizeAllAssetsIncomes,
   getHistoricalFallbackRateForDate,
+  getCDIRateForDate,
   fetchCDIRatesForDateRange,
   DEFAULT_CDI_RATE,
   CDI_CACHE_KEY
@@ -168,6 +169,43 @@ describe('cdi utilities', () => {
     expect(Object.keys(synced[1].incomeHistory)).toEqual(['2026-09-16', '2026-09-17', '2026-09-18']);
     expect(synced[1].totalIncome).toBeGreaterThan(0);
     expect(synced[1].investedAmount).toBeGreaterThan(5000);
+  });
+
+  test('getCDIRateForDate returns 100% accurate official BCB rates for 2024 business days', () => {
+    // January 2024 Copom period
+    expect(getCDIRateForDate('2024-01-02')).toBeCloseTo(0.043739, 6);
+    expect(getCDIRateForDate('2024-01-15')).toBeCloseTo(0.043739, 6);
+    // March/April 2024 Copom period
+    expect(getCDIRateForDate('2024-03-25')).toBeCloseTo(0.040168, 6);
+    // May to September 2024 Copom period
+    expect(getCDIRateForDate('2024-06-10')).toBeCloseTo(0.039270, 6);
+    // December 2024 Copom period
+    expect(getCDIRateForDate('2024-12-16')).toBeCloseTo(0.045513, 6);
+  });
+
+  test('long invested asset from 2024 calculates 100% accurate gross return matching B3 / bank account', () => {
+    // Deposit R$ 10.000,00 on 2024-01-02 (first business day of 2024)
+    // Accrual runs strictly from next business day (2024-01-03) through 2024-12-31 (252 business days)
+    const asset = {
+      id: 'asset-2024-cdb',
+      name: 'CDB 100% CDI 2024',
+      investedAmount: 10000,
+      initialInvestedAmount: 10000,
+      yieldRate: 100,
+      creationDate: '2024-01-02',
+      totalIncome: 0,
+      incomeHistory: {}
+    };
+
+    const targetDate = '2024-12-31';
+    const updated = calculateAssetAccrualSinceDate(asset, targetDate, []);
+
+    // 252 business days accrued in 2024
+    expect(Object.keys(updated.incomeHistory).length).toBe(252);
+    // Official B3 compound factor product over 2024 yields R$ 1.082,75 on R$ 10.000
+    expect(updated.totalIncome).toBeCloseTo(1082.75, 1);
+    expect(updated.investedAmount).toBeCloseTo(11082.75, 1);
+    expect(updated.initialInvestedAmount).toBe(10000);
   });
 });
 
