@@ -1,4 +1,4 @@
-/* SyncModal.css - Premium Glassmorphism Stopwatch Sync Animation */
+/* SyncModal.css - Clean, Refined Stopwatch Sync Animation (No Neon) */
 
 @keyframes syncModalFadeIn {
   from {
@@ -20,12 +20,12 @@
   }
 }
 
-@keyframes pulseGlow {
+@keyframes stopwatchSubtlePulse {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(16, 185, 129, 0.2), inset 0 0 15px rgba(16, 185, 129, 0.05);
+    transform: scale(1);
   }
   50% {
-    box-shadow: 0 0 35px rgba(16, 185, 129, 0.4), inset 0 0 25px rgba(16, 185, 129, 0.15);
+    transform: scale(1.04);
   }
 }
 
@@ -68,8 +68,8 @@
 }
 
 .sync-modal-card {
-  background: linear-gradient(165deg, rgba(20, 26, 38, 0.96) 0%, rgba(13, 17, 25, 0.98) 100%);
-  border: 1px solid rgba(16, 185, 129, 0.25);
+  background-color: var(--bg-surface, #141923);
+  border: 1px solid var(--border-card, rgba(255, 255, 255, 0.12));
   border-radius: 24px;
   padding: 32px 28px;
   max-width: 500px;
@@ -78,7 +78,7 @@
   display: flex;
   flex-direction: column;
   gap: 22px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75), 0 0 40px rgba(16, 185, 129, 0.12);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
   overflow-y: auto;
   position: relative;
   animation: syncModalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -96,8 +96,8 @@
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: var(--bg-surface-elevated, #1a2230);
+  border: 1px solid var(--border-card, rgba(255, 255, 255, 0.12));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -106,14 +106,14 @@
 }
 
 .sync-stopwatch-icon-wrapper.animating {
-  animation: pulseGlow 1.8s infinite ease-in-out;
+  animation: stopwatchSubtlePulse 1.8s infinite ease-in-out;
 }
 
 .sync-stopwatch-ring {
   position: absolute;
   inset: -3px;
   border-radius: 50%;
-  border: 2px dashed rgba(16, 185, 129, 0.5);
+  border: 2px dashed var(--border-hover, rgba(255, 255, 255, 0.25));
   pointer-events: none;
 }
 
@@ -148,9 +148,9 @@
   font-size: 13px;
   font-family: 'Courier New', Courier, monospace;
   font-weight: 700;
-  color: var(--accent-green, #10b981);
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.28);
+  color: var(--text-primary, #f8fafc);
+  background: var(--bg-surface-elevated, #1a2230);
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
   padding: 3px 8px;
   border-radius: 6px;
   letter-spacing: 0.5px;
@@ -164,8 +164,8 @@
 
 /* Central Stopwatch Money Display Card */
 .sync-money-hero-card {
-  background: radial-gradient(circle at center 40%, rgba(16, 185, 129, 0.12) 0%, rgba(15, 20, 30, 0.8) 100%);
-  border: 1px solid rgba(16, 185, 129, 0.35);
+  background: var(--bg-surface-elevated, #1a2230);
+  border: 1px solid var(--border-card, rgba(255, 255, 255, 0.12));
   border-radius: 18px;
   padding: 24px 20px;
   display: flex;
@@ -190,17 +190,10 @@
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   letter-spacing: -1px;
-  background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #6ee7b7 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 16px rgba(16, 185, 129, 0.35));
+  color: var(--accent-green, #10b981);
   line-height: 1.1;
   transition: transform 0.05s ease-out;
   margin: 4px 0;
-}
-
-.sync-money-hero-card.completed .sync-money-counter-display {
-  filter: drop-shadow(0 0 24px rgba(16, 185, 129, 0.6));
 }
 
 /* Live Compound Progress Bar */
@@ -216,10 +209,9 @@
 
 .sync-progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #059669 0%, #10b981 60%, #34d399 100%);
+  background: var(--accent-green, #10b981);
   border-radius: 999px;
   transition: width 0.05s linear;
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
 }
 
 /* Dynamic Live Status Ticker */
@@ -244,7 +236,6 @@
   height: 6px;
   border-radius: 50%;
   background-color: var(--accent-green, #10b981);
-  box-shadow: 0 0 6px var(--accent-green, #10b981);
 }
 
 /* Secondary Metrics Grid */
@@ -294,7 +285,7 @@
 .sync-btn-done {
   width: 100%;
   padding: 14px 24px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: var(--accent-green, #10b981);
   color: #ffffff;
   border: none;
   border-radius: 12px;
@@ -306,13 +297,13 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .sync-btn-done:hover {
-  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  background: #059669;
   transform: translateY(-1px);
-  box-shadow: 0 6px 22px rgba(16, 185, 129, 0.45);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
 }
 
 .sync-btn-done:active {
@@ -325,14 +316,14 @@
 }
 
 .light-theme .sync-modal-card {
-  background: linear-gradient(165deg, #ffffff 0%, #f8fafc 100%);
-  border-color: rgba(16, 185, 129, 0.35);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.15), 0 0 30px rgba(16, 185, 129, 0.1);
+  background: var(--bg-surface, #ffffff);
+  border-color: var(--border-card, rgba(0, 0, 0, 0.12));
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.15);
 }
 
 .light-theme .sync-money-hero-card {
-  background: radial-gradient(circle at center 40%, rgba(16, 185, 129, 0.08) 0%, rgba(248, 250, 252, 0.95) 100%);
-  border-color: rgba(16, 185, 129, 0.3);
+  background: var(--bg-surface-elevated, #f8fafc);
+  border-color: var(--border-card, rgba(0, 0, 0, 0.12));
 }
 
 @media (max-width: 480px) {
