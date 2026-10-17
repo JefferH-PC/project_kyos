@@ -11,7 +11,6 @@ import CatchUpModal from './Components/CatchUpModal/CatchUpModal';
 import AboutModal from './Components/AboutModal/AboutModal';
 import SyncModal from './Components/SyncModal/SyncModal';
 import SimulationArea from './Components/SimulationArea/SimulationArea';
-import MoneyBalanceChart from './Components/MoneyBalanceChart/MoneyBalanceChart';
 import { formatDecimal, formatMoney, formatDateKey } from './utils/formatters';
 import {
   getDateKey,
@@ -1273,16 +1272,19 @@ function App() {
           </div>
 
           <div className='balance-chart-card balance-graphic-card'>
-            <MoneyBalanceChart
-              database={database}
-              investedTotal={investedTotal}
-              spentTotal={spentTotal}
-              locale={locale}
-              areValuesVisible={areValuesVisible}
-            />
+            <div className='balance-graphic-header'>
+              <div className='graphic-title-group'>
+                <h2>{t.moneyBalance}</h2>
+                <span className='graphic-subtitle'>{t.capitalAllocation}</span>
+              </div>
+              <div className='graphic-total-badge'>
+                <span className='total-badge-label'>{t.totalFlow}</span>
+                <strong>R$ {displayMoney(totalBalance)}</strong>
+              </div>
+            </div>
 
-            <div className='balance-proportional-bar-wrapper'>
-              <div className='track-header'>
+            <div className='balance-visual-track-wrap'>
+              <div className='balance-track-header'>
                 <span className='track-marker invested-marker'>
                   <span className='marker-dot invested'></span>
                   {t.invested}: <strong>{formatDecimal(investedRatio)}%</strong>
