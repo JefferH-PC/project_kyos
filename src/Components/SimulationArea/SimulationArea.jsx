@@ -218,6 +218,8 @@ const SimulationArea = ({
     setTargetDate('');
     setCalendarYear(minYear);
     setCalendarMonth(minMonth);
+    setAdjustInflation(false);
+    setAnnualIpca('4.5');
     setIsAddAssetOpen(false);
   };
 
@@ -233,6 +235,7 @@ const SimulationArea = ({
       incomeHistory: {}
     });
     setTargetDate('');
+    setAdjustInflation(false);
     setIsAddAssetOpen(false);
   };
 
@@ -327,15 +330,22 @@ const SimulationArea = ({
       let dayTotalYield = 0;
 
       assets = assets.map((asset) => {
-        const yieldAmount = calculateDailyYield(asset.investedAmount, asset.yieldRate, rateToUse);
+        const assetStartDate = parseDateKey(asset.creationDate || baselineDateKey);
+        // Only accrue yield if the current projection day is on or after the asset start date
+        if (dayDate < assetStartDate) {
+          return asset;
+        }
+
+        const currentAmount = Number(asset.investedAmount) || 0;
+        const yieldAmount = calculateDailyYield(currentAmount, asset.yieldRate, rateToUse);
         const effectiveYield = asset.applyTax
           ? calculateTaxBreakdown(yieldAmount, asset.creationDate, dayDate).netYield
           : yieldAmount;
         dayTotalYield += effectiveYield;
         return {
           ...asset,
-          investedAmount: Number(asset.investedAmount || 0) + yieldAmount,
-          totalIncome: Number(asset.totalIncome || 0) + yieldAmount
+          investedAmount: currentAmount + yieldAmount,
+          totalIncome: (Number(asset.totalIncome) || 0) + yieldAmount
         };
       });
 
@@ -383,7 +393,7 @@ const SimulationArea = ({
       completedSlots,
       assets
     };
-  }, [targetDate, baselineDateObj, simDatabase, customCdi, holidaysMap, adjustInflation, annualIpca]);
+  }, [targetDate, baselineDateObj, baselineDateKey, simDatabase, customCdi, holidaysMap, adjustInflation, annualIpca]);
 
   // Calendar Day Cells rendering
   const firstDayOfMonth = new Date(calendarYear, calendarMonth, 1).getDay();
@@ -440,6 +450,10 @@ const SimulationArea = ({
 
   return (
     <div className="simulation-area">
+      <div className="simulation-header-bar">
+        <h3 className="simulation-area-title">{t.title}</h3>
+      </div>
+
       <div className="simulation-toolbar">
         <div className="simulation-actions">
           <button type="button" className="simulation-btn" onClick={handleResetToBaseline}>
