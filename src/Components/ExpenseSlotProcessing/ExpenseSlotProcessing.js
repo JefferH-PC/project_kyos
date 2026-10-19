@@ -9,7 +9,7 @@ const ExpenseSlotProcessing = (props) => {
             <div className='slot-info'>
                 <div className='slot-title-row'>
                     <strong className='slot-title'>{props.expenseName}</strong>
-                    <span className='slot-days-pill active'>{props.days} {props.daysLabel}</span>
+                    <span className='slot-days-pill active'>{props.days === '—' ? '—' : `${props.days} ${props.daysLabel}`}</span>
                 </div>
                 <div className='slot-amount-row'>
                     <span className='slot-price'>R$ {props.price}</span>

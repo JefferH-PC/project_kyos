@@ -339,8 +339,8 @@ const SimulationArea = ({
 
       assets = assets.map((asset) => {
         const assetStartDate = parseDateKey(asset.creationDate || baselineDateKey);
-        // Only accrue yield if the current projection day is on or after the asset start date
-        if (dayDate < assetStartDate) {
+        // B3 schedule: Day 0 of deposit yields R$ 0,00; first yield is credited on the next business day (dayDate > assetStartDate)
+        if (dayDate <= assetStartDate) {
           return asset;
         }
 

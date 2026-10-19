@@ -14,7 +14,7 @@ const TimeArea = (props) => {
     const [expenseName, setExpenseName] = useState('');
     const [price, setPrice] = useState('');
     const slots = props.slots || [];
-    const getDays = (amount) => props.dailyIncome > 0 ? Math.ceil(Number(amount || 0) / props.dailyIncome) : 0;
+    const getDays = (amount) => props.dailyIncome > 0 ? Math.ceil(Number(amount || 0) / props.dailyIncome) : '—';
 
     const addSlot = (event) => {
         event.preventDefault();
@@ -61,7 +61,7 @@ const TimeArea = (props) => {
 
     const buySlot = (slot) => {
         const chargedAmount = Number(slot.originalPrice ?? slot.price ?? 0);
-        props.onBuy?.(chargedAmount);
+        props.onBuy?.(chargedAmount, slot);
         completeSlot(slot.id);
     };
 
@@ -137,7 +137,7 @@ const TimeArea = (props) => {
                 {processingSlots.slice(0, 1).map((slot, index, list) => renderSlot(slot, index, list))}
             </div>
             <div className="total">
-                <h3>{labels.total}: R$ {formatMoney(props.total)} - {getDays(props.total)} {labels.days}</h3>
+                <h3>{labels.total}: R$ {formatMoney(props.total)} - {getDays(props.total) === '—' ? '—' : `${getDays(props.total)} ${labels.days}`}</h3>
             </div>
         </div >
     );

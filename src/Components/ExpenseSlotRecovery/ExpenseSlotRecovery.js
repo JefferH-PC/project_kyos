@@ -7,7 +7,7 @@ const ExpenseSlotRecovery = (props) => {
             <div className='slot-info'>
                 <div className='slot-title-row'>
                     <strong className='slot-title'>{props.expenseName}</strong>
-                    <span className='slot-days-pill recovery'>{props.days} {props.daysLabel}</span>
+                    <span className='slot-days-pill recovery'>{props.days === '—' ? '—' : `${props.days} ${props.daysLabel}`}</span>
                 </div>
                 <div className='slot-amount-row'>
                     <span className='slot-price recovery'>R$ {props.price}</span>

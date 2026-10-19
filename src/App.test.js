@@ -861,10 +861,11 @@ test('balance section maintains stable 2-card layout without breaking when inves
   const balanceView = document.querySelector('.balance-view');
   expect(balanceView).toBeInTheDocument();
 
-  // Must contain only the 2 balanced sections: year grid and chart card
-  expect(balanceView.children.length).toBe(2);
+  // Contains balanced layout: year grid, chart card, and expenses card
+  expect(balanceView.children.length).toBe(3);
   expect(balanceView.children[0]).toHaveClass('balance-year-grid');
   expect(balanceView.children[1]).toHaveClass('balance-chart-card');
+  expect(balanceView.children[2]).toHaveClass('balance-expenses-card');
 
   // Verify Spent and Invested values render properly in cards and graphic
   expect(screen.getAllByText('R$ 25.000,00').length).toBeGreaterThanOrEqual(1);
@@ -874,6 +875,7 @@ test('balance section maintains stable 2-card layout without breaking when inves
   expect(document.querySelector('.balance-graphic-card')).toBeInTheDocument();
   expect(document.querySelector('.balance-proportional-bar')).toBeInTheDocument();
   expect(document.querySelector('.balance-graphic-grid')).toBeInTheDocument();
+  expect(document.querySelector('.balance-expenses-card')).toBeInTheDocument();
   expect(document.querySelector('.balance-donut')).toBeNull();
   expect(document.querySelector('.portfolio-allocation-card')).toBeNull();
 });
@@ -1386,6 +1388,334 @@ test('syncing on weekend preserves Friday asset accrual without rolling simulate
     expect(db.assets[0].incomeHistory['2026-10-16']).toBeDefined();
     expect(db.assets[0].incomeHistory['2026-10-17']).toBeUndefined(); // Saturday no yield
     expect(db.assets[0].incomeHistory['2026-10-18']).toBeUndefined(); // Sunday no yield
+  } finally {
+    global.Date = RealDate;
+  }
+});
+
+test('zero yield display: renders dash instead of 0 days when daily income is zero', async () => {
+  window.localStorage.setItem('kyos-database', JSON.stringify({
+    schemaVersion: 11,
+    simulatedDate: '2026-10-19',
+    assets: [], // No assets => daily income is 0
+    wishlistSlots: [
+      { id: 'w1', expenseName: 'Headphones', price: 500, originalPrice: 500, type: 'expense' }
+    ],
+    recoverySlots: [
+      { id: 'r1', expenseName: 'Car Repair', price: 1000, originalPrice: 1000, type: 'recovery', isProcessing: true }
+    ],
+    milestone: { target: 10000 },
+    purchasedTotal: 0,
+    recoverySpentTotal: 1000,
+    expenses: []
+  }));
+  window.localStorage.setItem('kyos-last-opened-date', '2026-10-19');
+
+  render(<App />);
+
+  // In Wishlist slot pill, should render '—' instead of '0 days'
+  const slotPills = document.querySelectorAll('.slot-days-pill');
+  expect(slotPills.length).toBeGreaterThan(0);
+  slotPills.forEach((pill) => {
+    expect(pill.textContent.trim()).toBe('—');
+  });
+
+  // In TimeArea total row
+  const totals = document.querySelectorAll('.time-area .total h3');
+  totals.forEach((tot) => {
+    expect(tot.textContent).toContain('—');
+    expect(tot.textContent).not.toContain('0 days');
+    expect(tot.textContent).not.toContain('0 dias');
+  });
+
+  // Milestone days in dashboard
+  const milestoneCard = document.querySelector('.middle-milestone');
+  expect(milestoneCard).toBeInTheDocument();
+  expect(milestoneCard.textContent).toContain('—');
+});
+
+test('lossless migration and localization: preserves non-asset data on schema version mismatch and localizes topInvestment', () => {
+  window.localStorage.setItem('kyos-locale', 'pt');
+  window.localStorage.setItem('kyos-last-opened-date', '2026-10-19');
+  window.localStorage.setItem('kyos-database', JSON.stringify({
+    schemaVersion: 999, // mismatch!
+    simulatedDate: '2026-10-19',
+    wishlistSlots: [
+      { id: 'w-keep', expenseName: 'Monitor OLED', price: 3000, originalPrice: 3000, type: 'expense' }
+    ],
+    recoverySlots: [
+      { id: 'r-keep', expenseName: 'Vet Emergency', price: 800, originalPrice: 800, type: 'recovery', isProcessing: true }
+    ],
+    milestone: { target: 50000 },
+    purchasedTotal: 1200,
+    recoverySpentTotal: 800,
+    assets: []
+  }));
+
+  render(<App />);
+
+  // Verify wishlist and recovery slots were NOT wiped out by schemaVersion mismatch
+  expect(screen.getByText('Monitor OLED')).toBeInTheDocument();
+  expect(screen.getByText('Vet Emergency')).toBeInTheDocument();
+
+  // Navigate to Investments to check topInvestment fallback localization
+  const invBtn = screen.getByRole('button', { name: /investimentos/i });
+  userEvent.click(invBtn);
+
+  expect(screen.getByText('Maior investimento')).toBeInTheDocument();
+  expect(screen.getByText(/Nenhum/)).toBeInTheDocument();
+});
+
+test('yesterday income: on Monday references Friday trading session rather than Sunday', async () => {
+  const RealDate = Date;
+  class MockDate extends RealDate {
+    constructor(...args) {
+      if (args.length === 0) {
+        super('2026-10-19T12:00:00Z'); // Monday
+      } else {
+        super(...args);
+      }
+    }
+    static now() {
+      return new RealDate('2026-10-19T12:00:00Z').getTime();
+    }
+  }
+  global.Date = MockDate;
+
+  try {
+    window.localStorage.setItem('kyos-last-opened-date', '2026-10-19');
+    window.localStorage.setItem('kyos-database', JSON.stringify({
+      schemaVersion: 11,
+      simulatedDate: '2026-10-19',
+      assets: [{
+        id: 'asset-trend',
+        name: 'Tesouro Selic',
+        investedAmount: 10000,
+        initialInvestedAmount: 10000,
+        yieldRate: 100,
+        creationDate: '2026-10-01',
+        applyTax: false,
+        incomeHistory: {
+          '2026-10-16': 4.50, // Friday close
+          '2026-10-19': 4.50  // Monday
+        }
+      }],
+      wishlistSlots: [],
+      recoverySlots: [],
+      milestone: { target: 10000 },
+      purchasedTotal: 0,
+      recoverySpentTotal: 0
+    }));
+
+    render(<App />);
+
+    const todayCard = document.querySelector('.today-card');
+    expect(todayCard).toBeInTheDocument();
+    // Yesterday label is followed by Friday's income (R$ 4,50), not R$ 0,00!
+    expect(todayCard.textContent).toContain('Yesterday');
+    expect(todayCard.textContent).toContain('4,50');
+  } finally {
+    global.Date = RealDate;
+  }
+});
+
+test('expenses area in balance: displays capital outflows with yearly filter, metrics, direct add, and deletion', async () => {
+  window.localStorage.setItem('kyos-last-opened-date', '2026-10-19');
+  window.localStorage.setItem('kyos-database', JSON.stringify({
+    schemaVersion: 11,
+    simulatedDate: '2026-10-19',
+    assets: [{
+      id: 'asset-bal',
+      name: 'CDB 100%',
+      investedAmount: 20000,
+      initialInvestedAmount: 20000,
+      yieldRate: 100,
+      creationDate: '2026-10-01',
+      applyTax: false,
+      incomeHistory: { '2026-10-19': 8 }
+    }],
+    wishlistSlots: [],
+    recoverySlots: [],
+    purchasedTotal: 1500,
+    recoverySpentTotal: 0,
+    expenses: [
+      { id: 'exp-1', name: 'Ergonomic Chair', amount: 1200, date: '2026-05-10', category: 'wishlist' },
+      { id: 'exp-2', name: 'Dental Bill Reimbursed', amount: 300, date: '2026-08-15', category: 'recovery' },
+      { id: 'exp-3', name: 'Old Laptop (2025)', amount: 2500, date: '2025-11-20', category: 'wishlist' }
+    ]
+  }));
+
+  render(<App />);
+
+  // Navigate to Balance view
+  const balanceBtn = await screen.findByRole('button', { name: 'Balance' });
+  await userEvent.click(balanceBtn);
+
+  const expensesCard = document.querySelector('.balance-expenses-card');
+  expect(expensesCard).toBeInTheDocument();
+
+  // Check header title and count badge
+  expect(screen.getByText('Expenses & Capital Outflows')).toBeInTheDocument();
+  expect(screen.getByText('3 items')).toBeInTheDocument();
+
+  // All 3 items are visible initially (under 'All' filter)
+  expect(screen.getByText('Ergonomic Chair')).toBeInTheDocument();
+  expect(screen.getByText('Dental Bill Reimbursed')).toBeInTheDocument();
+  expect(screen.getByText('Old Laptop (2025)')).toBeInTheDocument();
+
+  // Check Total Outflows KPI: 1200 + 300 + 2500 = 4000
+  expect(screen.getByText('- R$ 4.000,00')).toBeInTheDocument();
+
+  // Click on '2026' yearly filter pill
+  const pill2026 = screen.getByRole('button', { name: '2026' });
+  await userEvent.click(pill2026);
+
+  // 2026 items visible, 2025 item filtered out
+  expect(screen.getByText('Ergonomic Chair')).toBeInTheDocument();
+  expect(screen.getByText('Dental Bill Reimbursed')).toBeInTheDocument();
+  expect(screen.queryByText('Old Laptop (2025)')).toBeNull();
+  expect(screen.getByText('- R$ 1.500,00')).toBeInTheDocument();
+
+  // Click on '2025' yearly filter pill
+  const pill2025 = screen.getByRole('button', { name: '2025' });
+  await userEvent.click(pill2025);
+
+  expect(screen.getByText('Old Laptop (2025)')).toBeInTheDocument();
+  expect(screen.queryByText('Ergonomic Chair')).toBeNull();
+  expect(screen.getAllByText('- R$ 2.500,00').length).toBe(2);
+
+  // Return to All
+  const pillAll = screen.getByRole('button', { name: 'All' });
+  await userEvent.click(pillAll);
+
+  // Direct add expense
+  const addExpBtn = screen.getByRole('button', { name: /add expense/i });
+  await userEvent.click(addExpBtn);
+
+  const nameInput = screen.getByPlaceholderText('Expense name');
+  const amountInput = screen.getByPlaceholderText('0,00');
+  await userEvent.type(nameInput, 'Mechanical Keyboard');
+  await userEvent.type(amountInput, '450');
+
+  const submitBtn = document.querySelector('.direct-expense-form .submit-btn');
+  expect(submitBtn).toBeInTheDocument();
+  await userEvent.click(submitBtn);
+
+  expect(screen.getByText('Mechanical Keyboard')).toBeInTheDocument();
+  expect(screen.getByText('- R$ 450,00')).toBeInTheDocument();
+
+  // Delete an expense
+  const deleteBtns = document.querySelectorAll('.expense-delete-btn');
+  expect(deleteBtns.length).toBe(4);
+  await userEvent.click(deleteBtns[0]); // delete Mechanical Keyboard
+
+  expect(screen.queryByText('Mechanical Keyboard')).toBeNull();
+});
+
+test('tax accounting: period income summaries reflect net yield for taxable assets', () => {
+  window.localStorage.setItem('kyos-last-opened-date', '2026-10-19');
+  window.localStorage.setItem('kyos-database', JSON.stringify({
+    schemaVersion: 11,
+    simulatedDate: '2026-10-19', // Monday
+    assets: [{
+      id: 'asset-tax-period',
+      name: 'CDB 100%',
+      investedAmount: 10000,
+      initialInvestedAmount: 10000,
+      yieldRate: 100,
+      creationDate: '2026-10-01',
+      applyTax: true, // 18 days elapsed: IOF applies + 22.5% IR on remaining
+      incomeHistory: {
+        '2026-10-19': 10.00 // gross 10.00 -> net 4.65
+      }
+    }],
+    wishlistSlots: [],
+    recoverySlots: [],
+    milestone: { target: 10000 },
+    purchasedTotal: 0,
+    recoverySpentTotal: 0
+  }));
+
+  render(<App />);
+
+  // Period cards (Week, Month, Year) should reflect R$ 4,65 (net), not R$ 10,00 (gross)
+  const periodCards = document.querySelectorAll('.period-card');
+  expect(periodCards.length).toBe(3);
+  periodCards.forEach((card) => {
+    expect(card.textContent).toContain('4,65');
+    expect(card.textContent).not.toContain('10,00');
+  });
+});
+
+test('accrual engine: catch-up follows B3 holding-day schedule and logs cleared recovery items to expenses', async () => {
+  const RealDate = Date;
+  class MockDate extends RealDate {
+    constructor(...args) {
+      if (args.length === 0) {
+        super('2026-10-20T12:00:00Z'); // Tuesday
+      } else {
+        super(...args);
+      }
+    }
+    static now() {
+      return new RealDate('2026-10-20T12:00:00Z').getTime();
+    }
+  }
+  global.Date = MockDate;
+
+  try {
+    window.localStorage.setItem('kyos-last-opened-date', '2026-10-19');
+    window.localStorage.setItem('kyos-database', JSON.stringify({
+      schemaVersion: 11,
+      simulatedDate: '2026-10-19',
+      assets: [
+        {
+          id: 'asset-old',
+          name: 'Old Investment',
+          investedAmount: 10000,
+          initialInvestedAmount: 10000,
+          yieldRate: 100,
+          creationDate: '2026-10-01',
+          applyTax: false,
+          incomeHistory: { '2026-10-19': 4 }
+        },
+        {
+          id: 'asset-new',
+          name: 'New Investment Today',
+          investedAmount: 50000,
+          initialInvestedAmount: 50000,
+          yieldRate: 100,
+          creationDate: '2026-10-20', // Deposited on Tuesday (Day 0) -> must yield R$ 0,00 on Tuesday!
+          applyTax: false,
+          incomeHistory: {}
+        }
+      ],
+      wishlistSlots: [],
+      recoverySlots: [
+        { id: 'rec-clear', expenseName: 'Parking fine', price: 2, originalPrice: 2, type: 'recovery', isProcessing: true }
+      ],
+      milestone: { target: 10000 },
+      purchasedTotal: 0,
+      recoverySpentTotal: 2,
+      expenses: []
+    }));
+
+    render(<App />);
+
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /continue/i }));
+
+    const savedDb = JSON.parse(window.localStorage.getItem('kyos-database'));
+    const newAsset = savedDb.assets.find((a) => a.id === 'asset-new');
+    // Day 0 of newAsset (2026-10-20) had not held overnight yet -> 0 yield credited
+    expect(newAsset.incomeHistory['2026-10-20']).toBeUndefined();
+
+    // The recovery item was cleared and logged to expenses!
+    expect(savedDb.expenses.length).toBe(1);
+    expect(savedDb.expenses[0].name).toBe('Parking fine');
+    expect(savedDb.expenses[0].category).toBe('recovery');
   } finally {
     global.Date = RealDate;
   }

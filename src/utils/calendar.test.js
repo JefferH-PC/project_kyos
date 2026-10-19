@@ -4,6 +4,7 @@ import {
   getAccrualBusinessDays,
   getAccrualSchedule,
   getLatestSettledBankingDate,
+  getPreviousBankingBusinessDay,
   fetchBrazilianHolidays,
   getDateKey,
   HOLIDAYS_CACHE_KEY
@@ -116,16 +117,32 @@ describe('calendar utilities', () => {
     expect(isBusinessDay('2026-05-01', [])).toBe(false);
   });
 
-  test('getLatestSettledBankingDate resolves weekend and holiday settlement positions', () => {
-    // Saturday 2026-10-17 rolls back to latest business day Friday 2026-10-16
+  test('getLatestSettledBankingDate rolls back non-working days to the latest settled banking date', () => {
+    // Friday 2026-10-16 is a business day -> returns 2026-10-16
+    expect(getLatestSettledBankingDate('2026-10-16')).toBe('2026-10-16');
+    // Saturday 2026-10-17 rolls back to Friday 2026-10-16
     expect(getLatestSettledBankingDate('2026-10-17')).toBe('2026-10-16');
-    // Sunday 2026-10-18 rolls back to latest business day Friday 2026-10-16
+    // Sunday 2026-10-18 rolls back to Friday 2026-10-16
     expect(getLatestSettledBankingDate('2026-10-18')).toBe('2026-10-16');
-    // Thursday 2026-10-15 stays 2026-10-15
-    expect(getLatestSettledBankingDate('2026-10-15')).toBe('2026-10-15');
-    // Holiday Monday 2026-10-12 rolls back to Friday 2026-10-09
+    // Monday 2026-10-19 is a business day -> returns 2026-10-19
+    expect(getLatestSettledBankingDate('2026-10-19')).toBe('2026-10-19');
+    // Monday 2026-10-12 is holiday -> rolls back to Friday 2026-10-09
     const holidays = [{ date: '2026-10-12', name: 'Nossa Senhora Aparecida' }];
     expect(getLatestSettledBankingDate('2026-10-12', holidays)).toBe('2026-10-09');
+  });
+
+  test('getPreviousBankingBusinessDay resolves preceding trading session strictly before reference date', () => {
+    // Monday 2026-10-19 resolves to Friday 2026-10-16
+    expect(getDateKey(getPreviousBankingBusinessDay('2026-10-19'))).toBe('2026-10-16');
+    // Saturday 2026-10-17 resolves to Friday 2026-10-16
+    expect(getDateKey(getPreviousBankingBusinessDay('2026-10-17'))).toBe('2026-10-16');
+    // Sunday 2026-10-18 resolves to Friday 2026-10-16
+    expect(getDateKey(getPreviousBankingBusinessDay('2026-10-18'))).toBe('2026-10-16');
+    // Tuesday 2026-10-20 resolves to Monday 2026-10-19
+    expect(getDateKey(getPreviousBankingBusinessDay('2026-10-20'))).toBe('2026-10-19');
+    // Tuesday 2026-10-13 after holiday Monday 2026-10-12 resolves to Friday 2026-10-09
+    const holidays = [{ date: '2026-10-12', name: 'Nossa Senhora Aparecida' }];
+    expect(getDateKey(getPreviousBankingBusinessDay('2026-10-13', holidays))).toBe('2026-10-09');
   });
 });
 

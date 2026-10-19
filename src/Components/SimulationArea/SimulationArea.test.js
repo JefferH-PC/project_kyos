@@ -137,4 +137,47 @@ describe('SimulationArea Component', () => {
     expect(screen.queryByText('Mock CDB')).not.toBeInTheDocument();
     expect(screen.getByText('CDB Banco Inter')).toBeInTheDocument();
   });
+
+  test('custom simulated asset follows B3 holding-day schedule (Day 0 yields 0, first yield on Day D+1)', () => {
+    const emptyDatabase = {
+      simulatedDate: '2026-10-15',
+      assets: [],
+      wishlistSlots: [],
+      recoverySlots: []
+    };
+
+    render(
+      <SimulationArea
+        mainDatabase={emptyDatabase}
+        liveCdiRate={0.040188}
+        holidaysList={[]}
+        locale="pt"
+      />
+    );
+
+    // Add asset starting on 2026-10-19
+    fireEvent.click(screen.getByText('+ Adicionar Ativo na Simulação'));
+    fireEvent.change(screen.getByPlaceholderText('Ex: CDB 110% CDI'), { target: { value: 'New Test Asset' } });
+    fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '100000' } });
+    // set start date input to 2026-10-19
+    const dateInput = document.querySelector('.sim-add-asset-form input[type="date"]');
+    expect(dateInput).toBeInTheDocument();
+    fireEvent.change(dateInput, { target: { value: '2026-10-19' } });
+    fireEvent.click(screen.getByText('Adicionar à Simulação'));
+
+    // Select 2026-10-19 as target: Day 0 of this asset -> yields 0
+    // Click on target date 19
+    const dayCell19 = screen.getByText('19');
+    fireEvent.click(dayCell19);
+
+    // With 0 yield for this asset, projected income is R$ 0,00
+    expect(screen.getByText(/R\$\s*0,00/)).toBeInTheDocument();
+
+    // Now select target date 20: Day 1 of this asset -> yields 1 business day
+    const dayCell20 = screen.getByText('20');
+    fireEvent.click(dayCell20);
+
+    // Yield should now be strictly greater than 0
+    expect(screen.queryByText(/R\$\s*0,00/)).toBeNull();
+  });
 });

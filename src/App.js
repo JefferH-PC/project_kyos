@@ -21,7 +21,8 @@ import {
   getAccrualBusinessDays,
   fetchBrazilianHolidays,
   fetchHolidaysForYearRange,
-  getLatestSettledBankingDate
+  getLatestSettledBankingDate,
+  getPreviousBankingBusinessDay
 } from './utils/calendar';
 import {
   calculateDailyYield,
@@ -30,6 +31,7 @@ import {
   calculateAssetAccrualSinceDate,
   synchronizeAllAssetsIncomes,
   fetchCDIRatesForDateRange,
+  getCDIRateForDate,
   DEFAULT_CDI_RATE
 } from './utils/cdi';
 import { calculateTaxBreakdown, getCalendarDaysElapsed } from './utils/tax';
@@ -148,7 +150,21 @@ const APP_TEXT = {
     installApp: 'Install App (PWA)',
     appInstalled: 'App installed successfully!',
     offlineActive: 'Offline mode active - data saved locally',
-    onlineRestored: 'Online connection restored'
+    onlineRestored: 'Online connection restored',
+    none: 'None',
+    expensesTitle: 'Expenses & Capital Outflows',
+    expensesSubtitle: 'Record of funded purchases, reimbursed debts, and direct costs',
+    allYears: 'All',
+    filterByYear: 'Filter by year',
+    wishlistCategory: 'Wishlist',
+    recoveryCategory: 'Recovery',
+    noExpensesFound: 'No expenses recorded for this period.',
+    totalExpenses: 'Total Outflows',
+    wishlistOutflows: 'Wishlist Funded',
+    recoveryOutflows: 'Recovery Reimbursed',
+    addExpenseCost: 'Add Expense',
+    itemSingular: 'item',
+    itemPlural: 'items'
   },
   pt: {
     selectLanguage: 'Selecionar idioma',
@@ -244,7 +260,21 @@ const APP_TEXT = {
     installApp: 'Instalar Aplicativo (PWA)',
     appInstalled: 'Aplicativo instalado com sucesso!',
     offlineActive: 'Modo offline ativo - dados salvos localmente',
-    onlineRestored: 'Conexão online restabelecida'
+    onlineRestored: 'Conexão online restabelecida',
+    none: 'Nenhum',
+    expensesTitle: 'Despesas e Saídas de Capital',
+    expensesSubtitle: 'Registro de compras realizadas, recuperações quitadas e custos diretos',
+    allYears: 'Todos',
+    filterByYear: 'Filtrar por ano',
+    wishlistCategory: 'Lista de Desejos',
+    recoveryCategory: 'Recuperação',
+    noExpensesFound: 'Nenhuma despesa registrada para este período.',
+    totalExpenses: 'Total de Saídas',
+    wishlistOutflows: 'Desejos Realizados',
+    recoveryOutflows: 'Recuperações Quitadas',
+    addExpenseCost: 'Adicionar Despesa',
+    itemSingular: 'item',
+    itemPlural: 'itens'
   }
 };
 
@@ -257,7 +287,8 @@ const defaultDatabase = {
   purchasedTotal: 0,
   simulatedDate: getDateKey(new Date()),
   incomeHistory: {},
-  recoverySpentTotal: 0
+  recoverySpentTotal: 0,
+  expenses: []
 };
 
 const normalizeDatabase = (parsedDatabase, resetNonAssetValues = false) => {
@@ -288,6 +319,28 @@ const normalizeDatabase = (parsedDatabase, resetNonAssetValues = false) => {
         applyTax: Boolean(asset.applyTax)
       };
     }) : [];
+
+  const rawExpenses = Array.isArray(parsedDatabase.expenses) ? parsedDatabase.expenses : [];
+  const expenses = resetNonAssetValues ? [] : rawExpenses
+    .filter((e) => e && typeof e === 'object' && Number(e.amount) > 0)
+    .map((e) => ({
+      id: String(e.id || `exp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`),
+      name: String(e.name || 'Expense'),
+      amount: Number(e.amount),
+      date: typeof e.date === 'string' && isValidDateKey(e.date) ? e.date : parsedDate,
+      category: e.category === 'recovery' ? 'recovery' : 'wishlist'
+    }));
+
+  if (!resetNonAssetValues && expenses.length === 0 && Number(parsedDatabase.purchasedTotal) > 0) {
+    expenses.push({
+      id: 'legacy-purchased-total',
+      name: 'Purchased Items (Legacy)',
+      amount: Number(parsedDatabase.purchasedTotal),
+      date: parsedDate,
+      category: 'wishlist'
+    });
+  }
+
   return {
     ...defaultDatabase,
     ...parsedDatabase,
@@ -298,6 +351,7 @@ const normalizeDatabase = (parsedDatabase, resetNonAssetValues = false) => {
     milestone: resetNonAssetValues ? { ...defaultDatabase.milestone } : { ...defaultDatabase.milestone, ...(parsedDatabase.milestone || {}), target: Math.max(toFiniteNumber(parsedDatabase.milestone?.target), 0) },
     purchasedTotal: resetNonAssetValues ? 0 : Math.max(toFiniteNumber(parsedDatabase.purchasedTotal), 0),
     recoverySpentTotal: resetNonAssetValues ? 0 : Math.max(toFiniteNumber(parsedDatabase.recoverySpentTotal), 0),
+    expenses,
     simulatedDate: parsedDate,
     incomeHistory: resetNonAssetValues ? {} : rebuildIncomeHistory(assets)
   };
@@ -308,7 +362,7 @@ const readDatabase = () => {
     const savedDatabase = window.localStorage.getItem('kyos-database');
     if (!savedDatabase) return defaultDatabase;
     const parsedDatabase = JSON.parse(savedDatabase);
-    return normalizeDatabase(parsedDatabase, parsedDatabase.schemaVersion !== DATABASE_VERSION);
+    return normalizeDatabase(parsedDatabase, false);
   } catch {
     return defaultDatabase;
   }
@@ -362,6 +416,14 @@ function App() {
     investedAmount: '',
     creationDate: '',
     applyTax: false
+  });
+  const [selectedExpenseYear, setSelectedExpenseYear] = useState('all');
+  const [isAddDirectExpenseOpen, setIsAddDirectExpenseOpen] = useState(false);
+  const [directExpenseForm, setDirectExpenseForm] = useState({
+    name: '',
+    amount: '',
+    date: '',
+    category: 'wishlist'
   });
 
   const hasRunCatchUpRef = useRef(false);
@@ -487,22 +549,26 @@ function App() {
 
     window.localStorage.setItem('kyos-last-opened-date', currentDateKey);
 
-    const startKey = getDateKey(startDate);
+    const earliestHoldingDay = getPreviousBankingBusinessDay(businessDaysList[0], holidays);
+    const startRateKey = getDateKey(earliestHoldingDay);
     const endKey = getDateKey(endDate);
-    const dayRates = await fetchCDIRatesForDateRange(startKey, endKey, currentCdi);
+    const dayRates = await fetchCDIRatesForDateRange(startRateKey, endKey, currentCdi);
 
     const currentDb = readDatabase();
     let assets = JSON.parse(JSON.stringify(currentDb.assets || []));
     let wishlistSlots = JSON.parse(JSON.stringify(currentDb.wishlistSlots || []));
     let recoverySlots = JSON.parse(JSON.stringify(currentDb.recoverySlots || []));
     let recoverySpentTotal = Number(currentDb.recoverySpentTotal || 0);
+    let expenses = Array.isArray(currentDb.expenses) ? [...currentDb.expenses] : [];
 
     let accruedSum = 0;
     const completed = [];
 
     for (const day of businessDaysList) {
       const dayKey = getDateKey(day);
-      const dayRate = dayRates[dayKey] || currentCdi;
+      const holdingDay = getPreviousBankingBusinessDay(day, holidays);
+      const holdingDayKey = getDateKey(holdingDay);
+      const dayRate = getCDIRateForDate(holdingDayKey, currentCdi, dayRates);
       let dayYieldForDistribution = 0;
 
       const updatedAssets = [];
@@ -512,7 +578,8 @@ function App() {
           continue;
         }
 
-        if (asset.creationDate && asset.creationDate > dayKey) {
+        // B3 Schedule: Overnight holding occurs on holdingDayKey; if deposited after holding day, Day 0 yields R$ 0,00
+        if (asset.creationDate && asset.creationDate > holdingDayKey) {
           updatedAssets.push(asset);
           continue;
         }
@@ -547,6 +614,17 @@ function App() {
         wishlistSlots = distributionResult.wishlistSlots;
         if (distributionResult.completedSlots.length > 0) {
           completed.push(...distributionResult.completedSlots);
+          for (const comp of distributionResult.completedSlots) {
+            if (comp.type === 'recovery') {
+              expenses.unshift({
+                id: `exp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                name: comp.name || 'Recovery item',
+                amount: Number(comp.price || 0),
+                date: dayKey,
+                category: 'recovery'
+              });
+            }
+          }
         }
       }
     }
@@ -557,6 +635,7 @@ function App() {
       wishlistSlots,
       recoverySlots,
       recoverySpentTotal,
+      expenses,
       simulatedDate: currentDateKey,
       incomeHistory: rebuildIncomeHistory(assets)
     };
@@ -780,9 +859,27 @@ function App() {
   const wishlistTotal = database.wishlistSlots.reduce((total, slot) => total + Math.max(toFiniteNumber(slot.price), 0), 0);
   const recoveryTotal = database.recoverySlots.reduce((total, slot) => total + Math.max(toFiniteNumber(slot.price), 0), 0);
   const investedTotal = database.assets.reduce((total, asset) => total + Math.max(toFiniteNumber(asset.investedAmount), 0), 0);
-  const topInvestment = database.assets.reduce((top, asset) => toFiniteNumber(asset.investedAmount) > toFiniteNumber(top.investedAmount) ? asset : top, { name: 'None', investedAmount: 0 });
+  const topInvestment = database.assets.reduce((top, asset) => toFiniteNumber(asset.investedAmount) > toFiniteNumber(top.investedAmount) ? asset : top, { name: t.none || 'None', investedAmount: 0 });
   const actualDate = parseDateKey(database.simulatedDate);
   const totalCdiRate = calculateAnnualizedCDI(cdiRate);
+
+  // Unified net daily income history (consistently accounts for tax mode)
+  const netDailyHistory = useMemo(() => {
+    const map = {};
+    (database.assets || []).forEach((asset) => {
+      Object.entries(asset.incomeHistory || {}).forEach(([dateKey, grossVal]) => {
+        const gross = Number(grossVal || 0);
+        if (gross <= 0) return;
+        let net = gross;
+        if (asset.applyTax) {
+          const d = parseDateKey(dateKey);
+          net = calculateTaxBreakdown(gross, asset.creationDate, d).netYield;
+        }
+        map[dateKey] = (map[dateKey] || 0) + net;
+      });
+    });
+    return map;
+  }, [database.assets]);
 
   const {
     weekIncome,
@@ -792,12 +889,11 @@ function App() {
     yearIncome,
     previousYearIncome
   } = useMemo(() => {
-    const history = database.incomeHistory || {};
     const refDate = parseDateKey(database.simulatedDate);
     const sumRange = (start, end) => {
       let sum = 0;
       for (let d = new Date(start); d <= end; d = shiftDate(d, 1)) {
-        sum += Number(history[getDateKey(d)] || 0);
+        sum += Number(netDailyHistory[getDateKey(d)] || 0);
       }
       return sum;
     };
@@ -820,7 +916,7 @@ function App() {
       yearIncome: sumRange(startOfYear, refDate),
       previousYearIncome: sumRange(previousYearStart, previousYearEnd)
     };
-  }, [database.incomeHistory, database.simulatedDate]);
+  }, [netDailyHistory, database.simulatedDate]);
 
   // Daily incomes calculation (per-asset tax deduction if asset.applyTax is true)
   const totalDailyIncome = database.assets.reduce((total, asset) => {
@@ -837,17 +933,23 @@ function App() {
     return total + tax.netYield;
   }, 0);
 
+  // Preceding official Brazilian banking trading day strictly before actualDate
+  const previousBankingDay = useMemo(() => {
+    return getPreviousBankingBusinessDay(actualDate, holidaysList);
+  }, [actualDate, holidaysList]);
+
   const yesterdayIncome = database.assets.reduce((total, asset) => {
-    const yesterdayDate = shiftDate(actualDate, -1);
-    const gross = Number(asset.incomeHistory?.[getDateKey(yesterdayDate)] || 0);
+    const gross = Number(asset.incomeHistory?.[getDateKey(previousBankingDay)] || 0);
     if (!asset.applyTax) return total + gross;
-    const tax = calculateTaxBreakdown(gross, asset.creationDate, yesterdayDate);
+    const tax = calculateTaxBreakdown(gross, asset.creationDate, previousBankingDay);
     return total + tax.netYield;
   }, 0);
 
   const netWorthTotal = investedTotal;
   const nextMilestone = (Math.floor(netWorthTotal / 10000) + 1) * 10000;
-  const spentTotal = Math.max(toFiniteNumber(database.recoverySpentTotal), 0) + Math.max(toFiniteNumber(database.purchasedTotal), 0);
+  const spentTotal = (database.expenses && database.expenses.length > 0)
+    ? database.expenses.reduce((sum, exp) => sum + Math.max(toFiniteNumber(exp.amount), 0), 0)
+    : Math.max(toFiniteNumber(database.recoverySpentTotal), 0) + Math.max(toFiniteNumber(database.purchasedTotal), 0);
   const milestoneRemaining = nextMilestone - netWorthTotal;
   const milestoneDays = totalDailyIncome > 0 ? Math.ceil(milestoneRemaining / totalDailyIncome) : 0;
   const displayMoney = (value) => areValuesVisible ? formatMoney(value) : '****';
@@ -1050,8 +1152,20 @@ function App() {
     }
   };
 
-  const recordWishlistPurchase = (amount) => {
-    setDatabase((current) => ({ ...current, purchasedTotal: Number(current.purchasedTotal || 0) + Number(amount || 0) }));
+  const recordWishlistPurchase = (amount, slot) => {
+    const cost = Number(amount || 0);
+    const newExpense = {
+      id: `exp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      name: slot?.expenseName || slot?.name || (locale === 'pt' ? 'Item da Lista de Desejos' : 'Wishlist item'),
+      amount: cost,
+      date: getDateKey(actualDate),
+      category: 'wishlist'
+    };
+    setDatabase((current) => ({
+      ...current,
+      purchasedTotal: Number(current.purchasedTotal || 0) + cost,
+      expenses: [newExpense, ...(current.expenses || [])]
+    }));
   };
 
   const recordRecoveryAddition = (amount) => {
@@ -1060,6 +1174,87 @@ function App() {
 
   const recordRecoveryRemoval = (amount) => {
     setDatabase((current) => ({ ...current, recoverySpentTotal: Math.max(Number(current.recoverySpentTotal || 0) - Number(amount || 0), 0) }));
+  };
+
+  const availableExpenseYears = useMemo(() => {
+    const years = new Set();
+    (database.expenses || []).forEach((e) => {
+      if (e.date && e.date.length >= 4) {
+        years.add(e.date.slice(0, 4));
+      }
+    });
+    years.add(String(actualDate.getFullYear()));
+    return Array.from(years).sort((a, b) => Number(b) - Number(a));
+  }, [database.expenses, actualDate]);
+
+  const filteredExpenses = useMemo(() => {
+    const list = database.expenses || [];
+    if (selectedExpenseYear === 'all') return list;
+    return list.filter((e) => e.date && e.date.startsWith(selectedExpenseYear));
+  }, [database.expenses, selectedExpenseYear]);
+
+  const expensesYearlyMetrics = useMemo(() => {
+    let total = 0;
+    let wishlistTotal = 0;
+    let recoveryTotal = 0;
+    let wishlistCount = 0;
+    let recoveryCount = 0;
+
+    filteredExpenses.forEach((e) => {
+      const val = Number(e.amount || 0);
+      total += val;
+      if (e.category === 'recovery') {
+        recoveryTotal += val;
+        recoveryCount += 1;
+      } else {
+        wishlistTotal += val;
+        wishlistCount += 1;
+      }
+    });
+
+    return {
+      total,
+      wishlistTotal,
+      recoveryTotal,
+      wishlistCount,
+      recoveryCount,
+      count: filteredExpenses.length
+    };
+  }, [filteredExpenses]);
+
+  const deleteExpense = (id) => {
+    setDatabase((current) => {
+      const target = (current.expenses || []).find((e) => e.id === id);
+      const amount = Number(target?.amount || 0);
+      const updated = (current.expenses || []).filter((e) => e.id !== id);
+      return {
+        ...current,
+        expenses: updated,
+        purchasedTotal: target?.category === 'wishlist'
+          ? Math.max(0, Number(current.purchasedTotal || 0) - amount)
+          : current.purchasedTotal
+      };
+    });
+  };
+
+  const handleAddDirectExpense = (event) => {
+    event.preventDefault();
+    const amt = Number(directExpenseForm.amount);
+    if (!directExpenseForm.name.trim() || !Number.isFinite(amt) || amt <= 0) return;
+    const newExp = {
+      id: `exp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      name: directExpenseForm.name.trim(),
+      amount: amt,
+      date: directExpenseForm.date && isValidDateKey(directExpenseForm.date) ? directExpenseForm.date : getDateKey(actualDate),
+      category: directExpenseForm.category === 'recovery' ? 'recovery' : 'wishlist'
+    };
+    setDatabase((current) => ({
+      ...current,
+      expenses: [newExp, ...(current.expenses || [])],
+      purchasedTotal: newExp.category === 'wishlist' ? Number(current.purchasedTotal || 0) + amt : current.purchasedTotal
+    }));
+    setDirectExpenseForm({ name: '', amount: '', date: '', category: 'wishlist' });
+    setIsAddDirectExpenseOpen(false);
   };
 
   const renderMiddleContent = () => {
@@ -1459,6 +1654,161 @@ function App() {
               </div>
             )}
           </div>
+
+          <div className='balance-expenses-card'>
+            <div className='expenses-card-header'>
+              <div className='expenses-header-titles'>
+                <div className='expenses-badge-row'>
+                  <h2>{t.expensesTitle}</h2>
+                  <span className='expenses-count-badge'>
+                    {expensesYearlyMetrics.count} {expensesYearlyMetrics.count === 1 ? t.itemSingular : t.itemPlural}
+                  </span>
+                </div>
+                <p className='expenses-subtitle'>{t.expensesSubtitle}</p>
+              </div>
+
+              <div className='expenses-header-actions'>
+                <div className='yearly-filter-pills' role='group' aria-label={t.filterByYear}>
+                  <button
+                    type='button'
+                    className={`filter-pill ${selectedExpenseYear === 'all' ? 'active' : ''}`}
+                    onClick={() => setSelectedExpenseYear('all')}
+                  >
+                    {t.allYears}
+                  </button>
+                  {availableExpenseYears.map((yr) => (
+                    <button
+                      key={yr}
+                      type='button'
+                      className={`filter-pill ${selectedExpenseYear === yr ? 'active' : ''}`}
+                      onClick={() => setSelectedExpenseYear(yr)}
+                    >
+                      {yr}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type='button'
+                  className='add-expense-btn'
+                  onClick={() => setIsAddDirectExpenseOpen((prev) => !prev)}
+                  title={t.addExpenseCost}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 256 256" fill="currentColor">
+                    <path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"/>
+                  </svg>
+                  <span>{t.addExpenseCost}</span>
+                </button>
+              </div>
+            </div>
+
+            {isAddDirectExpenseOpen && (
+              <form className='direct-expense-form' onSubmit={handleAddDirectExpense}>
+                <div className='direct-expense-grid'>
+                  <div className='direct-expense-field'>
+                    <label>{t.name}</label>
+                    <input
+                      type='text'
+                      required
+                      placeholder={t.expenseName}
+                      value={directExpenseForm.name}
+                      onChange={(e) => setDirectExpenseForm({ ...directExpenseForm, name: e.target.value })}
+                    />
+                  </div>
+                  <div className='direct-expense-field'>
+                    <label>{t.expenseValue}</label>
+                    <input
+                      type='number'
+                      step='0.01'
+                      min='0.01'
+                      required
+                      placeholder='0,00'
+                      value={directExpenseForm.amount}
+                      onChange={(e) => setDirectExpenseForm({ ...directExpenseForm, amount: e.target.value })}
+                    />
+                  </div>
+                  <div className='direct-expense-field'>
+                    <label>{t.date}</label>
+                    <input
+                      type='date'
+                      value={directExpenseForm.date || database.simulatedDate}
+                      onChange={(e) => setDirectExpenseForm({ ...directExpenseForm, date: e.target.value })}
+                    />
+                  </div>
+                  <div className='direct-expense-field'>
+                    <label>{t.capitalAllocation}</label>
+                    <select
+                      value={directExpenseForm.category}
+                      onChange={(e) => setDirectExpenseForm({ ...directExpenseForm, category: e.target.value })}
+                    >
+                      <option value='wishlist'>{t.wishlistCategory}</option>
+                      <option value='recovery'>{t.recoveryCategory}</option>
+                    </select>
+                  </div>
+                </div>
+                <div className='direct-expense-actions'>
+                  <button type='button' className='cancel-btn' onClick={() => setIsAddDirectExpenseOpen(false)}>
+                    {t.cancel}
+                  </button>
+                  <button type='submit' className='submit-btn'>
+                    {t.add}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            <div className='expenses-summary-strip'>
+              <div className='expense-kpi-card total-kpi'>
+                <span className='kpi-label'>{t.totalExpenses}</span>
+                <strong className='kpi-value outflow'>- R$ {displayMoney(expensesYearlyMetrics.total)}</strong>
+                <span className='kpi-sub'>{selectedExpenseYear === 'all' ? t.allYears : selectedExpenseYear}</span>
+              </div>
+              <div className='expense-kpi-card wishlist-kpi'>
+                <span className='kpi-label'>{t.wishlistOutflows}</span>
+                <strong className='kpi-value'>R$ {displayMoney(expensesYearlyMetrics.wishlistTotal)}</strong>
+                <span className='kpi-sub'>{expensesYearlyMetrics.wishlistCount} {locale === 'pt' ? 'desejos' : 'items'}</span>
+              </div>
+              <div className='expense-kpi-card recovery-kpi'>
+                <span className='kpi-label'>{t.recoveryOutflows}</span>
+                <strong className='kpi-value'>R$ {displayMoney(expensesYearlyMetrics.recoveryTotal)}</strong>
+                <span className='kpi-sub'>{expensesYearlyMetrics.recoveryCount} {locale === 'pt' ? 'quitados' : 'cleared'}</span>
+              </div>
+            </div>
+
+            <div className='expenses-items-list'>
+              {filteredExpenses.length === 0 ? (
+                <div className='expenses-empty-state'>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256" fill="currentColor">
+                    <path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM216,200H40V56H216V200ZM176,88a48,48,0,0,1-96,0,8,8,0,0,1,16,0,32,32,0,0,0,64,0,8,8,0,0,1,16,0Z"/>
+                  </svg>
+                  <p>{t.noExpensesFound}</p>
+                </div>
+              ) : (
+                filteredExpenses.map((exp) => (
+                  <div key={exp.id} className='expense-item-row'>
+                    <div className='expense-item-meta'>
+                      <span className={`expense-category-pill ${exp.category}`}>
+                        {exp.category === 'recovery' ? t.recoveryCategory : t.wishlistCategory}
+                      </span>
+                      <strong className='expense-item-name'>{exp.name}</strong>
+                      <span className='expense-item-date'>{formatDateKey(exp.date, locale)}</span>
+                    </div>
+                    <div className='expense-item-amount'>
+                      <span className='expense-amount-negative'>- R$ {displayMoney(exp.amount)}</span>
+                      <button
+                        type='button'
+                        className='expense-delete-btn'
+                        onClick={() => deleteExpense(exp.id)}
+                        title={locale === 'pt' ? 'Remover despesa' : 'Remove expense'}
+                        aria-label={locale === 'pt' ? 'Remover despesa' : 'Remove expense'}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       );
     }
@@ -1476,7 +1826,7 @@ function App() {
             <MiddleMilestoneCard
               title={t.milestone}
               next={displayMoney(nextMilestone)}
-              remaining={`${displayMoney(milestoneRemaining)} - ${milestoneDays} ${t.days}`}
+              remaining={`${displayMoney(milestoneRemaining)} - ${milestoneDays > 0 ? `${milestoneDays} ${t.days}` : '—'}`}
             ></MiddleMilestoneCard>
           </div>
           <div className='middle-summary-side'>

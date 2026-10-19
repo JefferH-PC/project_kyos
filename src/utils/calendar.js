@@ -276,4 +276,24 @@ export const getLatestSettledBankingDate = (referenceDate = new Date(), holidays
   return getDateKey(dateObj);
 };
 
+/**
+ * Resolves the previous official Brazilian banking business day strictly prior to referenceDate.
+ * For example, if referenceDate is Monday, returns the preceding Friday.
+ *
+ * @param {Date|string} [referenceDate] Defaults to today
+ * @param {Set<string>|Array<string>|Array<{ date: string }>} [holidays=[]]
+ * @returns {Date}
+ */
+export const getPreviousBankingBusinessDay = (referenceDate = new Date(), holidays = []) => {
+  const dateObj = parseDateKey(referenceDate);
+  dateObj.setDate(dateObj.getDate() - 1);
+
+  while (!isBusinessDay(dateObj, holidays)) {
+    dateObj.setDate(dateObj.getDate() - 1);
+  }
+
+  return dateObj;
+};
+
+
 
