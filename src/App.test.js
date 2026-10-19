@@ -1466,7 +1466,7 @@ test('lossless migration and localization: preserves non-asset data on schema ve
   expect(screen.getByText(/Nenhum/)).toBeInTheDocument();
 });
 
-test('yesterday income: on Monday references Friday trading session rather than Sunday', async () => {
+test('yesterday income: shows actual calendar yesterday rather than preceding banking business day', async () => {
   const RealDate = Date;
   class MockDate extends RealDate {
     constructor(...args) {
@@ -1496,7 +1496,8 @@ test('yesterday income: on Monday references Friday trading session rather than 
         creationDate: '2026-10-01',
         applyTax: false,
         incomeHistory: {
-          '2026-10-16': 4.50, // Friday close
+          '2026-10-16': 4.50, // Friday
+          '2026-10-18': 0.00, // Sunday (actual calendar yesterday)
           '2026-10-19': 4.50  // Monday
         }
       }],
@@ -1511,9 +1512,9 @@ test('yesterday income: on Monday references Friday trading session rather than 
 
     const todayCard = document.querySelector('.today-card');
     expect(todayCard).toBeInTheDocument();
-    // Yesterday label is followed by Friday's income (R$ 4,50), not R$ 0,00!
+    // On Monday, actual calendar yesterday is Sunday (2026-10-18), showing R$ 0,00 rather than Friday's trading day
     expect(todayCard.textContent).toContain('Yesterday');
-    expect(todayCard.textContent).toContain('4,50');
+    expect(todayCard.textContent).toContain('R$ 0,00');
   } finally {
     global.Date = RealDate;
   }

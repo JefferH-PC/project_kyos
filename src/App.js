@@ -933,15 +933,15 @@ function App() {
     return total + tax.netYield;
   }, 0);
 
-  // Preceding official Brazilian banking trading day strictly before actualDate
-  const previousBankingDay = useMemo(() => {
-    return getPreviousBankingBusinessDay(actualDate, holidaysList);
-  }, [actualDate, holidaysList]);
+  // Actual calendar yesterday strictly 1 day before actualDate
+  const yesterdayDate = useMemo(() => {
+    return shiftDate(actualDate, -1);
+  }, [actualDate]);
 
   const yesterdayIncome = database.assets.reduce((total, asset) => {
-    const gross = Number(asset.incomeHistory?.[getDateKey(previousBankingDay)] || 0);
+    const gross = Number(asset.incomeHistory?.[getDateKey(yesterdayDate)] || 0);
     if (!asset.applyTax) return total + gross;
-    const tax = calculateTaxBreakdown(gross, asset.creationDate, previousBankingDay);
+    const tax = calculateTaxBreakdown(gross, asset.creationDate, yesterdayDate);
     return total + tax.netYield;
   }, 0);
 
