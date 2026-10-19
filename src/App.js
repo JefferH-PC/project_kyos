@@ -448,11 +448,24 @@ function App() {
         lastOpenedKey = existingDate;
       } else {
         window.localStorage.setItem('kyos-last-opened-date', currentDateKey);
+        setDatabase((cur) => ({ ...cur, simulatedDate: currentDateKey }));
+        try {
+          const curDb = readDatabase();
+          window.localStorage.setItem('kyos-database', JSON.stringify({ ...curDb, simulatedDate: currentDateKey }));
+        } catch {}
         return;
       }
     }
 
     if (lastOpenedKey >= currentDateKey) {
+      if (database.simulatedDate < currentDateKey) {
+        const curDb = readDatabase();
+        const updated = { ...curDb, simulatedDate: currentDateKey };
+        setDatabase(updated);
+        try {
+          window.localStorage.setItem('kyos-database', JSON.stringify(updated));
+        } catch {}
+      }
       return;
     }
 
@@ -463,7 +476,12 @@ function App() {
 
     if (businessDaysList.length === 0) {
       window.localStorage.setItem('kyos-last-opened-date', currentDateKey);
-      setDatabase((cur) => ({ ...cur, simulatedDate: currentDateKey }));
+      const curDb = readDatabase();
+      const updated = { ...curDb, simulatedDate: currentDateKey };
+      setDatabase(updated);
+      try {
+        window.localStorage.setItem('kyos-database', JSON.stringify(updated));
+      } catch {}
       return;
     }
 
@@ -567,7 +585,7 @@ function App() {
     if (!Array.isArray(assets) || assets.length === 0) return currentDb;
 
     const settledBankingDate = getLatestSettledBankingDate(currentDateKey, holidays);
-    const targetDateKey = (currentDb.simulatedDate && isValidDateKey(currentDb.simulatedDate) && currentDb.simulatedDate !== currentDateKey)
+    const targetDateKey = (currentDb.simulatedDate && isValidDateKey(currentDb.simulatedDate) && currentDb.simulatedDate > currentDateKey)
       ? currentDb.simulatedDate
       : settledBankingDate;
 
@@ -611,7 +629,9 @@ function App() {
     const updatedDb = {
       ...currentDb,
       assets: updatedAssets,
-      simulatedDate: currentDb.simulatedDate || currentDateKey,
+      simulatedDate: (currentDb.simulatedDate && currentDb.simulatedDate > currentDateKey)
+        ? currentDb.simulatedDate
+        : currentDateKey,
       incomeHistory: updatedIncomeHistory
     };
 
@@ -667,6 +687,32 @@ function App() {
 
   useEffect(() => {
     loadHolidaysAndCatchUp();
+  }, [loadHolidaysAndCatchUp]);
+
+  // Ensure days pass in real time when app is kept open across midnight or tab is focused
+  useEffect(() => {
+    const checkDateProgression = () => {
+      const todayKey = getDateKey(new Date());
+      const lastOpened = window.localStorage.getItem('kyos-last-opened-date');
+      if (lastOpened && lastOpened < todayKey) {
+        loadHolidaysAndCatchUp(true);
+      }
+    };
+
+    const interval = window.setInterval(checkDateProgression, 60 * 1000);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkDateProgression();
+      }
+    };
+    window.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', checkDateProgression);
+
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', checkDateProgression);
+    };
   }, [loadHolidaysAndCatchUp]);
 
   // JSON Export

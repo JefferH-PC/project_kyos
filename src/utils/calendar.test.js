@@ -107,11 +107,20 @@ describe('calendar utilities', () => {
     expect(getDateKey(schedule[1].holdingDate)).toBe('2026-09-15');
   });
 
+  test('isBusinessDay identifies fixed national holidays as non-working even with empty holiday array', () => {
+    // 2026-12-25 is Christmas (Natal) - Friday
+    expect(isBusinessDay('2026-12-25', [])).toBe(false);
+    // 2026-04-21 is Tiradentes - Tuesday
+    expect(isBusinessDay('2026-04-21', [])).toBe(false);
+    // 2026-05-01 is Labor Day - Friday
+    expect(isBusinessDay('2026-05-01', [])).toBe(false);
+  });
+
   test('getLatestSettledBankingDate resolves weekend and holiday settlement positions', () => {
-    // Saturday 2026-10-17 rolls back to Thursday 2026-10-15
-    expect(getLatestSettledBankingDate('2026-10-17')).toBe('2026-10-15');
-    // Sunday 2026-10-18 rolls back to Thursday 2026-10-15
-    expect(getLatestSettledBankingDate('2026-10-18')).toBe('2026-10-15');
+    // Saturday 2026-10-17 rolls back to latest business day Friday 2026-10-16
+    expect(getLatestSettledBankingDate('2026-10-17')).toBe('2026-10-16');
+    // Sunday 2026-10-18 rolls back to latest business day Friday 2026-10-16
+    expect(getLatestSettledBankingDate('2026-10-18')).toBe('2026-10-16');
     // Thursday 2026-10-15 stays 2026-10-15
     expect(getLatestSettledBankingDate('2026-10-15')).toBe('2026-10-15');
     // Holiday Monday 2026-10-12 rolls back to Friday 2026-10-09

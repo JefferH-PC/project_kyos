@@ -1139,49 +1139,256 @@ test('sync incomes button triggers coherent update and displays confirmation toa
 });
 
 test('clicking sync incomes button opens SyncModal with stopwatch animation and calculates income for long-invested asset', async () => {
-  const todayKey = getDateKey(new Date());
-  window.localStorage.setItem('kyos-database', JSON.stringify({
-    schemaVersion: 11,
-    simulatedDate: todayKey,
-    wishlistSlots: [],
-    recoverySlots: [],
-    assets: [{
-      id: 'user-lci-inter',
-      name: 'LCI 88% CDI Inter',
-      yieldRate: 88,
-      investedAmount: 69249,
-      initialInvestedAmount: 69249,
-      totalIncome: 0,
-      creationDate: '2024-06-06',
-      incomeHistory: {}
-    }],
-    milestone: { target: 0 },
-    purchasedTotal: 0,
-    recoverySpentTotal: 0
-  }));
-  window.localStorage.setItem('kyos-last-opened-date', todayKey);
+  const RealDate = global.Date;
+  class MockDate extends RealDate {
+    constructor(...args) {
+      if (args.length === 0) {
+        super('2026-10-15T12:00:00Z');
+      } else {
+        super(...args);
+      }
+    }
+    static now() {
+      return new RealDate('2026-10-15T12:00:00Z').getTime();
+    }
+  }
+  global.Date = MockDate;
 
-  render(<App />);
+  try {
+    const todayKey = '2026-10-15';
+    window.localStorage.setItem('kyos-database', JSON.stringify({
+      schemaVersion: 11,
+      simulatedDate: todayKey,
+      wishlistSlots: [],
+      recoverySlots: [],
+      assets: [{
+        id: 'user-lci-inter',
+        name: 'LCI 88% CDI Inter',
+        yieldRate: 88,
+        investedAmount: 69249,
+        initialInvestedAmount: 69249,
+        totalIncome: 0,
+        creationDate: '2024-06-06',
+        incomeHistory: {}
+      }],
+      milestone: { target: 0 },
+      purchasedTotal: 0,
+      recoverySpentTotal: 0
+    }));
+    window.localStorage.setItem('kyos-last-opened-date', todayKey);
 
-  const investmentsBtn = await screen.findByRole('button', { name: 'Investments' });
-  await userEvent.click(investmentsBtn);
+    render(<App />);
 
-  const syncBtn = await screen.findByRole('button', { name: /sync incomes/i });
-  await userEvent.click(syncBtn);
+    const investmentsBtn = await screen.findByRole('button', { name: 'Investments' });
+    await userEvent.click(investmentsBtn);
 
-  // Modal opens immediately with stopwatch money display
-  const moneyCounter = await screen.findByTestId('sync-money-display');
-  expect(moneyCounter).toBeInTheDocument();
+    const syncBtn = await screen.findByRole('button', { name: /sync incomes/i });
+    await userEvent.click(syncBtn);
 
-  // Close modal via Done button
-  const doneBtn = screen.getByRole('button', { name: /done/i });
-  await userEvent.click(doneBtn);
-  expect(screen.queryByTestId('sync-money-display')).not.toBeInTheDocument();
+    // Modal opens immediately with stopwatch money display
+    const moneyCounter = await screen.findByTestId('sync-money-display');
+    expect(moneyCounter).toBeInTheDocument();
 
-  // Verify asset was updated to exact bank amount
-  const db = JSON.parse(window.localStorage.getItem('kyos-database'));
-  expect(db.assets[0].investedAmount).toBeCloseTo(89966.36, 1);
+    // Close modal via Done button
+    const doneBtn = screen.getByRole('button', { name: /done/i });
+    await userEvent.click(doneBtn);
+    expect(screen.queryByTestId('sync-money-display')).not.toBeInTheDocument();
+
+    // Verify asset was updated to exact bank amount
+    const db = JSON.parse(window.localStorage.getItem('kyos-database'));
+    expect(db.assets[0].investedAmount).toBeCloseTo(89966.36, 1);
+  } finally {
+    global.Date = RealDate;
+  }
 });
+
+test('non-working days logic: opening app on Saturday advances simulatedDate to Saturday, preserves Friday balance, and reports R$ 0,00 today', async () => {
+  const RealDate = global.Date;
+  class MockDate extends RealDate {
+    constructor(...args) {
+      if (args.length === 0) {
+        super('2026-10-17T12:00:00Z'); // Saturday
+      } else {
+        super(...args);
+      }
+    }
+    static now() {
+      return new RealDate('2026-10-17T12:00:00Z').getTime();
+    }
+  }
+  global.Date = MockDate;
+
+  try {
+    // Last opened on Friday 2026-10-16
+    window.localStorage.setItem('kyos-last-opened-date', '2026-10-16');
+    window.localStorage.setItem('kyos-database', JSON.stringify({
+      schemaVersion: 11,
+      simulatedDate: '2026-10-16',
+      wishlistSlots: [],
+      recoverySlots: [],
+      assets: [{
+        id: 'weekend-asset',
+        name: 'Tesouro Selic',
+        yieldRate: 100,
+        investedAmount: 10005.17,
+        initialInvestedAmount: 10000,
+        totalIncome: 5.17,
+        creationDate: '2026-10-15',
+        incomeHistory: { '2026-10-16': 5.17 }
+      }],
+      milestone: { target: 0 },
+      purchasedTotal: 0,
+      recoverySpentTotal: 0
+    }));
+
+    render(<App />);
+
+    // Date must advance to Saturday
+    await waitFor(() => {
+      const db = JSON.parse(window.localStorage.getItem('kyos-database'));
+      expect(db.simulatedDate).toBe('2026-10-17');
+    });
+
+    // Friday's income must NOT be deleted or rolled back to Thursday
+    const db = JSON.parse(window.localStorage.getItem('kyos-database'));
+    expect(db.assets[0].incomeHistory['2026-10-16']).toBeCloseTo(5.08, 1);
+    expect(db.assets[0].investedAmount).toBeCloseTo(10005.08, 1);
+
+    // Today's income on Saturday is R$ 0,00
+    const todayCard = screen.getByText('Today').parentElement;
+    expect(todayCard).toHaveTextContent('R$ 0,00');
+
+    // Yesterday's income reflects Friday's earnings
+    expect(todayCard).toHaveTextContent('R$ 5,08');
+  } finally {
+    global.Date = RealDate;
+  }
+});
+
+test('days passing: opening on Monday after weekend processes missed business days and updates simulatedDate to Monday', async () => {
+  const RealDate = global.Date;
+  class MockDate extends RealDate {
+    constructor(...args) {
+      if (args.length === 0) {
+        super('2026-10-19T12:00:00Z'); // Monday
+      } else {
+        super(...args);
+      }
+    }
+    static now() {
+      return new RealDate('2026-10-19T12:00:00Z').getTime();
+    }
+  }
+  global.Date = MockDate;
+
+  try {
+    // Last opened on Saturday 2026-10-17
+    window.localStorage.setItem('kyos-last-opened-date', '2026-10-17');
+    window.localStorage.setItem('kyos-database', JSON.stringify({
+      schemaVersion: 11,
+      simulatedDate: '2026-10-17',
+      wishlistSlots: [{ id: 'wish-book', type: 'expense', expenseName: 'Book', price: 10, originalPrice: 10 }],
+      recoverySlots: [],
+      assets: [{
+        id: 'monday-asset',
+        name: 'Tesouro Selic',
+        yieldRate: 100,
+        investedAmount: 10000,
+        initialInvestedAmount: 10000,
+        totalIncome: 0,
+        creationDate: '2026-10-15',
+        incomeHistory: { '2026-10-16': 5.08 }
+      }],
+      milestone: { target: 0 },
+      purchasedTotal: 0,
+      recoverySpentTotal: 0
+    }));
+
+    render(<App />);
+
+    // CatchUp modal opens for Monday
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toBeInTheDocument();
+
+    await waitFor(() => {
+      const db = JSON.parse(window.localStorage.getItem('kyos-database'));
+      expect(db.simulatedDate).toBe('2026-10-19');
+      // Invested amount has accrued Monday's income
+      expect(db.assets[0].investedAmount).toBeGreaterThan(10000);
+      expect(db.assets[0].incomeHistory['2026-10-19']).toBeGreaterThan(0);
+    });
+  } finally {
+    global.Date = RealDate;
+  }
+});
+
+test('syncing on weekend preserves Friday asset accrual without rolling simulatedDate backward', async () => {
+  const RealDate = global.Date;
+  class MockDate extends RealDate {
+    constructor(...args) {
+      if (args.length === 0) {
+        super('2026-10-18T12:00:00Z'); // Sunday
+      } else {
+        super(...args);
+      }
+    }
+    static now() {
+      return new RealDate('2026-10-18T12:00:00Z').getTime();
+    }
+  }
+  global.Date = MockDate;
+
+  try {
+    const sundayKey = '2026-10-18';
+    window.localStorage.setItem('kyos-database', JSON.stringify({
+      schemaVersion: 11,
+      simulatedDate: sundayKey,
+      wishlistSlots: [],
+      recoverySlots: [],
+      assets: [{
+        id: 'sync-weekend-asset',
+        name: 'Tesouro Selic',
+        yieldRate: 100,
+        investedAmount: 10000,
+        initialInvestedAmount: 10000,
+        totalIncome: 0,
+        creationDate: '2026-10-14',
+        incomeHistory: {}
+      }],
+      milestone: { target: 0 },
+      purchasedTotal: 0,
+      recoverySpentTotal: 0
+    }));
+    window.localStorage.setItem('kyos-last-opened-date', sundayKey);
+
+    render(<App />);
+
+    const investmentsBtn = await screen.findByRole('button', { name: 'Investments' });
+    await userEvent.click(investmentsBtn);
+
+    const syncBtn = await screen.findByRole('button', { name: /sync incomes/i });
+    await userEvent.click(syncBtn);
+
+    // Modal opens
+    const modal = await screen.findByTestId('sync-money-display');
+    expect(modal).toBeInTheDocument();
+
+    const doneBtn = screen.getByRole('button', { name: /done/i });
+    await userEvent.click(doneBtn);
+
+    const db = JSON.parse(window.localStorage.getItem('kyos-database'));
+    // simulatedDate must remain Sunday (not rolled back)
+    expect(db.simulatedDate).toBe(sundayKey);
+    // Asset has accrued up to Friday (2026-10-15 and 2026-10-16)
+    expect(db.assets[0].incomeHistory['2026-10-15']).toBeDefined();
+    expect(db.assets[0].incomeHistory['2026-10-16']).toBeDefined();
+    expect(db.assets[0].incomeHistory['2026-10-17']).toBeUndefined(); // Saturday no yield
+    expect(db.assets[0].incomeHistory['2026-10-18']).toBeUndefined(); // Sunday no yield
+  } finally {
+    global.Date = RealDate;
+  }
+});
+
 
 
 

@@ -158,6 +158,12 @@ export const isBusinessDay = (date, holidays) => {
     }
   }
 
+  // Offline fallback to fixed national holidays
+  const fixedHolidays = getFixedNationalHolidays(dateObj.getFullYear());
+  if (fixedHolidays.some((item) => item.date === dateStr)) {
+    return false;
+  }
+
   // Official ground truth: if within verified BCB series 12 dataset, exact presence verifies banking business day
   if (dateStr <= LATEST_BUNDLED_CDI_DATE && dateStr >= '2010-01-04') {
     return OFFICIAL_HISTORICAL_CDI_RATES[dateStr] !== undefined;
@@ -252,11 +258,9 @@ export const getAccrualBusinessDays = (creationDate, targetDate, holidays = []) 
  * positions have been cleared and reflected on bank statements.
  *
  * Brazilian Banking Conventions (B3 / CETIP):
- * - On Saturdays and Sundays: clearing for Friday trades does not settle until Monday night.
- *   Bank statements and portfolio screens over the weekend display the settled position
- *   as of Thursday close (D-2).
- * - On normal business days: returns the reference date if it is a business day,
- *   or rolls back to the latest completed business day if on a holiday or weekend.
+ * - On normal business days: returns the reference date if it is a business day.
+ * - On non-working days (weekends and holidays): rolls back to the latest completed
+ *   business day (e.g. Friday for weekends, preceding business day for holidays).
  *
  * @param {Date|string} [referenceDate] Defaults to today
  * @param {Set<string>|Array<string>|Array<{ date: string }>} [holidays=[]]
@@ -264,15 +268,6 @@ export const getAccrualBusinessDays = (creationDate, targetDate, holidays = []) 
  */
 export const getLatestSettledBankingDate = (referenceDate = new Date(), holidays = []) => {
   const dateObj = parseDateKey(referenceDate);
-  const dayOfWeek = dateObj.getDay();
-
-  if (dayOfWeek === 6) {
-    // Saturday: rolls back 2 days to Thursday
-    dateObj.setDate(dateObj.getDate() - 2);
-  } else if (dayOfWeek === 0) {
-    // Sunday: rolls back 3 days to Thursday
-    dateObj.setDate(dateObj.getDate() - 3);
-  }
 
   while (!isBusinessDay(dateObj, holidays)) {
     dateObj.setDate(dateObj.getDate() - 1);
