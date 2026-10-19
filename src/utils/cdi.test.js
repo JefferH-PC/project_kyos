@@ -206,7 +206,7 @@ describe('cdi utilities', () => {
     expect(updated.initialInvestedAmount).toBe(10000);
   });
 
-  test('user asset of R$ 69.249,00 at 88% CDI from 2024-06-06 calculates exact R$ 89.966,36 matching bank statement', () => {
+  test('user asset of R$ 69.249,00 at 88% CDI from 2024-06-06 calculates exact bank statement values across settlement dates and real scenario', () => {
     const asset = {
       id: 'asset-user-lci',
       name: 'LCI 88% CDI Inter',
@@ -218,13 +218,25 @@ describe('cdi utilities', () => {
       incomeHistory: {}
     };
 
-    // Bank statement position as of 2026-10-15 (latest settled business day)
-    const targetDate = '2026-10-15';
-    const updated = calculateAssetAccrualSinceDate(asset, targetDate, []);
+    // 1. Thursday 2026-10-15 position (historical baseline)
+    const positionThursday = calculateAssetAccrualSinceDate(asset, '2026-10-15', []);
+    expect(positionThursday.investedAmount).toBeCloseTo(89966.36, 2);
+    expect(positionThursday.totalIncome).toBeCloseTo(20717.36, 2);
+    expect(Object.keys(positionThursday.incomeHistory).length).toBe(594);
 
-    expect(updated.investedAmount).toBeCloseTo(89966.36, 2);
-    expect(updated.totalIncome).toBeCloseTo(20717.36, 2);
-    expect(Object.keys(updated.incomeHistory).length).toBe(594);
+    // 2. Friday 2026-10-16 settled position (reconciled by fixing weekend rollback issue)
+    const positionFriday = calculateAssetAccrualSinceDate(asset, '2026-10-16', []);
+    expect(positionFriday.investedAmount).toBeCloseTo(90006.57, 2);
+    expect(positionFriday.totalIncome).toBeCloseTo(20757.57, 2);
+    expect(Object.keys(positionFriday.incomeHistory).length).toBe(595);
+    expect(positionFriday.incomeHistory['2026-10-16']).toBeCloseTo(40.21, 2);
+
+    // 3. Monday 2026-10-19 real scenario position (active date progression)
+    const positionMonday = calculateAssetAccrualSinceDate(asset, '2026-10-19', []);
+    expect(positionMonday.investedAmount).toBeCloseTo(90046.80, 2);
+    expect(positionMonday.totalIncome).toBeCloseTo(20797.80, 2);
+    expect(Object.keys(positionMonday.incomeHistory).length).toBe(596);
+    expect(positionMonday.incomeHistory['2026-10-19']).toBeCloseTo(40.23, 2);
   });
 });
 

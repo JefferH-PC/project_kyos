@@ -1022,7 +1022,11 @@ function App() {
       const totalInc = assets.reduce((sum, a) => sum + (Number(a.totalIncome) || 0), 0);
       const totalInv = assets.reduce((sum, a) => sum + (Number(a.investedAmount) || 0), 0);
       const initialPrinc = assets.reduce((sum, a) => sum + (Number(a.initialInvestedAmount) || 0), 0);
-      const targetDateKey = updatedDb?.simulatedDate || getDateKey(new Date());
+      const currentDateKey = getDateKey(new Date());
+      const settledBankingDate = getLatestSettledBankingDate(currentDateKey, holidaysList);
+      const targetDateKey = (updatedDb?.simulatedDate && updatedDb.simulatedDate > currentDateKey)
+        ? updatedDb.simulatedDate
+        : settledBankingDate;
 
       let earliestDate = targetDateKey;
       for (const asset of assets) {

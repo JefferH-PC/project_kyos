@@ -1,7 +1,7 @@
 /**
  * Official Historical CDI Daily Rates from Banco Central do Brasil (SGS Series 12)
  * Guaranteed 100% accuracy matching Brazilian banking and B3 / CETIP calculations.
- * Covers every official business day from 2010-01-04 to 2026-10-15.
+ * Covers every official business day from 2010-01-04 to 2026-10-19.
  */
 
 export const OFFICIAL_HISTORICAL_CDI_RATES = {
@@ -4221,7 +4221,8 @@ export const OFFICIAL_HISTORICAL_CDI_RATES = {
   "2026-10-13": 0.050788,
   "2026-10-14": 0.050788,
   "2026-10-15": 0.050788,
-  "2026-10-16": 0.050788
+  "2026-10-16": 0.050788,
+  "2026-10-19": 0.050788
 };
 
-export const LATEST_BUNDLED_CDI_DATE = "2026-10-16";
+export const LATEST_BUNDLED_CDI_DATE = "2026-10-19";

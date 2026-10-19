@@ -1138,24 +1138,24 @@ test('sync incomes button triggers coherent update and displays confirmation toa
   }
 });
 
-test('clicking sync incomes button opens SyncModal with stopwatch animation and calculates income for long-invested asset', async () => {
+test('clicking sync incomes button opens SyncModal with stopwatch animation and calculates income for long-invested asset in real scenario', async () => {
   const RealDate = global.Date;
   class MockDate extends RealDate {
     constructor(...args) {
       if (args.length === 0) {
-        super('2026-10-15T12:00:00Z');
+        super('2026-10-19T12:00:00Z');
       } else {
         super(...args);
       }
     }
     static now() {
-      return new RealDate('2026-10-15T12:00:00Z').getTime();
+      return new RealDate('2026-10-19T12:00:00Z').getTime();
     }
   }
   global.Date = MockDate;
 
   try {
-    const todayKey = '2026-10-15';
+    const todayKey = '2026-10-19';
     window.localStorage.setItem('kyos-database', JSON.stringify({
       schemaVersion: 11,
       simulatedDate: todayKey,
@@ -1194,9 +1194,11 @@ test('clicking sync incomes button opens SyncModal with stopwatch animation and 
     await userEvent.click(doneBtn);
     expect(screen.queryByTestId('sync-money-display')).not.toBeInTheDocument();
 
-    // Verify asset was updated to exact bank amount
+    // Verify asset was updated to exact bank amount in real scenario
     const db = JSON.parse(window.localStorage.getItem('kyos-database'));
-    expect(db.assets[0].investedAmount).toBeCloseTo(89966.36, 1);
+    expect(db.assets[0].investedAmount).toBeCloseTo(90046.80, 1);
+    expect(db.assets[0].totalIncome).toBeCloseTo(20797.80, 1);
+    expect(Object.keys(db.assets[0].incomeHistory).length).toBe(596);
   } finally {
     global.Date = RealDate;
   }

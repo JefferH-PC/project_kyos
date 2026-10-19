@@ -16,17 +16,17 @@ describe('SyncModal', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  test('renders dialog and starts counting from R$ 0,00 up to targetIncome', () => {
+  test('renders dialog and starts counting from R$ 0,00 up to targetIncome in real scenario', () => {
     const handleClose = jest.fn();
     render(
       <SyncModal
         isOpen={true}
         onClose={handleClose}
-        targetIncome={20717.36}
-        targetTotal={89966.36}
+        targetIncome={20797.80}
+        targetTotal={90046.80}
         initialPrincipal={69249}
-        businessDays={594}
-        referenceDate="2026-10-15"
+        businessDays={596}
+        referenceDate="2026-10-19"
         locale="pt"
         duration={1000}
       />
@@ -35,8 +35,8 @@ describe('SyncModal', () => {
     // Initial state: dialog is present
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByText('Sincronização CDI Bancária')).toBeInTheDocument();
-    expect(screen.getByText(/594/)).toBeInTheDocument();
-    expect(screen.getByText(/15\/10\/2026/)).toBeInTheDocument();
+    expect(screen.getByText(/596/)).toBeInTheDocument();
+    expect(screen.getByText(/19\/10\/2026/)).toBeInTheDocument();
 
     // Fast-forward animation to completion
     act(() => {
@@ -45,11 +45,11 @@ describe('SyncModal', () => {
 
     // Money display reaches target
     const display = screen.getByTestId('sync-money-display');
-    expect(display).toHaveTextContent('20.717,36');
+    expect(display).toHaveTextContent('20.797,80');
 
     // Portfolio balance reaches target
     const portfolio = screen.getByTestId('sync-portfolio-balance');
-    expect(portfolio).toHaveTextContent('89.966,36');
+    expect(portfolio).toHaveTextContent('90.046,80');
 
     // Completion status
     expect(screen.getByText('✓ 100% Sincronizado e Reconciliado com o Banco!')).toBeInTheDocument();
