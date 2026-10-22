@@ -32,7 +32,8 @@ import {
   synchronizeAllAssetsIncomes,
   fetchCDIRatesForDateRange,
   getCDIRateForDate,
-  DEFAULT_CDI_RATE
+  DEFAULT_CDI_RATE,
+  LATEST_CDI_KEY
 } from './utils/cdi';
 import { calculateTaxBreakdown, getCalendarDaysElapsed } from './utils/tax';
 import { distributeDailyIncome } from './utils/incomeDistribution';
@@ -389,7 +390,13 @@ function App() {
     creationDate: '',
     applyTax: false
   }));
-  const [cdiRate, setCdiRate] = useState(DEFAULT_CDI_RATE);
+  const [cdiRate, setCdiRate] = useState(() => {
+    try {
+      const cached = Number(window.localStorage.getItem(LATEST_CDI_KEY));
+      if (Number.isFinite(cached) && cached > 0) return cached;
+    } catch {}
+    return DEFAULT_CDI_RATE;
+  });
   const [areValuesVisible, setAreValuesVisible] = useState(true);
   const [holidaysList, setHolidaysList] = useState([]);
   const [holidaysError, setHolidaysError] = useState(false);
@@ -589,13 +596,15 @@ function App() {
           ? calculateTaxBreakdown(income, asset.creationDate, day).netYield
           : income;
 
-        dayYieldForDistribution += netIncome;
-        accruedSum += income;
+        const effectiveIncome = asset.applyTax ? netIncome : income;
+
+        dayYieldForDistribution += effectiveIncome;
+        accruedSum += effectiveIncome;
 
         updatedAssets.push({
           ...asset,
-          investedAmount: Number(asset.investedAmount || 0) + income,
-          totalIncome: Number(asset.totalIncome || 0) + income,
+          investedAmount: Number(asset.investedAmount || 0) + effectiveIncome,
+          totalIncome: Number(asset.totalIncome || 0) + effectiveIncome,
           incomeHistory: {
             ...(asset.incomeHistory || {}),
             [dayKey]: income
@@ -757,8 +766,19 @@ function App() {
     }
 
     try {
-      await processMissedDays(holidays, cdiRateRef.current);
-      await syncExistingAssetsIncomes(holidays, cdiRateRef.current);
+      let liveCdi = cdiRateRef.current;
+      try {
+        const fetchedCdi = await fetchLatestCDI(cdiRateRef.current);
+        if (Number.isFinite(fetchedCdi) && fetchedCdi > 0) {
+          liveCdi = fetchedCdi;
+          setCdiRate(fetchedCdi);
+          cdiRateRef.current = fetchedCdi;
+        }
+      } catch {
+        // Non-blocking fallback
+      }
+      await processMissedDays(holidays, liveCdi);
+      await syncExistingAssetsIncomes(holidays, liveCdi);
     } finally {
       isCatchingUpRef.current = false;
     }

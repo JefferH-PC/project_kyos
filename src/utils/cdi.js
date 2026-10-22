@@ -3,7 +3,7 @@ import { OFFICIAL_HISTORICAL_CDI_RATES, LATEST_BUNDLED_CDI_DATE } from './histor
 
 export { OFFICIAL_HISTORICAL_CDI_RATES, LATEST_BUNDLED_CDI_DATE };
 
-export const DEFAULT_CDI_RATE = 0.051660;
+export const DEFAULT_CDI_RATE = 0.050788;
 export const CDI_BUSINESS_DAYS = 252;
 export const CDI_LATEST_API_URL = 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados/ultimos/1?formato=json';
 export const CDI_CACHE_KEY = 'kyos-cdi-cache';
@@ -106,7 +106,7 @@ export const HISTORICAL_CDI_BENCHMARKS = {
   2023: 0.048651,
   2024: 0.040168,
   2025: 0.044095,
-  2026: 0.051660
+  2026: 0.050788
 };
 
 /**

@@ -1722,6 +1722,82 @@ test('accrual engine: catch-up follows B3 holding-day schedule and logs cleared 
   }
 });
 
+test('accrual consistency: calculated income that increases matches the accurate total daily income shown', async () => {
+  const RealDate = Date;
+  const originalFetch = global.fetch;
+  class MockDate extends RealDate {
+    constructor(...args) {
+      if (args.length === 0) {
+        super('2026-10-22T12:00:00Z'); // Thursday
+      } else {
+        super(...args);
+      }
+    }
+    static now() {
+      return new RealDate('2026-10-22T12:00:00Z').getTime();
+    }
+  }
+  global.Date = MockDate;
+  global.fetch = jest.fn((url) => {
+    const urlStr = String(url);
+    if (urlStr.includes('api.bcb.gov.br')) {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve([
+          { data: '22/10/2026', valor: '0.050788' }
+        ])
+      });
+    }
+    return originalFetch(url);
+  });
+
+  try {
+    window.localStorage.setItem('kyos-last-opened-date', '2026-10-21');
+    window.localStorage.setItem('kyos-latest-cdi', '0.050788');
+    window.localStorage.setItem('kyos-database', JSON.stringify({
+      schemaVersion: 11,
+      simulatedDate: '2026-10-21',
+      assets: [
+        {
+          id: 'asset-user',
+          name: 'Fixed Income Portfolio',
+          investedAmount: 98153,
+          initialInvestedAmount: 98153,
+          yieldRate: 100,
+          creationDate: '2026-10-21',
+          applyTax: false,
+          incomeHistory: {}
+        }
+      ],
+      wishlistSlots: [],
+      recoverySlots: [],
+      milestone: { target: 100000 },
+      purchasedTotal: 0,
+      recoverySpentTotal: 0,
+      expenses: []
+    }));
+
+    render(<App />);
+
+    // Check dialog metric
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toBeInTheDocument();
+
+    const accruedMetric = screen.getByText(/Total Accrued Income/i).parentElement;
+    // Exactly R$ 49,85 accrued (NOT R$ 50,69 or R$ 50,71)
+    expect(accruedMetric).toHaveTextContent('R$ 49,85');
+    expect(accruedMetric).not.toHaveTextContent('50,71');
+
+    // Balance in DB increased by exactly R$ 49,85
+    const savedDb = JSON.parse(window.localStorage.getItem('kyos-database'));
+    expect(savedDb.assets[0].investedAmount).toBeCloseTo(98153 + 49.85, 2);
+  } finally {
+    global.Date = RealDate;
+    global.fetch = originalFetch;
+  }
+});
+
 
 
 
