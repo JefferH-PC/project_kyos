@@ -4,15 +4,14 @@
     min-width: 0;
     max-width: 100%;
     height: 100%;
-    border: 1px solid var(--border-subtle);
+    border: 1px solid var(--border-card);
     padding: 14px 12px;
     display: flex;
     background-color: var(--bg-surface);
-    border-radius: 14px;
+    border-radius: 10px;
     flex-direction: column;
     align-items: center;
     overflow: hidden;
-    box-shadow: var(--shadow-card);
 }
 
 .time-area .top {
@@ -30,8 +29,8 @@
 
 .time-area .top h2 {
     background: none;
-    font-size: 17px;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 600;
     color: var(--text-primary);
     margin-bottom: 0;
     line-height: 1.2;
@@ -41,7 +40,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     min-width: 0;
-    letter-spacing: -0.3px;
+    letter-spacing: -0.01em;
 }
 
 .time-area .top .add-button {
@@ -53,21 +52,21 @@
     width: 100%;
     flex: 0 0 auto;
     margin-bottom: 10px;
-    padding: 12px;
+    padding: 10px;
     display: grid;
     gap: 8px;
     border: 1px solid var(--border-card);
-    border-radius: 10px;
+    border-radius: 8px;
     background: var(--bg-surface-elevated);
-    animation: reveal .18s ease both;
+    animation: reveal .15s ease both;
 }
 
 .expense-form input {
     width: 100%;
     min-width: 0;
-    padding: 8px 10px;
+    padding: 7px 10px;
     border: 1px solid var(--border-card);
-    border-radius: 8px;
+    border-radius: 6px;
     background: var(--bg-input);
     color: var(--text-primary);
     font: inherit;
@@ -75,29 +74,31 @@
     font-variant-numeric: tabular-nums;
 }
 
+.expense-form input[type="number"] {
+    font-family: var(--font-mono);
+}
+
 .expense-form input:focus {
     outline: none;
     border-color: var(--accent-green);
-    box-shadow: 0 0 0 2px var(--accent-green-bg);
 }
 
 .expense-form button {
     width: 100%;
-    padding: 8px;
-    border: 1px solid var(--accent-green-border);
-    border-radius: 8px;
+    padding: 7px;
+    border: 1px solid transparent;
+    border-radius: 6px;
     background: var(--accent-green);
     color: #ffffff;
     font: inherit;
-    font-size: 13px;
-    font-weight: 700;
+    font-size: 12.5px;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: background-color 0.12s ease;
 }
 
 .expense-form button:hover {
     background: var(--accent-green-hover);
-    transform: translateY(-1px);
 }
 
 .expense-area {
@@ -108,10 +109,10 @@
     height: auto;
     flex-direction: column;
     overflow-y: auto;
-    gap: 8px;
+    gap: 6px;
     background: none;
     margin-bottom: 8px;
-    padding: 2px 4px 4px 2px;
+    padding: 2px 2px 4px 0;
     width: 100%;
 }
 
@@ -123,12 +124,16 @@
 .processing-area {
     flex: 0 0 auto;
     background-color: transparent;
-    padding: 6px 0;
+    padding: 8px 0 4px;
     width: 100%;
     display: flex;
     flex-direction: column;
     gap: 6px;
-    border-top: 1px dashed var(--border-subtle);
+    border-top: 1px solid var(--border-subtle);
+}
+
+.processing-area:empty {
+    display: none;
 }
 
 .total {
@@ -140,15 +145,18 @@
 }
 
 .total h3 {
-    background: var(--bg-surface-elevated);
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    background: var(--bg-surface-card);
     border: 1px solid var(--border-card);
-    padding: 10px 12px;
-    border-radius: 12px;
+    padding: 9px 10px;
+    border-radius: 8px;
     width: 100%;
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 500;
     color: var(--text-secondary);
     text-align: center;
+    letter-spacing: -0.01em;
 }
 
 @media (max-width: 900px) {
@@ -177,16 +185,15 @@
 @media (max-width: 600px) {
     .time-area {
         padding: 12px 10px;
-        border-radius: 14px;
+        border-radius: 10px;
     }
 
     .time-area .top h2 {
-        font-size: 16px;
+        font-size: 14px;
     }
 
     .total h3 {
         padding: 8px 10px;
-        font-size: 12px;
+        font-size: 11.5px;
     }
 }
-

@@ -9,6 +9,8 @@ import "./TimeArea.css";
 
 const TimeArea = (props) => {
     const isRecoveryArea = props.area === 'recovery';
+    const areValuesVisible = props.areValuesVisible !== false;
+    const displayMoney = (val) => areValuesVisible ? formatMoney(val) : '****';
     const labels = props.labels || { add: 'Add', expenseName: 'Expense name', expenseValue: 'Expense value', total: 'Total', days: 'days' };
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [expenseName, setExpenseName] = useState('');
@@ -88,10 +90,11 @@ const TimeArea = (props) => {
 
         const slotProps = {
             expenseName: slot.expenseName,
-            price: formatMoney(slot.price),
-            originalPrice: formatMoney(origPrice),
+            price: displayMoney(slot.price),
+            originalPrice: displayMoney(origPrice),
             days: getDays(slot.price),
             daysLabel: labels.days,
+            readyLabel: labels.readyLabel,
             progressPercent,
             hasProgress: origPrice > currentPrice && currentPrice > 0,
             position,
@@ -137,7 +140,7 @@ const TimeArea = (props) => {
                 {processingSlots.slice(0, 1).map((slot, index, list) => renderSlot(slot, index, list))}
             </div>
             <div className="total">
-                <h3>{labels.total}: R$ {formatMoney(props.total)} - {getDays(props.total) === '—' ? '—' : `${getDays(props.total)} ${labels.days}`}</h3>
+                <h3>{labels.total}: R$ {displayMoney(props.total)} - {getDays(props.total) === '—' ? '—' : `${getDays(props.total)} ${labels.days}`}</h3>
             </div>
         </div >
     );

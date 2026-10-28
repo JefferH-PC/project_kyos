@@ -1,4 +1,3 @@
-
 import BuyButton from '../BuyButton/BuyButton';
 import RemoveButton from '../RemoveButton/RemoveButton';
 import './ExpenseSlotReady.css';
@@ -9,7 +8,7 @@ const ExpenseSlotReady = (props) => {
             <div className='slot-info'>
                 <div className='slot-title-row'>
                     <strong className='slot-title'>{props.expenseName}</strong>
-                    <span className='slot-days-pill ready'>✓ 100% Funded</span>
+                    <span className='slot-days-pill ready'>{props.readyLabel || '✓ 100% Funded'}</span>
                 </div>
                 <div className='slot-amount-row'>
                     <span className='slot-price ready'>R$ {props.originalPrice || props.price}</span>

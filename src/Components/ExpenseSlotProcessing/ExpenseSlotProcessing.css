@@ -1,27 +1,24 @@
 .expense-slot-processing {
     width: 100%;
-    min-height: 76px;
+    min-height: 70px;
     border: 1px solid var(--accent-blue-border);
-    border-left: 4px solid var(--accent-blue);
-    border-radius: 12px;
+    border-radius: 8px;
     padding: 10px 12px;
     background: var(--bg-surface-card);
     display: flex;
     align-items: center;
     gap: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-    transition: transform 0.15s ease, border-color 0.15s ease;
+    transition: border-color 0.12s ease;
 }
 
 .expense-slot-processing:hover {
     border-color: var(--accent-blue);
-    transform: translateY(-1px);
 }
 
 .expense-slot-processing h3 {
     background: transparent;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
     line-height: 1.3;
     color: var(--text-primary);
     flex: 1 1 auto;
@@ -46,21 +43,35 @@
 
 .expense-slot-processing .slot-title {
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 500;
     color: var(--text-primary);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.expense-slot-processing .slot-title::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--accent-blue);
+    flex-shrink: 0;
 }
 
 .expense-slot-processing .slot-days-pill.active {
+    font-family: var(--font-mono);
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
     color: var(--accent-blue);
     background: var(--accent-blue-bg);
     border: 1px solid var(--accent-blue-border);
-    padding: 2px 6px;
-    border-radius: 6px;
+    padding: 1px 6px;
+    border-radius: 4px;
     white-space: nowrap;
 }
 
@@ -71,13 +82,16 @@
 }
 
 .expense-slot-processing .slot-price {
-    font-size: 14px;
-    font-weight: 800;
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+    font-weight: 600;
     color: var(--accent-blue);
     font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
 }
 
 .expense-slot-processing .slot-original-price {
+    font-family: var(--font-mono);
     font-size: 11px;
     color: var(--text-muted);
     text-decoration: line-through;
@@ -86,16 +100,16 @@
 
 .expense-slot-processing .slot-progress-bar-wrap {
     width: 100%;
-    height: 4px;
+    height: 3px;
     background: var(--border-subtle);
-    border-radius: 4px;
+    border-radius: 2px;
     overflow: hidden;
     margin-top: 3px;
 }
 
 .expense-slot-processing .slot-progress-fill.processing {
     height: 100%;
-    background: linear-gradient(90deg, var(--accent-blue), #60a5fa);
-    border-radius: 4px;
-    transition: width 0.3s ease;
+    background: var(--accent-blue);
+    border-radius: 2px;
+    transition: width 0.25s ease;
 }

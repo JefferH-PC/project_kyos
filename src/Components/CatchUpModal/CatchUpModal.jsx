@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import './CatchUpModal.css';
 import { formatMoney } from '../../utils/formatters';
 
 const MODAL_TEXT = {
   en: {
     title: 'Catch-Up Summary',
-    subtitle: 'Here is what was processed while you were away:',
+    subtitle: 'Processed since your last session:',
     businessDaysProcessed: 'Business Days Processed',
     calendarDaysPassed: 'Calendar Days Passed',
     totalAccruedIncome: 'Total Accrued Income',
@@ -17,7 +17,7 @@ const MODAL_TEXT = {
   },
   pt: {
     title: 'Resumo de Atualização',
-    subtitle: 'Veja o que foi processado durante sua ausência:',
+    subtitle: 'Processado desde a sua última sessão:',
     businessDaysProcessed: 'Dias Úteis Processados',
     calendarDaysPassed: 'Dias Corridos',
     totalAccruedIncome: 'Rendimento Acumulado',
@@ -38,6 +38,17 @@ const CatchUpModal = ({
   completedSlots = [],
   locale = 'en'
 }) => {
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        onClose?.();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const t = MODAL_TEXT[locale] || MODAL_TEXT.en;
@@ -60,7 +71,7 @@ const CatchUpModal = ({
           <div className="catchup-metric-card neutral">
             <span>{t.businessDaysProcessed}</span>
             <strong>
-              {businessDays} <small style={{ fontSize: '13px', fontWeight: 'normal', color: '#888' }}>/ {calendarDays} {t.calendarDaysPassed.toLowerCase()}</small>
+              {businessDays} <small className="catchup-metric-sub">/ {calendarDays} {t.calendarDaysPassed.toLowerCase()}</small>
             </strong>
           </div>
 

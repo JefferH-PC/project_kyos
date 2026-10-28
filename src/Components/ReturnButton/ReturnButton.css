@@ -4,7 +4,7 @@
     border: 0;
     cursor: pointer;
     overflow: hidden;
-    border-radius: 6px;
+    border-radius: 5px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -14,12 +14,11 @@
     fill: var(--accent-blue);
     background: var(--accent-blue-bg);
     border: 1px solid var(--accent-blue-border);
-    border-radius: 6px;
-    transition: all 0.2s ease;
+    border-radius: 5px;
+    transition: background-color 0.12s ease, fill 0.12s ease;
 }
 
 .return:hover {
     fill: #ffffff;
     background: var(--accent-blue);
-    transform: scale(1.05);
 }

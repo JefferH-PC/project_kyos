@@ -1798,6 +1798,50 @@ test('accrual consistency: calculated income that increases matches the accurate
   }
 });
 
+test('persists theme in localStorage, masks TimeArea and SimulationArea on privacy toggle, and renders milestone progress bar', async () => {
+  window.localStorage.setItem('kyos-last-opened-date', '2026-10-19');
+  window.localStorage.setItem('kyos-database', JSON.stringify({
+    schemaVersion: 11,
+    simulatedDate: '2026-10-19',
+    assets: [{
+      id: 'asset-privacy',
+      name: 'Tesouro Selic',
+      investedAmount: 15000,
+      initialInvestedAmount: 15000,
+      yieldRate: 100,
+      creationDate: '2026-10-01',
+      applyTax: false,
+      incomeHistory: {}
+    }],
+    wishlistSlots: [
+      { id: 'w-priv', expenseName: 'Mechanical Watch', price: 2400, originalPrice: 2400, type: 'expense' }
+    ],
+    recoverySlots: [],
+    milestone: { target: 20000 },
+    purchasedTotal: 0,
+    recoverySpentTotal: 0,
+    expenses: []
+  }));
+
+  render(<App />);
+
+  // Milestone progress bar is rendered (15,000 -> 50% of 10k step)
+  expect(document.querySelector('.milestone-progress-fill')).toBeInTheDocument();
+  expect(screen.getByText('50%')).toBeInTheDocument();
+
+  // Theme toggle persists to localStorage
+  const themeBtn = screen.getByRole('button', { name: /toggle theme/i });
+  await userEvent.click(themeBtn);
+  expect(window.localStorage.getItem('kyos-theme')).toBe('light');
+
+  // Privacy toggle masks TimeArea values
+  expect(screen.getAllByText(/2\.400,00/).length).toBeGreaterThan(0);
+  const eyeBtn = screen.getByRole('button', { name: /hide money values/i });
+  await userEvent.click(eyeBtn);
+  expect(screen.queryByText(/2\.400,00/)).toBeNull();
+});
+
+
 
 
 

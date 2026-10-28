@@ -371,7 +371,13 @@ const readDatabase = () => {
 
 function App() {
   const [activeSection, setActiveSection] = useState('Net Worth');
-  const [isLightTheme, setIsLightTheme] = useState(false);
+  const [isLightTheme, setIsLightTheme] = useState(() => {
+    try {
+      return window.localStorage.getItem('kyos-theme') === 'light';
+    } catch {
+      return false;
+    }
+  });
   const [locale, setLocale] = useState(() => {
     try {
       return window.localStorage.getItem('kyos-locale') === 'pt' ? 'pt' : 'en';
@@ -484,6 +490,14 @@ function App() {
       // Ignore storage errors for non-persistent environments.
     }
   }, [locale]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('kyos-theme', isLightTheme ? 'light' : 'dark');
+    } catch {
+      // Ignore storage errors for non-persistent environments.
+    }
+  }, [isLightTheme]);
 
   // Initial CDI rate refresh and daily interval
   useEffect(() => {
@@ -967,6 +981,7 @@ function App() {
 
   const netWorthTotal = investedTotal;
   const nextMilestone = (Math.floor(netWorthTotal / 10000) + 1) * 10000;
+  const milestoneProgress = ((netWorthTotal % 10000) / 10000) * 100;
   const spentTotal = (database.expenses && database.expenses.length > 0)
     ? database.expenses.reduce((sum, exp) => sum + Math.max(toFiniteNumber(exp.amount), 0), 0)
     : Math.max(toFiniteNumber(database.recoverySpentTotal), 0) + Math.max(toFiniteNumber(database.purchasedTotal), 0);
@@ -1285,6 +1300,7 @@ function App() {
           liveCdiRate={cdiRate}
           holidaysList={holidaysList}
           locale={locale}
+          areValuesVisible={areValuesVisible}
         />
       );
     }
@@ -1471,36 +1487,54 @@ function App() {
                           </small>
                         </div>
 
-                        <strong>{t.yield}</strong><p>{formatDecimal(asset.yieldRate)}% {t.cdi}</p>
-                        <strong>{t.invested}</strong><p>R$ {displayMoney(asset.investedAmount)}</p>
-
-                        {asset.applyTax ? (
-                          <div className='asset-tax-block'>
-                            <strong>{t.dailyIncome} ({t.net})</strong>
-                            <p>
-                              R$ {displayMoney(dailyTax.netYield)}
-                              <small className='tax-gross-tag'>({t.gross}: R$ {displayMoney(dailyGross)})</small>
-                            </p>
-                            <strong>{t.totalIncome} ({t.net})</strong>
-                            <p>
-                              R$ {displayMoney(totalTax.netYield)}
-                              <small className='tax-gross-tag'>({t.gross}: R$ {displayMoney(asset.totalIncome)})</small>
-                            </p>
-                            <div className='asset-tax-tags'>
-                              <span className={`tax-rate-pill ${dailyTax.iofRate === 0 ? 'zero-iof' : ''}`}>
-                                {t.iofRateLabel}: {dailyTax.iofRate}%
-                              </span>
-                              <span className='tax-rate-pill'>
-                                {t.irRateLabel}: {dailyTax.irRate}%
-                              </span>
-                            </div>
+                        <div className='asset-metrics-grid'>
+                          <div className='asset-metric'>
+                            <strong>{t.yield}</strong>
+                            <p>{formatDecimal(asset.yieldRate)}% {t.cdi}</p>
                           </div>
-                        ) : (
-                          <>
-                            <strong>{t.dailyIncome}</strong><p>R$ {displayMoney(dailyGross)}</p>
-                            <strong>{t.totalIncome}</strong><p>R$ {displayMoney(asset.totalIncome)}</p>
-                          </>
-                        )}
+                          <div className='asset-metric'>
+                            <strong>{t.invested}</strong>
+                            <p>R$ {displayMoney(asset.investedAmount)}</p>
+                          </div>
+
+                          {asset.applyTax ? (
+                            <div className='asset-tax-block'>
+                              <div className='asset-metric'>
+                                <strong>{t.dailyIncome} ({t.net})</strong>
+                                <p>
+                                  R$ {displayMoney(dailyTax.netYield)}
+                                  <small className='tax-gross-tag'>({t.gross}: R$ {displayMoney(dailyGross)})</small>
+                                </p>
+                              </div>
+                              <div className='asset-metric'>
+                                <strong>{t.totalIncome} ({t.net})</strong>
+                                <p>
+                                  R$ {displayMoney(totalTax.netYield)}
+                                  <small className='tax-gross-tag'>({t.gross}: R$ {displayMoney(asset.totalIncome)})</small>
+                                </p>
+                              </div>
+                              <div className='asset-tax-tags'>
+                                <span className={`tax-rate-pill ${dailyTax.iofRate === 0 ? 'zero-iof' : ''}`}>
+                                  {t.iofRateLabel}: {dailyTax.iofRate}%
+                                </span>
+                                <span className='tax-rate-pill'>
+                                  {t.irRateLabel}: {dailyTax.irRate}%
+                                </span>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <div className='asset-metric'>
+                                <strong>{t.dailyIncome}</strong>
+                                <p>R$ {displayMoney(dailyGross)}</p>
+                              </div>
+                              <div className='asset-metric'>
+                                <strong>{t.totalIncome}</strong>
+                                <p>R$ {displayMoney(asset.totalIncome)}</p>
+                              </div>
+                            </>
+                          )}
+                        </div>
                       </>
                     )}
                   </div>
@@ -1516,6 +1550,18 @@ function App() {
       const totalBalance = spentTotal + investedTotal;
       const spentRatio = totalBalance > 0 ? (spentTotal / totalBalance) * 100 : 0;
       const investedRatio = totalBalance > 0 ? (investedTotal / totalBalance) * 100 : 0;
+      const lastYearPrefix = String(actualDate.getFullYear() - 1);
+      const lastYearSpentTotal = (database.expenses || [])
+        .filter((exp) => exp.date && exp.date.startsWith(lastYearPrefix))
+        .reduce((sum, exp) => sum + Math.max(toFiniteNumber(exp.amount), 0), 0);
+      const portfolioColors = [
+        '#10b981',
+        '#0d9488',
+        '#0284c7',
+        '#64748b',
+        '#059669',
+        '#475569'
+      ];
 
       return (
         <div className='balance-view'>
@@ -1525,14 +1571,14 @@ function App() {
               <strong>{actualDate.getFullYear()}</strong>
               <strong>R$ {displayMoney(spentTotal)}</strong>
               <h3>{t.lastYear}</h3>
-              <strong>R$ {displayMoney(0)}</strong>
+              <strong>R$ {displayMoney(lastYearSpentTotal)}</strong>
             </div>
             <div className='balance-card'>
               <h2>{t.invested}</h2>
               <strong>{actualDate.getFullYear()}</strong>
               <strong>R$ {displayMoney(investedTotal)}</strong>
               <h3>{t.lastYear}</h3>
-              <strong>R$ {displayMoney(0)}</strong>
+              <strong>R$ {displayMoney(previousYearIncome)}</strong>
             </div>
           </div>
 
@@ -1631,15 +1677,7 @@ function App() {
                 <div className='breakdown-track' role='progressbar' aria-label={locale === 'pt' ? 'Composição dos Investimentos' : 'Investment Portfolio Breakdown'}>
                   {database.assets.map((asset, index) => {
                     const ratio = investedTotal > 0 ? (asset.investedAmount / investedTotal) * 100 : 0;
-                    const colors = [
-                      'hsl(156, 72%, 46%)',
-                      'hsl(190, 85%, 48%)',
-                      'hsl(215, 85%, 60%)',
-                      'hsl(280, 75%, 65%)',
-                      'hsl(42, 90%, 55%)',
-                      'hsl(340, 80%, 60%)'
-                    ];
-                    const color = colors[index % colors.length];
+                    const color = portfolioColors[index % portfolioColors.length];
                     return (
                       <div
                         key={asset.id}
@@ -1653,15 +1691,7 @@ function App() {
                 <div className='breakdown-legend'>
                   {database.assets.map((asset, index) => {
                     const ratio = investedTotal > 0 ? (asset.investedAmount / investedTotal) * 100 : 0;
-                    const colors = [
-                      'hsl(156, 72%, 46%)',
-                      'hsl(190, 85%, 48%)',
-                      'hsl(215, 85%, 60%)',
-                      'hsl(280, 75%, 65%)',
-                      'hsl(42, 90%, 55%)',
-                      'hsl(340, 80%, 60%)'
-                    ];
-                    const color = colors[index % colors.length];
+                    const color = portfolioColors[index % portfolioColors.length];
                     return (
                       <div key={asset.id} className='breakdown-legend-item'>
                         <span className='legend-color-dot' style={{ backgroundColor: color }} />
@@ -1847,6 +1877,7 @@ function App() {
               title={t.milestone}
               next={displayMoney(nextMilestone)}
               remaining={`${displayMoney(milestoneRemaining)} - ${milestoneDays > 0 ? `${milestoneDays} ${t.days}` : '—'}`}
+              progress={milestoneProgress}
             ></MiddleMilestoneCard>
           </div>
           <div className='middle-summary-side'>
@@ -1937,13 +1968,21 @@ function App() {
         <TimeArea
           title={t.wishlist}
           area='wishlist'
-          labels={{ add: t.add, expenseName: t.expenseName, expenseValue: t.expenseValue, total: t.totalLabel, days: t.days }}
+          labels={{
+            add: t.add,
+            expenseName: t.expenseName,
+            expenseValue: t.expenseValue,
+            total: t.totalLabel,
+            days: t.days,
+            readyLabel: locale === 'pt' ? '✓ 100% Financiado' : '✓ 100% Funded'
+          }}
           slots={database.wishlistSlots}
           onSlotsChange={(slots) => updateSlots('wishlistSlots', slots)}
           onBuy={recordWishlistPurchase}
           total={wishlistTotal}
           dailyIncome={totalDailyIncome}
           hasRecoveryProcessing={database.recoverySlots.some((slot) => slot.type === 'recovery' && slot.isProcessing)}
+          areValuesVisible={areValuesVisible}
         />
 
         <main className='middle'>
@@ -1959,7 +1998,14 @@ function App() {
         <TimeArea
           title={t.recovery}
           area='recovery'
-          labels={{ add: t.add, expenseName: t.expenseName, expenseValue: t.expenseValue, total: t.totalLabel, days: t.days }}
+          labels={{
+            add: t.add,
+            expenseName: t.expenseName,
+            expenseValue: t.expenseValue,
+            total: t.totalLabel,
+            days: t.days,
+            readyLabel: locale === 'pt' ? '✓ 100% Financiado' : '✓ 100% Funded'
+          }}
           slots={database.recoverySlots}
           onSlotsChange={(slots) => updateSlots('recoverySlots', slots)}
           onAdd={recordRecoveryAddition}
@@ -1967,6 +2013,7 @@ function App() {
           total={recoveryTotal}
           dailyIncome={totalDailyIncome}
           hasWishlistProcessing={database.wishlistSlots.some((slot) => slot.type === 'processing')}
+          areValuesVisible={areValuesVisible}
         />
       </div>
 

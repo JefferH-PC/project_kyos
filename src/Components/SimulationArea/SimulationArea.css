@@ -1,15 +1,41 @@
 .simulation-area {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
     flex: 1 1 auto;
     min-height: min-content;
-    padding: 16px;
-    border: 1px solid var(--border-card);
-    border-radius: 16px;
-    background: var(--bg-surface);
-    box-shadow: var(--shadow-card);
+    padding: 0;
+    border: none;
+    background: transparent;
     overflow: visible;
+}
+
+.simulation-toolbar-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-card);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.simulation-header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.simulation-area-title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
 }
 
 .simulation-toolbar {
@@ -18,34 +44,32 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding-bottom: 14px;
-    border-bottom: 1px solid var(--border-subtle);
     background: transparent;
 }
 
 .simulation-actions {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     background: transparent;
     flex-wrap: wrap;
 }
 
 .simulation-btn {
-    padding: 8px 16px;
+    padding: 6px 12px;
     border: 1px solid var(--border-card);
-    border-radius: 10px;
+    border-radius: 6px;
     background: var(--bg-surface-elevated);
     color: var(--text-primary);
     cursor: pointer;
     font: inherit;
-    font-size: 13px;
-    font-weight: 600;
-    transition: all 0.2s ease;
+    font-size: 12.5px;
+    font-weight: 500;
+    transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
 }
 
 .simulation-btn:hover {
-    background: var(--border-hover);
-    transform: translateY(-1px);
+    background: var(--bg-surface-card);
+    border-color: var(--border-strong);
 }
 
 .simulation-btn.btn-clear {
@@ -75,49 +99,53 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 16px;
+    width: 100%;
+    justify-content: space-between;
 }
 
 .simulation-cdi-control {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     background: transparent;
     flex-wrap: wrap;
 }
 
 .simulation-cdi-control label {
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 12.5px;
+    font-weight: 500;
     color: var(--text-secondary);
     background: transparent;
 }
 
 .simulation-cdi-input {
-    width: 96px;
-    padding: 7px 10px;
+    font-family: var(--font-mono);
+    width: 92px;
+    padding: 5px 8px;
     border: 1px solid var(--border-card);
-    border-radius: 8px;
+    border-radius: 6px;
     background: var(--bg-input);
     color: var(--text-primary);
-    font: inherit;
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
 }
 
 .simulation-cdi-input:focus {
     outline: none;
     border-color: var(--accent-green);
-    box-shadow: 0 0 0 2px var(--accent-green-bg);
 }
 
 .simulation-cdi-annual {
-    font-size: 13px;
-    font-weight: 600;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
     color: var(--accent-green);
     background: var(--accent-green-bg);
-    padding: 4px 8px;
-    border-radius: 6px;
+    padding: 3px 8px;
+    border-radius: 4px;
     border: 1px solid var(--accent-green-border);
+    font-variant-numeric: tabular-nums;
 }
 
 /* Inflation (IPCA) Control */
@@ -132,17 +160,17 @@
 .simulation-inflation-toggle-label {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    font-weight: 600;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 500;
     color: var(--text-secondary);
     cursor: pointer;
     user-select: none;
 }
 
 .simulation-inflation-toggle-label input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
     accent-color: var(--accent-green);
     cursor: pointer;
 }
@@ -155,38 +183,38 @@
 
 .simulation-inflation-input-wrap label {
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--text-muted);
 }
 
 .simulation-ipca-input {
-    width: 68px;
-    padding: 6px 8px;
+    font-family: var(--font-mono);
+    width: 64px;
+    padding: 5px 8px;
     border: 1px solid var(--border-card);
     border-radius: 6px;
     background: var(--bg-input);
     color: var(--text-primary);
-    font: inherit;
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 12.5px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
 }
 
 .simulation-ipca-input:focus {
     outline: none;
     border-color: var(--accent-green);
-    box-shadow: 0 0 0 2px var(--accent-green-bg);
 }
 
 /* Add Simulation Asset Form Drawer */
 .sim-add-asset-form {
     background: var(--bg-surface-elevated);
     border: 1px solid var(--border-card);
-    border-radius: 12px;
-    padding: 16px;
+    border-radius: 8px;
+    padding: 14px;
     display: flex;
     flex-direction: column;
     gap: 12px;
-    animation: reveal 0.2s ease both;
+    animation: reveal 0.15s ease both;
 }
 
 .sim-form-header {
@@ -197,15 +225,15 @@
 
 .sim-form-header h4 {
     margin: 0;
-    font-size: 14px;
-    font-weight: 700;
+    font-size: 13px;
+    font-weight: 600;
     color: var(--text-primary);
 }
 
 .sim-form-close {
     background: transparent;
     border: none;
-    font-size: 20px;
+    font-size: 18px;
     line-height: 1;
     color: var(--text-muted);
     cursor: pointer;
@@ -218,8 +246,8 @@
 
 .sim-form-fields {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
 }
 
 .sim-form-field {
@@ -230,18 +258,16 @@
 
 .sim-form-field label {
     font-size: 11px;
-    font-weight: 600;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    font-weight: 500;
+    color: var(--text-secondary);
 }
 
 .sim-form-field input[type="text"],
 .sim-form-field input[type="number"],
 .sim-form-field input[type="date"] {
-    padding: 8px 10px;
+    padding: 7px 10px;
     border: 1px solid var(--border-card);
-    border-radius: 8px;
+    border-radius: 6px;
     background: var(--bg-input);
     color: var(--text-primary);
     font: inherit;
@@ -249,10 +275,14 @@
     font-weight: 500;
 }
 
+.sim-form-field input[type="number"],
+.sim-form-field input[type="date"] {
+    font-family: var(--font-mono);
+}
+
 .sim-form-field input:focus {
     outline: none;
     border-color: var(--accent-green);
-    box-shadow: 0 0 0 2px var(--accent-green-bg);
 }
 
 .sim-form-field.checkbox-field {
@@ -266,21 +296,19 @@
     cursor: pointer;
     font-size: 12px;
     color: var(--text-secondary);
-    text-transform: none;
-    letter-spacing: normal;
 }
 
 .sim-form-field.checkbox-field input {
     accent-color: var(--accent-green);
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
 }
 
 .sim-form-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
-    margin-top: 4px;
+    gap: 8px;
+    margin-top: 2px;
 }
 
 .sim-form-actions .btn-save {
@@ -290,28 +318,13 @@
 }
 
 .sim-form-actions .btn-save:hover {
-    background: #059669;
-}
-
-.simulation-header-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-bottom: 2px;
-}
-
-.simulation-area-title {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text-primary);
-    letter-spacing: -0.2px;
+    background: var(--accent-green-hover);
 }
 
 .simulation-content {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+    gap: 12px;
     background: transparent;
     flex: 1 1 auto;
     min-height: 0;
@@ -321,14 +334,13 @@
 /* Calendar Card */
 .simulation-calendar-card {
     border: 1px solid var(--border-card);
-    border-radius: 14px;
-    background: var(--bg-surface-card);
+    border-radius: 10px;
+    background: var(--bg-surface);
     padding: 16px;
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    box-shadow: var(--shadow-card);
-    min-height: 380px;
+    gap: 12px;
+    min-height: 360px;
 }
 
 .calendar-header {
@@ -339,45 +351,45 @@
 }
 
 .calendar-header h3 {
-    font-size: 17px;
-    font-weight: 700;
+    font-size: 15px;
+    font-weight: 600;
     color: var(--text-primary);
     background: transparent;
-    letter-spacing: -0.2px;
+    letter-spacing: -0.01em;
 }
 
 .calendar-nav-btn {
+    font-family: var(--font-mono);
     background: var(--bg-surface-elevated);
     border: 1px solid var(--border-card);
     color: var(--text-primary);
-    border-radius: 8px;
-    padding: 5px 12px;
+    border-radius: 6px;
+    padding: 4px 10px;
     cursor: pointer;
-    font-size: 14px;
-    font-weight: 700;
-    transition: all 0.2s ease;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background-color 0.12s ease, border-color 0.12s ease;
 }
 
 .calendar-nav-btn:hover:not(:disabled) {
-    background: var(--border-hover);
-    transform: scale(1.05);
+    background: var(--bg-surface-card);
+    border-color: var(--border-strong);
 }
 
 .calendar-nav-btn:disabled {
     opacity: 0.35;
     cursor: not-allowed;
     pointer-events: none;
-    transform: none;
 }
 
 .calendar-legend {
     display: flex;
-    gap: 14px;
+    gap: 12px;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 500;
     background: transparent;
     flex-wrap: wrap;
-    padding: 4px 0;
+    padding: 2px 0;
 }
 
 .calendar-legend-item {
@@ -389,8 +401,8 @@
 }
 
 .legend-dot {
-    width: 9px;
-    height: 9px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     display: inline-block;
 }
@@ -410,40 +422,41 @@
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 6px;
+    gap: 4px;
     background: transparent;
     text-align: center;
 }
 
 .calendar-day-header {
-    font-size: 12px;
-    font-weight: 700;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
     color: var(--text-muted);
-    padding: 6px 0;
+    padding: 4px 0;
     background: transparent;
     text-transform: uppercase;
 }
 
 .calendar-day-cell {
+    font-family: var(--font-mono);
     aspect-ratio: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-size: 13px;
-    font-weight: 600;
-    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 500;
+    border-radius: 6px;
     cursor: pointer;
     border: 1px solid var(--border-subtle);
-    background-color: var(--bg-surface-elevated);
+    background-color: var(--bg-surface-card);
     color: var(--text-primary);
     position: relative;
-    transition: all 0.15s ease;
+    transition: border-color 0.12s ease, background-color 0.12s ease;
 }
 
 .calendar-day-cell:hover:not(.empty):not(.past-day) {
-    border-color: var(--border-hover);
-    transform: scale(1.04);
+    border-color: var(--border-strong);
 }
 
 .calendar-day-cell.empty {
@@ -453,38 +466,38 @@
 }
 
 .calendar-day-cell.baseline-day {
-    border: 2px solid var(--accent-blue);
-    font-weight: 700;
+    border: 1.5px solid var(--accent-blue);
+    font-weight: 600;
+}
+
+.calendar-day-cell.in-range:not(.non-working) {
+    background-color: rgba(16, 185, 129, 0.08);
+    border-color: rgba(16, 185, 129, 0.22);
 }
 
 .calendar-day-cell.selected-target {
-    border: 2px solid var(--accent-green) !important;
-    background-color: rgba(16, 185, 129, 0.25) !important;
-    color: #ffffff !important;
-    font-weight: 800;
+    border: 1.5px solid var(--accent-green) !important;
+    background-color: rgba(16, 185, 129, 0.22) !important;
+    color: var(--text-primary) !important;
+    font-weight: 700;
 }
 
-/* RED HIGHLIGHT FOR NON-WORKING DAYS (Weekends and Holidays) */
 .calendar-day-cell.non-working {
     background-color: var(--accent-red-bg) !important;
     border-color: var(--accent-red-border) !important;
     color: var(--accent-red) !important;
 }
 
-.calendar-day-cell.non-working:hover {
-    background-color: rgba(239, 68, 68, 0.25) !important;
-}
-
 .calendar-day-cell.past-day {
-    opacity: 0.35;
+    opacity: 0.32;
     cursor: not-allowed;
 }
 
 .calendar-holiday-indicator {
     position: absolute;
     bottom: 3px;
-    width: 5px;
-    height: 5px;
+    width: 4px;
+    height: 4px;
     border-radius: 50%;
     background-color: var(--accent-red);
 }
@@ -492,55 +505,60 @@
 /* Projections Card */
 .simulation-results-card {
     border: 1px solid var(--border-card);
-    border-radius: 14px;
-    background: var(--bg-surface-card);
+    border-radius: 10px;
+    background: var(--bg-surface);
     padding: 16px;
     display: flex;
     flex-direction: column;
     gap: 14px;
-    box-shadow: var(--shadow-card);
-    min-height: 380px;
+    min-height: 360px;
     height: auto;
 }
 
-/* Rich Simulation Empty State */
+.simulation-target-date-badge {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent-blue);
+    font-variant-numeric: tabular-nums;
+}
+
 .simulation-empty-state {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 28px 16px;
+    padding: 24px 16px;
     height: 100%;
-    min-height: 280px;
-    gap: 12px;
+    min-height: 260px;
+    gap: 10px;
 }
 
 .sim-empty-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
     background: var(--bg-surface-elevated);
     border: 1px solid var(--border-card);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--accent-blue);
+    color: var(--text-secondary);
     margin-bottom: 2px;
 }
 
 .simulation-empty-state h4 {
     margin: 0;
-    font-size: 16px;
-    font-weight: 700;
+    font-size: 14.5px;
+    font-weight: 600;
     color: var(--text-primary);
 }
 
 .simulation-empty-state p {
     margin: 0;
-    font-size: 13px;
+    font-size: 12.5px;
     color: var(--text-secondary);
-    max-width: 320px;
+    max-width: 300px;
     line-height: 1.45;
 }
 
@@ -548,27 +566,27 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 8px;
+    gap: 6px;
     margin-top: 6px;
 }
 
 .sim-quick-chip {
+    font-family: var(--font-mono);
     background: var(--bg-surface-elevated);
     border: 1px solid var(--border-card);
     color: var(--text-primary);
-    border-radius: 999px;
-    padding: 6px 13px;
-    font-size: 12px;
-    font-weight: 600;
+    border-radius: 6px;
+    padding: 5px 11px;
+    font-size: 11.5px;
+    font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: border-color 0.12s ease, background-color 0.12s ease;
 }
 
 .sim-quick-chip:hover {
-    background: var(--border-hover);
-    border-color: var(--accent-blue);
-    color: var(--accent-blue);
-    transform: translateY(-1px);
+    background: var(--bg-surface-card);
+    border-color: var(--accent-green);
+    color: var(--accent-green);
 }
 
 .simulation-results-header {
@@ -579,42 +597,47 @@
 }
 
 .simulation-results-header h3 {
-    font-size: 17px;
-    font-weight: 700;
+    font-size: 15px;
+    font-weight: 600;
     color: var(--text-primary);
     background: transparent;
-    letter-spacing: -0.2px;
+    letter-spacing: -0.01em;
 }
 
 .simulation-metric-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 8px;
     background: transparent;
 }
 
 .simulation-metric {
-    background: var(--bg-surface-elevated);
+    background: var(--bg-surface-card);
     border: 1px solid var(--border-card);
-    border-radius: 10px;
-    padding: 12px;
+    border-radius: 8px;
+    padding: 11px 12px;
     display: flex;
     flex-direction: column;
     gap: 4px;
 }
 
+.simulation-metric.span-two {
+    grid-column: span 2;
+}
+
 .simulation-metric span {
     font-size: 11px;
-    font-weight: 600;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    font-weight: 500;
+    color: var(--text-secondary);
     background: transparent;
 }
 
 .simulation-metric strong {
-    font-size: 20px;
-    font-weight: 800;
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
     color: var(--accent-green);
     background: transparent;
 }
@@ -628,14 +651,14 @@
     flex-direction: column;
     gap: 8px;
     background: transparent;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-subtle);
 }
 
 .simulation-slots-section h4 {
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 500;
     color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
     background: transparent;
 }
 
@@ -649,11 +672,12 @@
 }
 
 .simulation-slot-badge {
+    font-family: var(--font-mono);
     font-size: 10px;
     padding: 2px 6px;
     border-radius: 4px;
     text-transform: uppercase;
-    font-weight: bold;
+    font-weight: 600;
 }
 
 .simulation-slot-badge.wishlist {
@@ -668,7 +692,6 @@
     border: 1px solid var(--accent-red-border);
 }
 
-/* Inflation metrics styling */
 .sim-metric-title-row {
     display: flex;
     align-items: center;
@@ -677,12 +700,12 @@
 }
 
 .sim-badge {
+    font-family: var(--font-mono);
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 600;
     text-transform: uppercase;
-    padding: 2px 6px;
+    padding: 1px 5px;
     border-radius: 4px;
-    letter-spacing: 0.5px;
 }
 
 .sim-badge.real {
@@ -692,23 +715,26 @@
 }
 
 .sim-metric-subtext {
+    font-family: var(--font-mono);
     font-size: 11px;
     color: var(--text-muted);
-    font-weight: 500;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
 }
 
 .simulation-metric.highlight-ipca {
-    background: var(--bg-surface);
-    border: 1px dashed var(--border-hover);
+    background: var(--bg-surface-card);
+    border: 1px solid var(--border-card);
 }
 
 .sim-badge-pill {
+    font-family: var(--font-mono);
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--accent-blue);
     background: var(--accent-blue-bg);
-    padding: 2px 6px;
-    border-radius: 6px;
+    padding: 1px 6px;
+    border-radius: 4px;
 }
 
 .sim-inflation-details {
@@ -717,7 +743,8 @@
 }
 
 .sim-inflation-details strong {
-    font-size: 14px;
+    font-family: var(--font-mono);
+    font-size: 13px;
     color: var(--accent-green);
 }
 
@@ -726,9 +753,10 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    padding-top: 14px;
-    border-top: 1px solid var(--border-subtle);
-    background: transparent;
+    padding: 14px 16px;
+    border: 1px solid var(--border-card);
+    border-radius: 10px;
+    background: var(--bg-surface);
 }
 
 .sim-assets-header {
@@ -739,8 +767,8 @@
 
 .sim-assets-header h4 {
     margin: 0;
-    font-size: 14px;
-    font-weight: 700;
+    font-size: 13px;
+    font-weight: 600;
     color: var(--text-primary);
 }
 
@@ -752,23 +780,21 @@
 .sim-assets-chips-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
 }
 
 .sim-asset-chip {
     display: flex;
     align-items: center;
     gap: 10px;
-    background: var(--bg-surface-elevated);
+    background: var(--bg-surface-card);
     border: 1px solid var(--border-card);
-    border-radius: 10px;
+    border-radius: 8px;
     padding: 8px 12px;
-    transition: all 0.2s ease;
 }
 
 .sim-asset-chip.is-simulated {
-    border-left: 3px solid var(--accent-green);
-    background: var(--bg-surface-card);
+    border-color: var(--accent-green-border);
 }
 
 .sim-chip-info {
@@ -779,13 +805,15 @@
 
 .sim-chip-info strong {
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--text-primary);
 }
 
 .sim-chip-info span {
-    font-size: 11px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
     color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
 }
 
 .sim-chip-actions {
@@ -795,13 +823,14 @@
 }
 
 .sim-asset-tag {
+    font-family: var(--font-mono);
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 600;
     text-transform: uppercase;
     color: var(--accent-green);
     background: var(--accent-green-bg);
     border: 1px solid var(--accent-green-border);
-    padding: 2px 6px;
+    padding: 1px 5px;
     border-radius: 4px;
 }
 
@@ -814,7 +843,7 @@
     cursor: pointer;
     padding: 2px 4px;
     border-radius: 4px;
-    transition: color 0.15s ease;
+    transition: color 0.12s ease;
 }
 
 .sim-chip-delete:hover {
@@ -828,16 +857,10 @@
 }
 
 @media (max-width: 600px) {
-    .simulation-area {
-        padding: 12px;
-        gap: 12px;
-    }
-
     .simulation-toolbar {
         flex-direction: column;
         align-items: stretch;
         gap: 10px;
-        padding-bottom: 12px;
     }
 
     .simulation-actions {
@@ -848,9 +871,9 @@
     .simulation-btn {
         flex: 1 1 0;
         text-align: center;
-        padding: 9px 8px;
+        padding: 8px 8px;
         font-size: 12px;
-        min-height: 40px;
+        min-height: 38px;
     }
 
     .simulation-cdi-control {
@@ -898,22 +921,6 @@
     }
 
     .simulation-metric strong {
-        font-size: 17px;
+        font-size: 16px;
     }
 }
-
-@media (max-width: 380px) {
-    .calendar-day-cell {
-        font-size: 11px;
-    }
-
-    .calendar-day-header {
-        font-size: 10px;
-    }
-
-    .simulation-btn {
-        font-size: 11px;
-        padding: 8px 4px;
-    }
-}
-

@@ -1,65 +1,64 @@
 .catchup-overlay {
     position: fixed;
     inset: 0;
-    background-color: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(8px);
+    background-color: rgba(4, 7, 12, 0.75);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1000;
     padding: 16px;
-    animation: reveal 0.2s ease both;
+    animation: reveal 0.16s ease-out both;
 }
 
 .catchup-modal {
     background-color: var(--bg-surface);
     border: 1px solid var(--border-card);
-    border-radius: 18px;
+    border-radius: 12px;
     padding: 24px;
-    max-width: 520px;
+    max-width: 480px;
     width: 100%;
     max-height: 85vh;
     display: flex;
     flex-direction: column;
-    gap: 18px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    gap: 16px;
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.45);
     overflow-y: auto;
 }
 
 .catchup-header {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    background: transparent;
+    gap: 4px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-subtle);
 }
 
 .catchup-header h2 {
-    font-size: 22px;
-    font-weight: 800;
+    font-size: 18px;
+    font-weight: 600;
     color: var(--text-primary);
-    line-height: 1.2;
-    background: transparent;
-    letter-spacing: -0.3px;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
 }
 
 .catchup-header p {
-    font-size: 14px;
+    font-size: 13px;
     color: var(--text-secondary);
-    background: transparent;
 }
 
 .catchup-metrics {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    background: transparent;
+    gap: 10px;
 }
 
 .catchup-metric-card {
-    background-color: var(--bg-surface-elevated);
+    background-color: var(--bg-surface-card);
     border: 1px solid var(--border-card);
-    border-radius: 12px;
-    padding: 14px;
+    border-radius: 8px;
+    padding: 12px 14px;
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -67,57 +66,58 @@
 
 .catchup-metric-card span {
     font-size: 11px;
-    font-weight: 600;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    background: transparent;
+    font-weight: 500;
+    color: var(--text-secondary);
 }
 
 .catchup-metric-card strong {
-    font-size: 22px;
-    font-weight: 800;
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
     color: var(--accent-green);
-    background: transparent;
 }
 
 .catchup-metric-card.neutral strong {
     color: var(--text-primary);
 }
 
+.catchup-metric-sub {
+    font-family: var(--font-family);
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-muted);
+}
+
 .catchup-section {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    background: transparent;
+    gap: 8px;
 }
 
 .catchup-section h3 {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 500;
     color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    background: transparent;
 }
 
 .catchup-slots-list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     max-height: 180px;
     overflow-y: auto;
-    background: transparent;
 }
 
 .catchup-slot-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 14px;
-    background-color: var(--bg-surface-elevated);
+    padding: 9px 12px;
+    background-color: var(--bg-surface-card);
     border: 1px solid var(--border-card);
-    border-radius: 10px;
+    border-radius: 8px;
     gap: 10px;
 }
 
@@ -125,16 +125,16 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    background: transparent;
     min-width: 0;
 }
 
 .catchup-slot-badge {
-    font-size: 11px;
-    padding: 2px 8px;
-    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
     text-transform: uppercase;
-    font-weight: 700;
+    font-weight: 600;
 }
 
 .catchup-slot-badge.wishlist {
@@ -150,54 +150,50 @@
 }
 
 .catchup-slot-name {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 500;
     color: var(--text-primary);
-    background: transparent;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .catchup-slot-price {
-    font-size: 14px;
-    font-weight: 800;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
     color: var(--accent-green);
-    background: transparent;
     white-space: nowrap;
 }
 
 .catchup-empty {
-    font-size: 13px;
+    font-size: 12.5px;
     color: var(--text-muted);
-    font-style: italic;
-    background: transparent;
-    padding: 8px 0;
+    padding: 6px 0;
 }
 
 .catchup-footer {
     display: flex;
     justify-content: flex-end;
-    margin-top: 6px;
-    background: transparent;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-subtle);
 }
 
 .catchup-btn-continue {
-    padding: 10px 24px;
-    background-color: var(--text-primary);
-    color: var(--bg-app);
+    padding: 8px 20px;
+    background-color: var(--accent-green);
+    color: #ffffff;
     border: none;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 700;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.12s ease;
 }
 
 .catchup-btn-continue:hover {
-    filter: brightness(0.9);
-    transform: translateY(-1px);
+    background-color: var(--accent-green-hover);
 }
 
 @media (max-width: 600px) {
@@ -207,17 +203,9 @@
 
     .catchup-modal {
         padding: 16px;
-        border-radius: 16px;
+        border-radius: 12px;
         gap: 14px;
         max-height: 90vh;
-    }
-
-    .catchup-header h2 {
-        font-size: 19px;
-    }
-
-    .catchup-header p {
-        font-size: 13px;
     }
 
     .catchup-metrics {
@@ -229,30 +217,16 @@
     }
 
     .catchup-metric-card strong {
-        font-size: 18px;
-    }
-
-    .catchup-slot-item {
-        padding: 8px 10px;
-    }
-
-    .catchup-slot-name {
-        font-size: 13px;
-    }
-
-    .catchup-slot-price {
-        font-size: 13px;
+        font-size: 16px;
     }
 
     .catchup-footer {
         width: 100%;
-        justify-content: stretch;
     }
 
     .catchup-btn-continue {
         width: 100%;
-        min-height: 44px;
-        font-size: 15px;
+        min-height: 40px;
+        font-size: 14px;
     }
 }
-

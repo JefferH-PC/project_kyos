@@ -125,19 +125,19 @@ const SimulationArea = ({
   mainDatabase,
   liveCdiRate = DEFAULT_CDI_RATE,
   holidaysList = [],
-  locale = 'en'
+  locale = 'en',
+  areValuesVisible = true
 }) => {
   const t = TEXT[locale] || TEXT.en;
   const monthNames = MONTH_NAMES[locale] || MONTH_NAMES.en;
   const dayNames = DAY_NAMES[locale] || DAY_NAMES.en;
+  const displayMoney = (val) => (areValuesVisible ? formatMoney(val) : '****');
 
-  // Isolated simulation state
   const [simDatabase, setSimDatabase] = useState(() => cloneState(mainDatabase));
   const [customCdi, setCustomCdi] = useState(liveCdiRate);
   const [targetDate, setTargetDate] = useState('');
   const [holidaysMap, setHolidaysMap] = useState({});
 
-  // Simulation-only asset form state
   const [isAddAssetOpen, setIsAddAssetOpen] = useState(false);
   const [simAssetForm, setSimAssetForm] = useState({
     name: '',
@@ -147,11 +147,9 @@ const SimulationArea = ({
     applyTax: false
   });
 
-  // Inflation (IPCA) adjustment state
   const [adjustInflation, setAdjustInflation] = useState(false);
   const [annualIpca, setAnnualIpca] = useState('4.5');
 
-  // Calendar month/year navigation
   const baselineDateKey = simDatabase.simulatedDate || getDateKey(new Date());
   const baselineDateObj = useMemo(() => parseDateKey(baselineDateKey), [baselineDateKey]);
 
@@ -172,7 +170,6 @@ const SimulationArea = ({
     }
   }, [minYear, minMonth, calendarYear, calendarMonth]);
 
-  // Load and cache holidays for current calendar view year
   useEffect(() => {
     let isCancelled = false;
     fetchBrazilianHolidays(calendarYear)
@@ -184,15 +181,12 @@ const SimulationArea = ({
         });
         setHolidaysMap((current) => ({ ...current, ...map }));
       })
-      .catch(() => {
-        // Handled gracefully via existing cache
-      });
+      .catch(() => {});
     return () => {
       isCancelled = true;
     };
   }, [calendarYear]);
 
-  // Merge initial holidaysList into holidaysMap
   useEffect(() => {
     if (Array.isArray(holidaysList) && holidaysList.length > 0) {
       const map = {};
@@ -203,15 +197,12 @@ const SimulationArea = ({
     }
   }, [holidaysList]);
 
-  // Keep CDI default aligned with live rate initially
   useEffect(() => {
     if (customCdi === DEFAULT_CDI_RATE && liveCdiRate) {
       setCustomCdi(liveCdiRate);
     }
   }, [liveCdiRate, customCdi]);
 
-  // Actions
-  // Reset completely removes all simulation-added assets and restores live baseline
   const handleResetToBaseline = () => {
     setSimDatabase(cloneState(mainDatabase));
     setCustomCdi(liveCdiRate);
@@ -223,7 +214,6 @@ const SimulationArea = ({
     setIsAddAssetOpen(false);
   };
 
-  // Clear all removes all assets including simulation-added assets
   const handleClearAll = () => {
     setSimDatabase({
       ...simDatabase,
@@ -239,7 +229,6 @@ const SimulationArea = ({
     setIsAddAssetOpen(false);
   };
 
-  // Add asset specifically to the simulation area
   const handleAddSimAsset = (event) => {
     event.preventDefault();
     const amount = Number(simAssetForm.investedAmount);
@@ -274,7 +263,6 @@ const SimulationArea = ({
     setIsAddAssetOpen(false);
   };
 
-  // Remove individual simulation asset
   const handleRemoveSimAsset = (id) => {
     setSimDatabase((current) => ({
       ...current,
@@ -282,7 +270,6 @@ const SimulationArea = ({
     }));
   };
 
-  // Calendar navigation
   const handlePrevMonth = () => {
     if (isAtMinMonth) return;
     if (calendarMonth === 0) {
@@ -310,18 +297,15 @@ const SimulationArea = ({
     setCalendarMonth(target.getMonth());
   };
 
-  // Projection calculation with date-coherent inflation adjustment
   const projection = useMemo(() => {
     if (!targetDate) return null;
 
     const targetDateObj = parseDateKey(targetDate);
     if (targetDateObj <= baselineDateObj) return null;
 
-    // Determine calendar days
     const diffTime = targetDateObj.getTime() - baselineDateObj.getTime();
     const calendarDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
-    // Get business days strictly between baseline (exclusive) and target (inclusive)
     const startDate = shiftDate(baselineDateObj, 1);
     const holidaysArray = Object.values(holidaysMap);
     const businessDaysList = getBusinessDaysInRange(startDate, targetDateObj, holidaysArray);
@@ -339,7 +323,6 @@ const SimulationArea = ({
 
       assets = assets.map((asset) => {
         const assetStartDate = parseDateKey(asset.creationDate || baselineDateKey);
-        // B3 schedule: Day 0 of deposit yields R$ 0,00; first yield is credited on the next business day (dayDate > assetStartDate)
         if (dayDate <= assetStartDate) {
           return asset;
         }
@@ -375,13 +358,11 @@ const SimulationArea = ({
 
     const projectedInvestedTotal = assets.reduce((acc, a) => acc + (Number(a.investedAmount) || 0), 0);
 
-    // Coherent inflation deflator for every single date
     let deflator = 1;
     let accumulatedInflationPct = 0;
     const ipcaNum = Number(annualIpca);
 
     if (adjustInflation && Number.isFinite(ipcaNum) && ipcaNum > 0 && calendarDays > 0) {
-      // Annual IPCA compounded over the exact elapsed calendar days: (1 + IPCA / 100)^(days / 365.25)
       deflator = Math.pow(1 + ipcaNum / 100, calendarDays / 365.25);
       accumulatedInflationPct = (deflator - 1) * 100;
     }
@@ -403,7 +384,6 @@ const SimulationArea = ({
     };
   }, [targetDate, baselineDateObj, baselineDateKey, simDatabase, customCdi, holidaysMap, adjustInflation, annualIpca]);
 
-  // Calendar Day Cells rendering
   const firstDayOfMonth = new Date(calendarYear, calendarMonth, 1).getDay();
   const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
 
@@ -423,6 +403,7 @@ const SimulationArea = ({
     const isPast = currentCellDate < baselineDateObj;
     const isBaseline = dateKey === baselineDateKey;
     const isSelected = dateKey === targetDate;
+    const isInRange = Boolean(targetDate && dateKey > baselineDateKey && dateKey < targetDate);
 
     let tooltip = t.businessDay;
     if (holiday) {
@@ -435,6 +416,7 @@ const SimulationArea = ({
     if (isNonWorking) classNames.push('non-working');
     if (isBaseline) classNames.push('baseline-day');
     if (isSelected) classNames.push('selected-target');
+    if (isInRange) classNames.push('in-range');
     if (isPast) classNames.push('past-day');
 
     calendarCells.push(
@@ -458,154 +440,151 @@ const SimulationArea = ({
 
   return (
     <div className="simulation-area">
-      <div className="simulation-header-bar">
-        <h3 className="simulation-area-title">{t.title}</h3>
-      </div>
-
-      <div className="simulation-toolbar">
-        <div className="simulation-actions">
-          <button type="button" className="simulation-btn" onClick={handleResetToBaseline}>
-            {t.resetToLive}
-          </button>
-          <button type="button" className="simulation-btn btn-clear" onClick={handleClearAll}>
-            {t.clearAll}
-          </button>
-          <button
-            type="button"
-            className="simulation-btn btn-add-sim-asset"
-            onClick={() => setIsAddAssetOpen((prev) => !prev)}
-          >
-            {t.addSimAsset}
-          </button>
-        </div>
-
-        <div className="simulation-controls-wrap">
-          {/* CDI Rate Control */}
-          <div className="simulation-cdi-control">
-            <label htmlFor="sim-cdi-input">{t.cdiOverride}</label>
-            <input
-              id="sim-cdi-input"
-              className="simulation-cdi-input"
-              type="number"
-              step="0.0001"
-              min="0"
-              value={customCdi}
-              onChange={(e) => setCustomCdi(e.target.value)}
-            />
-            <span className="simulation-cdi-annual">
-              ({t.cdiAnnual} {formatDecimal(annualCdi)}%)
-            </span>
-          </div>
-
-          {/* Inflation (IPCA) Control */}
-          <div className="simulation-inflation-control">
-            <label className="simulation-inflation-toggle-label">
-              <input
-                type="checkbox"
-                checked={adjustInflation}
-                onChange={(e) => setAdjustInflation(e.target.checked)}
-              />
-              <span>{t.inflationToggle}</span>
-            </label>
-            {adjustInflation && (
-              <div className="simulation-inflation-input-wrap">
-                <label htmlFor="sim-ipca-input">{t.annualIpcaLabel}</label>
-                <input
-                  id="sim-ipca-input"
-                  className="simulation-ipca-input"
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="50"
-                  value={annualIpca}
-                  onChange={(e) => setAnnualIpca(e.target.value)}
-                />
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Add Simulation Asset Form / Drawer */}
-      {isAddAssetOpen && (
-        <form className="sim-add-asset-form" onSubmit={handleAddSimAsset}>
-          <div className="sim-form-header">
-            <h4>{t.addSimAsset}</h4>
+      <div className="simulation-toolbar-card">
+        <div className="simulation-header-bar">
+          <h3 className="simulation-area-title">{t.title}</h3>
+          <div className="simulation-actions">
+            <button type="button" className="simulation-btn" onClick={handleResetToBaseline}>
+              {t.resetToLive}
+            </button>
+            <button type="button" className="simulation-btn btn-clear" onClick={handleClearAll}>
+              {t.clearAll}
+            </button>
             <button
               type="button"
-              className="sim-form-close"
-              onClick={() => setIsAddAssetOpen(false)}
+              className="simulation-btn btn-add-sim-asset"
+              onClick={() => setIsAddAssetOpen((prev) => !prev)}
             >
-              ×
+              {t.addSimAsset}
             </button>
           </div>
-          <div className="sim-form-fields">
-            <div className="sim-form-field">
-              <label>{t.assetName}</label>
+        </div>
+
+        <div className="simulation-toolbar">
+          <div className="simulation-controls-wrap">
+            <div className="simulation-cdi-control">
+              <label htmlFor="sim-cdi-input">{t.cdiOverride}</label>
               <input
-                type="text"
-                required
-                placeholder="Ex: CDB 110% CDI"
-                value={simAssetForm.name}
-                onChange={(e) => setSimAssetForm({ ...simAssetForm, name: e.target.value })}
-              />
-            </div>
-            <div className="sim-form-field">
-              <label>{t.investedAmount}</label>
-              <input
+                id="sim-cdi-input"
+                className="simulation-cdi-input"
                 type="number"
-                step="0.01"
-                min="0.01"
-                required
-                placeholder="0.00"
-                value={simAssetForm.investedAmount}
-                onChange={(e) => setSimAssetForm({ ...simAssetForm, investedAmount: e.target.value })}
-              />
-            </div>
-            <div className="sim-form-field">
-              <label>{t.yieldRate}</label>
-              <input
-                type="number"
-                step="1"
+                step="0.0001"
                 min="0"
-                required
-                placeholder="100"
-                value={simAssetForm.yieldRate}
-                onChange={(e) => setSimAssetForm({ ...simAssetForm, yieldRate: e.target.value })}
+                value={customCdi}
+                onChange={(e) => setCustomCdi(e.target.value)}
               />
+              <span className="simulation-cdi-annual">
+                ({t.cdiAnnual} {formatDecimal(annualCdi)}%)
+              </span>
             </div>
-            <div className="sim-form-field">
-              <label>{t.creationDate}</label>
-              <input
-                type="date"
-                value={simAssetForm.creationDate || baselineDateKey}
-                onChange={(e) => setSimAssetForm({ ...simAssetForm, creationDate: e.target.value })}
-              />
-            </div>
-            <div className="sim-form-field checkbox-field">
-              <label>
+
+            <div className="simulation-inflation-control">
+              <label className="simulation-inflation-toggle-label">
                 <input
                   type="checkbox"
-                  checked={simAssetForm.applyTax}
-                  onChange={(e) => setSimAssetForm({ ...simAssetForm, applyTax: e.target.checked })}
+                  checked={adjustInflation}
+                  onChange={(e) => setAdjustInflation(e.target.checked)}
                 />
-                <span>{t.applyTax}</span>
+                <span>{t.inflationToggle}</span>
               </label>
+              {adjustInflation && (
+                <div className="simulation-inflation-input-wrap">
+                  <label htmlFor="sim-ipca-input">{t.annualIpcaLabel}</label>
+                  <input
+                    id="sim-ipca-input"
+                    className="simulation-ipca-input"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="50"
+                    value={annualIpca}
+                    onChange={(e) => setAnnualIpca(e.target.value)}
+                  />
+                </div>
+              )}
             </div>
           </div>
-          <div className="sim-form-actions">
-            <button type="button" className="simulation-btn" onClick={() => setIsAddAssetOpen(false)}>
-              {t.cancel}
-            </button>
-            <button type="submit" className="simulation-btn btn-save">
-              {t.saveAsset}
-            </button>
-          </div>
-        </form>
-      )}
+        </div>
+
+        {isAddAssetOpen && (
+          <form className="sim-add-asset-form" onSubmit={handleAddSimAsset}>
+            <div className="sim-form-header">
+              <h4>{t.addSimAsset}</h4>
+              <button
+                type="button"
+                className="sim-form-close"
+                onClick={() => setIsAddAssetOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="sim-form-fields">
+              <div className="sim-form-field">
+                <label>{t.assetName}</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ex: CDB 110% CDI"
+                  value={simAssetForm.name}
+                  onChange={(e) => setSimAssetForm({ ...simAssetForm, name: e.target.value })}
+                />
+              </div>
+              <div className="sim-form-field">
+                <label>{t.investedAmount}</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  required
+                  placeholder="0.00"
+                  value={simAssetForm.investedAmount}
+                  onChange={(e) => setSimAssetForm({ ...simAssetForm, investedAmount: e.target.value })}
+                />
+              </div>
+              <div className="sim-form-field">
+                <label>{t.yieldRate}</label>
+                <input
+                  type="number"
+                  step="1"
+                  min="0"
+                  required
+                  placeholder="100"
+                  value={simAssetForm.yieldRate}
+                  onChange={(e) => setSimAssetForm({ ...simAssetForm, yieldRate: e.target.value })}
+                />
+              </div>
+              <div className="sim-form-field">
+                <label>{t.creationDate}</label>
+                <input
+                  type="date"
+                  value={simAssetForm.creationDate || baselineDateKey}
+                  onChange={(e) => setSimAssetForm({ ...simAssetForm, creationDate: e.target.value })}
+                />
+              </div>
+              <div className="sim-form-field checkbox-field">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={simAssetForm.applyTax}
+                    onChange={(e) => setSimAssetForm({ ...simAssetForm, applyTax: e.target.checked })}
+                  />
+                  <span>{t.applyTax}</span>
+                </label>
+              </div>
+            </div>
+            <div className="sim-form-actions">
+              <button type="button" className="simulation-btn" onClick={() => setIsAddAssetOpen(false)}>
+                {t.cancel}
+              </button>
+              <button type="submit" className="simulation-btn btn-save">
+                {t.saveAsset}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
 
       <div className="simulation-content">
-        {/* Calendar UI */}
         <div className="simulation-calendar-card">
           <div className="calendar-header">
             <button
@@ -653,11 +632,10 @@ const SimulationArea = ({
           </div>
         </div>
 
-        {/* Projection Results */}
         <div className="simulation-results-card">
           <div className="simulation-results-header">
             <h3>{t.projectionsTitle}</h3>
-            {targetDate && <span style={{ fontSize: '13px', color: 'var(--accent-blue)' }}>{t.targetDate}: {formatDateKey(targetDate, locale)}</span>}
+            {targetDate && <span className="simulation-target-date-badge">{t.targetDate}: {formatDateKey(targetDate, locale)}</span>}
           </div>
 
           {projection ? (
@@ -679,11 +657,11 @@ const SimulationArea = ({
                     {adjustInflation && <span className="sim-badge real">{t.realBadge}</span>}
                   </div>
                   <strong>
-                    R$ {formatMoney(adjustInflation ? projection.realProjectedIncome : projection.totalProjectedIncome)}
+                    R$ {displayMoney(adjustInflation ? projection.realProjectedIncome : projection.totalProjectedIncome)}
                   </strong>
                   {adjustInflation && projection.deflator > 1 && (
                     <small className="sim-metric-subtext">
-                      {t.nominalBadge}: R$ {formatMoney(projection.totalProjectedIncome)}
+                      {t.nominalBadge}: R$ {displayMoney(projection.totalProjectedIncome)}
                     </small>
                   )}
                 </div>
@@ -694,23 +672,23 @@ const SimulationArea = ({
                     {adjustInflation && <span className="sim-badge real">{t.realBadge}</span>}
                   </div>
                   <strong>
-                    R$ {formatMoney(adjustInflation ? projection.realProjectedNetWorth : projection.projectedInvestedTotal)}
+                    R$ {displayMoney(adjustInflation ? projection.realProjectedNetWorth : projection.projectedInvestedTotal)}
                   </strong>
                   {adjustInflation && projection.deflator > 1 && (
                     <small className="sim-metric-subtext">
-                      {t.nominalBadge}: R$ {formatMoney(projection.projectedInvestedTotal)}
+                      {t.nominalBadge}: R$ {displayMoney(projection.projectedInvestedTotal)}
                     </small>
                   )}
                 </div>
 
                 {adjustInflation && (
-                  <div className="simulation-metric highlight-ipca" style={{ gridColumn: 'span 2' }}>
+                  <div className="simulation-metric highlight-ipca span-two">
                     <div className="sim-metric-title-row">
                       <span>{t.accumulatedInflation} ({annualIpca}% a.a.)</span>
                       <span className="sim-badge-pill">+{formatDecimal(projection.accumulatedInflationPct)}%</span>
                     </div>
                     <small className="sim-inflation-details">
-                      {t.realPurchasingPower}: <strong>R$ {formatMoney(projection.realProjectedNetWorth)}</strong>
+                      {t.realPurchasingPower}: <strong>R$ {displayMoney(projection.realProjectedNetWorth)}</strong>
                     </small>
                   </div>
                 )}
@@ -728,7 +706,7 @@ const SimulationArea = ({
                           </span>
                           <span className="catchup-slot-name">{slot.name}</span>
                         </div>
-                        <span className="catchup-slot-price">R$ {formatMoney(slot.price)}</span>
+                        <span className="catchup-slot-price">R$ {displayMoney(slot.price)}</span>
                       </div>
                     ))}
                   </div>
@@ -740,19 +718,18 @@ const SimulationArea = ({
           ) : (
             <div className="simulation-empty-state">
               <div className="sim-empty-icon" aria-hidden="true">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                   <line x1="16" y1="2" x2="16" y2="6" />
                   <line x1="8" y1="2" x2="8" y2="6" />
                   <line x1="3" y1="10" x2="21" y2="10" />
-                  <circle cx="12" cy="15" r="2" />
                 </svg>
               </div>
               <h4>{locale === 'pt' ? 'Escolha uma Data Alvo' : 'Select Target Date'}</h4>
               <p>
                 {locale === 'pt'
-                  ? 'Clique em um dia útil no calendário ou use um dos atalhos rápidos abaixo para projetar rendimentos e poder de compra.'
-                  : 'Click any business day on the calendar or pick a quick horizon shortcut below to simulate wealth growth.'}
+                  ? 'Selecione um dia útil no calendário ou use um horizonte rápido abaixo.'
+                  : 'Select a business day on the calendar or pick a horizon shortcut below.'}
               </p>
               <div className="sim-quick-chips">
                 <button type="button" className="sim-quick-chip" onClick={() => handleQuickHorizon(30)}>
@@ -773,7 +750,6 @@ const SimulationArea = ({
         </div>
       </div>
 
-      {/* Simulation Assets Overview Bar */}
       <div className="simulation-assets-section">
         <div className="sim-assets-header">
           <h4>{t.assetsSummary} ({simDatabase.assets?.length || 0})</h4>
@@ -789,7 +765,7 @@ const SimulationArea = ({
             >
               <div className="sim-chip-info">
                 <strong>{asset.name}</strong>
-                <span>R$ {formatMoney(asset.investedAmount)} ({asset.yieldRate}% CDI)</span>
+                <span>R$ {displayMoney(asset.investedAmount)} ({asset.yieldRate}% CDI)</span>
               </div>
               {asset.isSimulationOnly && (
                 <div className="sim-chip-actions">
