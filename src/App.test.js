@@ -1,5 +1,5 @@
 /* eslint-disable testing-library/no-node-access */
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor, within, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from './App';
 
@@ -1858,6 +1858,91 @@ test('persists theme in localStorage, masks TimeArea and SimulationArea on priva
   await userEvent.click(eyeBtn);
   expect(screen.queryByText(/2\.400,00/)).toBeNull();
 });
+
+test('reorders wishlist and recovery items via drag-and-drop and renders empty state when queue is empty', () => {
+  window.localStorage.setItem('kyos-last-opened-date', '2026-10-19');
+  window.localStorage.setItem('kyos-database', JSON.stringify({
+    schemaVersion: 11,
+    simulatedDate: '2026-10-19',
+    assets: [],
+    wishlistSlots: [
+      { id: 'w-first', expenseName: 'First Item', price: 100, originalPrice: 100, type: 'expense' },
+      { id: 'w-second', expenseName: 'Second Item', price: 200, originalPrice: 200, type: 'expense' }
+    ],
+    recoverySlots: [],
+    milestone: { target: 10000 },
+    purchasedTotal: 0,
+    recoverySpentTotal: 0,
+    expenses: []
+  }));
+
+  render(<App />);
+
+  // Empty recovery queue shows 'No items queued'
+  expect(screen.getByText('No items queued')).toBeInTheDocument();
+
+  // Drag Second Item onto First Item in Wishlist
+  const firstSlot = document.querySelector('[data-slot-id="w-first"]');
+  const secondSlot = document.querySelector('[data-slot-id="w-second"]');
+  expect(firstSlot).toBeInTheDocument();
+  expect(secondSlot).toBeInTheDocument();
+
+  fireEvent.dragStart(secondSlot);
+  fireEvent.dragOver(firstSlot);
+  fireEvent.drop(firstSlot);
+  fireEvent.dragEnd(secondSlot);
+
+  const savedDb = JSON.parse(window.localStorage.getItem('kyos-database'));
+  expect(savedDb.wishlistSlots.map((s) => s.id)).toEqual(['w-second', 'w-first']);
+});
+
+test('edits an existing expense inline in Balance section and updates totals', async () => {
+  window.localStorage.setItem('kyos-last-opened-date', '2026-10-19');
+  window.localStorage.setItem('kyos-database', JSON.stringify({
+    schemaVersion: 11,
+    simulatedDate: '2026-10-19',
+    assets: [],
+    wishlistSlots: [],
+    recoverySlots: [],
+    milestone: { target: 10000 },
+    purchasedTotal: 1200,
+    recoverySpentTotal: 0,
+    expenses: [
+      { id: 'exp-edit-1', name: 'Desk Lamp', amount: 1200, date: '2026-05-10', category: 'wishlist' }
+    ]
+  }));
+
+  render(<App />);
+
+  const balanceBtn = await screen.findByRole('button', { name: 'Balance' });
+  await userEvent.click(balanceBtn);
+
+  expect(screen.getByText('Desk Lamp')).toBeInTheDocument();
+
+  // Click inline edit button for Desk Lamp
+  const editBtn = screen.getByRole('button', { name: /edit desk lamp/i });
+  await userEvent.click(editBtn);
+
+  const nameInput = screen.getByDisplayValue('Desk Lamp');
+  const amountInput = screen.getByDisplayValue('1200');
+
+  await userEvent.clear(nameInput);
+  await userEvent.type(nameInput, 'Studio Monitor Lamp');
+  await userEvent.clear(amountInput);
+  await userEvent.type(amountInput, '1500');
+
+  const saveBtn = screen.getByRole('button', { name: 'Save' });
+  await userEvent.click(saveBtn);
+
+  expect(screen.getByText('Studio Monitor Lamp')).toBeInTheDocument();
+  expect(screen.queryByText('Desk Lamp')).toBeNull();
+
+  const savedDb = JSON.parse(window.localStorage.getItem('kyos-database'));
+  expect(savedDb.expenses[0].name).toBe('Studio Monitor Lamp');
+  expect(savedDb.expenses[0].amount).toBe(1500);
+  expect(savedDb.purchasedTotal).toBe(1500);
+});
+
 
 
 

@@ -95,7 +95,7 @@
 .about-priority-banner {
     background: var(--bg-surface-card);
     border: 1px solid var(--border-card);
-    border-radius: 10px;
+    border-radius: 10px 10px 0 0;
     padding: 14px 16px;
     display: flex;
     flex-direction: column;
@@ -121,7 +121,7 @@
     display: flex;
     align-items: stretch;
     justify-content: space-between;
-    gap: 8px;
+    gap: 6px;
 }
 
 .about-flow-step {
@@ -131,9 +131,17 @@
     flex-direction: column;
     gap: 4px;
     padding: 10px 12px;
-    border-radius: 8px;
+    border-radius: 0;
     background: var(--bg-surface-elevated);
     border: 1px solid var(--border-subtle);
+}
+
+.about-flow-step.income {
+    border-radius: 8px 0 0 8px;
+}
+
+.about-flow-step.wishlist {
+    border-radius: 0 8px 8px 0;
 }
 
 .about-flow-step-head {
@@ -178,13 +186,13 @@
 .about-cards-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 6px;
 }
 
 .about-card {
     background: var(--bg-surface-card);
     border: 1px solid var(--border-card);
-    border-radius: 10px;
+    border-radius: 0;
     padding: 14px 16px;
     display: flex;
     flex-direction: column;
@@ -193,6 +201,7 @@
 
 .about-card.card-taxes {
     grid-column: span 2;
+    border-radius: 0 0 10px 10px;
 }
 
 .about-card-top {

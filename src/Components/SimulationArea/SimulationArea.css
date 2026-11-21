@@ -1,7 +1,7 @@
 .simulation-area {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 6px;
     flex: 1 1 auto;
     min-height: min-content;
     padding: 0;
@@ -13,7 +13,7 @@
 .simulation-toolbar-card {
     background: var(--bg-surface);
     border: 1px solid var(--border-card);
-    border-radius: 10px;
+    border-radius: 0;
     padding: 14px 16px;
     display: flex;
     flex-direction: column;
@@ -49,7 +49,7 @@
 
 .simulation-actions {
     display: flex;
-    gap: 8px;
+    gap: 4px;
     background: transparent;
     flex-wrap: wrap;
 }
@@ -57,7 +57,7 @@
 .simulation-btn {
     padding: 6px 12px;
     border: 1px solid var(--border-card);
-    border-radius: 6px;
+    border-radius: 0;
     background: var(--bg-surface-elevated);
     color: var(--text-secondary);
     cursor: pointer;
@@ -65,6 +65,14 @@
     font-size: 12.5px;
     font-weight: 500;
     transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.simulation-actions .simulation-btn:first-child {
+    border-radius: 6px 0 0 6px;
+}
+
+.simulation-actions .simulation-btn:last-child {
+    border-radius: 0 6px 6px 0;
 }
 
 .simulation-btn:hover {
@@ -287,14 +295,19 @@
 .sim-form-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 8px;
+    gap: 4px;
     margin-top: 2px;
+}
+
+.sim-form-actions .simulation-btn:first-child {
+    border-radius: 6px 0 0 6px;
 }
 
 .sim-form-actions .btn-save {
     background: var(--accent-green);
     color: #ffffff;
     border-color: var(--accent-green);
+    border-radius: 0 6px 6px 0;
 }
 
 .sim-form-actions .btn-save:hover {
@@ -304,7 +317,7 @@
 .simulation-content {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
-    gap: 12px;
+    gap: 6px;
     background: transparent;
     flex: 1 1 auto;
     min-height: 0;
@@ -314,7 +327,7 @@
 /* Calendar Card */
 .simulation-calendar-card {
     border: 1px solid var(--border-card);
-    border-radius: 10px;
+    border-radius: 0;
     background: var(--bg-surface);
     padding: 16px;
     display: flex;
@@ -426,7 +439,7 @@
     justify-content: center;
     font-size: 12.5px;
     font-weight: 500;
-    border-radius: 6px;
+    border-radius: 0;
     cursor: pointer;
     border: 1px solid var(--border-subtle);
     background-color: var(--bg-surface-card);
@@ -485,7 +498,7 @@
 /* Projections Card */
 .simulation-results-card {
     border: 1px solid var(--border-card);
-    border-radius: 10px;
+    border-radius: 0;
     background: var(--bg-surface);
     padding: 16px;
     display: flex;
@@ -525,7 +538,7 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
 }
 
 .sim-quick-chip {
@@ -533,12 +546,20 @@
     background: var(--bg-surface-elevated);
     border: 1px solid var(--border-card);
     color: var(--text-secondary);
-    border-radius: 6px;
+    border-radius: 0;
     padding: 6px 10px;
     font-size: 12px;
     font-weight: 500;
     cursor: pointer;
     transition: border-color 0.12s ease, background-color 0.12s ease, color 0.12s ease;
+}
+
+.sim-quick-chips .sim-quick-chip:first-child {
+    border-radius: 6px 0 0 6px;
+}
+
+.sim-quick-chips .sim-quick-chip:last-child {
+    border-radius: 0 6px 6px 0;
 }
 
 .sim-quick-chip:hover {
@@ -565,22 +586,39 @@
 .simulation-metric-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+    gap: 6px;
     background: transparent;
 }
 
 .simulation-metric {
     background: var(--bg-surface-card);
     border: 1px solid var(--border-card);
-    border-radius: 8px;
+    border-radius: 0;
     padding: 11px 12px;
     display: flex;
     flex-direction: column;
     gap: 4px;
 }
 
+.simulation-metric-grid .simulation-metric:nth-child(1) {
+    border-top-left-radius: 8px;
+}
+
+.simulation-metric-grid .simulation-metric:nth-child(2) {
+    border-top-right-radius: 8px;
+}
+
+.simulation-metric-grid .simulation-metric:nth-child(3):nth-last-child(2) {
+    border-bottom-left-radius: 8px;
+}
+
+.simulation-metric-grid .simulation-metric:nth-child(4):last-child {
+    border-bottom-right-radius: 8px;
+}
+
 .simulation-metric.span-two {
     grid-column: span 2;
+    border-radius: 0 0 8px 8px;
 }
 
 .simulation-metric span {
@@ -622,6 +660,7 @@
     gap: 6px;
     max-height: 140px;
     overflow-y: auto;
+    padding-right: 10px;
     background: transparent;
 }
 
@@ -665,99 +704,6 @@
     font-family: var(--font-mono);
     font-size: 13px;
     color: var(--text-primary);
-}
-
-/* Simulation Assets Section */
-.simulation-assets-section {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 14px 16px;
-    border: 1px solid var(--border-card);
-    border-radius: 10px;
-    background: var(--bg-surface);
-}
-
-.sim-assets-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.sim-assets-header h4 {
-    margin: 0;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.sim-assets-chips-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.sim-asset-chip {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--bg-surface-card);
-    border: 1px solid var(--border-card);
-    border-radius: 8px;
-    padding: 8px 12px;
-}
-
-.sim-asset-chip.is-simulated {
-    border-color: var(--border-strong);
-}
-
-.sim-chip-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.sim-chip-info strong {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-primary);
-}
-
-.sim-chip-info span {
-    font-family: var(--font-mono);
-    font-size: 11.5px;
-    color: var(--text-secondary);
-    font-variant-numeric: tabular-nums;
-}
-
-.sim-chip-actions {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.sim-asset-tag {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 500;
-    text-transform: uppercase;
-    color: var(--text-muted);
-}
-
-.sim-chip-delete {
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    font-size: 16px;
-    line-height: 1;
-    cursor: pointer;
-    padding: 2px 4px;
-    border-radius: 4px;
-    transition: color 0.12s ease;
-}
-
-.sim-chip-delete:hover {
-    color: var(--accent-red);
 }
 
 @media (max-width: 720px) {

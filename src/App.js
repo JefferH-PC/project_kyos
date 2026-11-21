@@ -1,16 +1,17 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import './App.css';
 import Header from './Components/Header/Header';
-import MiddleMilestoneCard from './Components/MiddleMilestoneCard/MiddleMilestoneCard';
 import SectionButton from './Components/SectionButton/SectionButton';
 import TimeArea from './Components/TimeArea/TimeArea';
-import MiddleNetWorthCard from './MiddleNetWorthCard/MiddleNetWorthCard';
-import RemoveButton from './Components/RemoveButton/RemoveButton';
 import CatchUpModal from './Components/CatchUpModal/CatchUpModal';
 import AboutModal from './Components/AboutModal/AboutModal';
 import SyncModal from './Components/SyncModal/SyncModal';
 import SimulationArea from './Components/SimulationArea/SimulationArea';
-import { formatDecimal, formatMoney, formatDateKey } from './utils/formatters';
+import NetWorthArea from './Components/NetWorthArea/NetWorthArea';
+import BalanceArea from './Components/BalanceArea/BalanceArea';
+import InvestmentsArea from './Components/InvestmentsArea/InvestmentsArea';
+import { formatMoney } from './utils/formatters';
+import { APP_TEXT } from './utils/translations';
 import {
   getDateKey,
   parseDateKey,
@@ -34,7 +35,7 @@ import {
   DEFAULT_CDI_RATE,
   LATEST_CDI_KEY
 } from './utils/cdi';
-import { calculateTaxBreakdown, getCalendarDaysElapsed } from './utils/tax';
+import { calculateTaxBreakdown } from './utils/tax';
 import { distributeDailyIncome } from './utils/incomeDistribution';
 
 const DATABASE_VERSION = 11;
@@ -54,229 +55,6 @@ const normalizeIncomeHistory = (incomeHistory) => Object.entries(incomeHistory |
   if (isValidDateKey(date) && Number.isFinite(numericIncome) && numericIncome >= 0) history[date] = numericIncome;
   return history;
 }, {});
-
-const APP_TEXT = {
-  en: {
-    selectLanguage: 'Select language',
-    languageName: 'English',
-    hideMoneyValues: 'Hide money values',
-    showMoneyValues: 'Show money values',
-    toggleTheme: 'Toggle theme',
-    netWorth: 'Net Worth',
-    balance: 'Balance',
-    investments: 'Investments',
-    simulation: 'Simulation',
-    topInvestment: 'Top Investment',
-    cdi: 'CDI',
-    assets: 'Assets',
-    date: 'Date',
-    edit: 'Edit',
-    save: 'Save',
-    cancel: 'Cancel',
-    addInvestment: 'Add investment',
-    add: 'Add',
-    name: 'Name',
-    yieldRate: 'Yield %',
-    investedAmount: 'Invested amount',
-    yield: 'Yield',
-    invested: 'Invested',
-    dailyIncome: 'Daily income',
-    totalDailyIncome: 'Total daily income',
-    totalIncome: 'Total income',
-    spent: 'Spent',
-    lastYear: 'Last Year',
-    moneyBalance: "Money's Balance",
-    total: 'Total',
-    milestone: 'Milestone',
-    today: 'Today',
-    yesterday: 'Yesterday',
-    week: 'Week',
-    lastWeek: 'Last Week',
-    month: 'Month',
-    lastMonth: 'Last Month',
-    year: 'Year',
-    lastYearLabel: 'Last Year',
-    wishlist: 'Wishlist',
-    recovery: 'Recovery',
-    expenseName: 'Expense name',
-    expenseValue: 'Expense value',
-    totalLabel: 'Total',
-    days: 'days',
-    investmentsCount: 'Investments',
-    eyeToggle: 'Toggle visibility',
-    addExpense: 'Add expense',
-    completeSlot: 'Complete slot',
-    removeSlot: 'Remove slot',
-    returnSlot: 'Return slot from processing',
-    moveToProcessing: 'Move slot to processing',
-    holidayError: 'Unable to fetch holiday data. Auto-update paused. Check your connection.',
-    retry: 'Retry',
-    aboutKyos: 'How Kyos works',
-    exportData: 'Export backup (JSON)',
-    importData: 'Import backup (JSON)',
-    exportSuccess: 'Backup exported successfully!',
-    importSuccess: 'Backup imported successfully!',
-    importError: 'Invalid backup file format.',
-    applyTaxLabel: 'Apply IR & IOF Tax (CDB / Tesouro)',
-    taxExemptBadge: 'Isento',
-    taxableBadge: 'Tributado',
-    toggleTaxTip: 'Toggle tax (CDB / Tesouro vs LCI / LCA)',
-    gross: 'Gross',
-    net: 'Net',
-    netIncome: 'Net Income',
-    netDailyIncome: 'Net daily income',
-    netTotalIncome: 'Net total income',
-    taxDetails: 'Taxes',
-    investmentDate: 'Investment Date',
-    investedSince: 'Invested on',
-    calendarDaysCount: 'days elapsed',
-    syncIncomes: 'Sync Incomes',
-    syncIncomesTip: 'Recalculate and update all existing incomes coherently from their creation dates to today',
-    syncedSuccess: 'Incomes synchronized coherently!',
-    iofRateLabel: 'IOF',
-    irRateLabel: 'IR',
-    appliedAmount: 'Principal Invested',
-    grossBalance: 'Gross Balance',
-    netBalance: 'Net Balance',
-    currentBalance: 'Current Balance',
-    taxDeductedBadge: 'Net (IR & IOF Deducted)',
-    mobileNavWishlist: 'Wishlist',
-    mobileNavDashboard: 'Dashboard',
-    mobileNavRecovery: 'Recovery',
-    milestoneProgress: 'Progress',
-    capitalAllocation: 'Capital Distribution',
-    totalFlow: 'Total Capital Flow',
-    capitalEfficiency: 'Preserved vs Outflow',
-    installApp: 'Install App (PWA)',
-    appInstalled: 'App installed successfully!',
-    offlineActive: 'Offline mode active - data saved locally',
-    onlineRestored: 'Online connection restored',
-    none: 'None',
-    expensesTitle: 'Expenses & Capital Outflows',
-    expensesSubtitle: 'Record of funded purchases, reimbursed debts, and direct costs',
-    allYears: 'All',
-    filterByYear: 'Filter by year',
-    wishlistCategory: 'Wishlist',
-    recoveryCategory: 'Recovery',
-    noExpensesFound: 'No expenses recorded for this period.',
-    totalExpenses: 'Total Outflows',
-    wishlistOutflows: 'Wishlist Funded',
-    recoveryOutflows: 'Recovery Reimbursed',
-    addExpenseCost: 'Add Expense',
-    itemSingular: 'item',
-    itemPlural: 'items'
-  },
-  pt: {
-    selectLanguage: 'Selecionar idioma',
-    languageName: 'Português',
-    hideMoneyValues: 'Ocultar valores monetários',
-    showMoneyValues: 'Mostrar valores monetários',
-    toggleTheme: 'Alternar tema',
-    netWorth: 'Patrimônio',
-    balance: 'Saldo',
-    investments: 'Investimentos',
-    simulation: 'Simulação',
-    topInvestment: 'Maior investimento',
-    cdi: 'CDI',
-    assets: 'Ativos',
-    date: 'Data',
-    edit: 'Editar',
-    save: 'Salvar',
-    cancel: 'Cancelar',
-    addInvestment: 'Adicionar investimento',
-    add: 'Adicionar',
-    name: 'Nome',
-    yieldRate: 'Rendimento %',
-    investedAmount: 'Valor investido',
-    yield: 'Rendimento',
-    invested: 'Investido',
-    dailyIncome: 'Rendimento diário',
-    totalDailyIncome: 'Rendimento diário total',
-    totalIncome: 'Rendimento total',
-    spent: 'Gasto',
-    lastYear: 'Ano anterior',
-    moneyBalance: 'Balanço financeiro',
-    total: 'Total',
-    milestone: 'Meta',
-    today: 'Hoje',
-    yesterday: 'Ontem',
-    week: 'Semana',
-    lastWeek: 'Semana anterior',
-    month: 'Mês',
-    lastMonth: 'Mês anterior',
-    year: 'Ano',
-    lastYearLabel: 'Ano anterior',
-    wishlist: 'Lista de desejos',
-    recovery: 'Recuperação',
-    expenseName: 'Nome da despesa',
-    expenseValue: 'Valor da despesa',
-    totalLabel: 'Total',
-    days: 'dias',
-    investmentsCount: 'Investimentos',
-    eyeToggle: 'Alternar visibilidade',
-    addExpense: 'Adicionar despesa',
-    completeSlot: 'Concluir item',
-    removeSlot: 'Remover item',
-    returnSlot: 'Retornar item do processamento',
-    moveToProcessing: 'Mover item para processamento',
-    holidayError: 'Não foi possível carregar os feriados. Atualização automática pausada. Verifique sua conexão.',
-    retry: 'Tentar novamente',
-    aboutKyos: 'Como o Kyos funciona',
-    exportData: 'Exportar backup (JSON)',
-    importData: 'Importar backup (JSON)',
-    exportSuccess: 'Backup exportado com sucesso!',
-    importSuccess: 'Backup importado com sucesso!',
-    importError: 'Formato de arquivo inválido.',
-    applyTaxLabel: 'Descontar IR e IOF (CDB / Tesouro)',
-    taxExemptBadge: 'Isento',
-    taxableBadge: 'Tributado',
-    toggleTaxTip: 'Alternar tributação (CDB / Tesouro vs LCI / LCA)',
-    gross: 'Bruto',
-    net: 'Líquido',
-    netIncome: 'Rendimento Líquido',
-    netDailyIncome: 'Rendimento diário líquido',
-    netTotalIncome: 'Rendimento total líquido',
-    taxDetails: 'Tributação',
-    investmentDate: 'Data do Investimento',
-    investedSince: 'Investido em',
-    calendarDaysCount: 'dias decorridos',
-    syncIncomes: 'Sincronizar Rendimentos',
-    syncIncomesTip: 'Recalcular e atualizar todos os rendimentos de forma coerente desde a data de criação até hoje',
-    syncedSuccess: 'Rendimentos sincronizados com sucesso!',
-    iofRateLabel: 'IOF',
-    irRateLabel: 'IR',
-    appliedAmount: 'Valor Aplicado',
-    grossBalance: 'Saldo Bruto',
-    netBalance: 'Saldo Líquido',
-    currentBalance: 'Saldo Atual',
-    taxDeductedBadge: 'Líquido (IR e IOF Deduzidos)',
-    mobileNavWishlist: 'Lista de Desejos',
-    mobileNavDashboard: 'Painel',
-    mobileNavRecovery: 'Recuperação',
-    milestoneProgress: 'Progresso',
-    capitalAllocation: 'Distribuição de Capital',
-    totalFlow: 'Fluxo Total de Capital',
-    capitalEfficiency: 'Preservado vs Saídas',
-    installApp: 'Instalar Aplicativo (PWA)',
-    appInstalled: 'Aplicativo instalado com sucesso!',
-    offlineActive: 'Modo offline ativo - dados salvos localmente',
-    onlineRestored: 'Conexão online restabelecida',
-    none: 'Nenhum',
-    expensesTitle: 'Despesas e Saídas de Capital',
-    expensesSubtitle: 'Registro de compras realizadas, recuperações quitadas e custos diretos',
-    allYears: 'Todos',
-    filterByYear: 'Filtrar por ano',
-    wishlistCategory: 'Lista de Desejos',
-    recoveryCategory: 'Recuperação',
-    noExpensesFound: 'Nenhuma despesa registrada para este período.',
-    totalExpenses: 'Total de Saídas',
-    wishlistOutflows: 'Desejos Realizados',
-    recoveryOutflows: 'Recuperações Quitadas',
-    addExpenseCost: 'Adicionar Despesa',
-    itemSingular: 'item',
-    itemPlural: 'itens'
-  }
-};
 
 const defaultDatabase = {
   schemaVersion: DATABASE_VERSION,
@@ -430,13 +208,6 @@ function App() {
     applyTax: false
   });
   const [selectedExpenseYear, setSelectedExpenseYear] = useState('all');
-  const [isAddDirectExpenseOpen, setIsAddDirectExpenseOpen] = useState(false);
-  const [directExpenseForm, setDirectExpenseForm] = useState({
-    name: '',
-    amount: '',
-    date: '',
-    category: 'wishlist'
-  });
 
   const hasRunCatchUpRef = useRef(false);
   const isCatchingUpRef = useRef(false);
@@ -1271,24 +1042,49 @@ function App() {
     });
   };
 
-  const handleAddDirectExpense = (event) => {
-    event.preventDefault();
-    const amt = Number(directExpenseForm.amount);
-    if (!directExpenseForm.name.trim() || !Number.isFinite(amt) || amt <= 0) return;
+  const addDirectExpense = ({ name, amount, date, category }) => {
+    const amt = Number(amount);
+    if (!name || !Number.isFinite(amt) || amt <= 0) return;
     const newExp = {
       id: `exp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      name: directExpenseForm.name.trim(),
+      name,
       amount: amt,
-      date: directExpenseForm.date && isValidDateKey(directExpenseForm.date) ? directExpenseForm.date : getDateKey(actualDate),
-      category: directExpenseForm.category === 'recovery' ? 'recovery' : 'wishlist'
+      date: date && isValidDateKey(date) ? date : getDateKey(actualDate),
+      category: category === 'recovery' ? 'recovery' : 'wishlist'
     };
     setDatabase((current) => ({
       ...current,
       expenses: [newExp, ...(current.expenses || [])],
       purchasedTotal: newExp.category === 'wishlist' ? Number(current.purchasedTotal || 0) + amt : current.purchasedTotal
     }));
-    setDirectExpenseForm({ name: '', amount: '', date: '', category: 'wishlist' });
-    setIsAddDirectExpenseOpen(false);
+  };
+
+  const updateExpense = (id, { name, amount, date, category }) => {
+    const amt = Number(amount);
+    if (!name || !Number.isFinite(amt) || amt <= 0) return;
+    const validCategory = category === 'recovery' ? 'recovery' : 'wishlist';
+
+    setDatabase((current) => {
+      const existing = (current.expenses || []).find((e) => e.id === id);
+      const oldWishlistAmt = existing?.category === 'wishlist' ? Number(existing.amount || 0) : 0;
+      const newWishlistAmt = validCategory === 'wishlist' ? amt : 0;
+      const updatedExpenses = (current.expenses || []).map((e) => {
+        if (e.id !== id) return e;
+        return {
+          ...e,
+          name,
+          amount: amt,
+          date: date && isValidDateKey(date) ? date : e.date,
+          category: validCategory
+        };
+      });
+
+      return {
+        ...current,
+        expenses: updatedExpenses,
+        purchasedTotal: Math.max(0, Number(current.purchasedTotal || 0) - oldWishlistAmt + newWishlistAmt)
+      };
+    });
   };
 
   const renderMiddleContent = () => {
@@ -1306,519 +1102,88 @@ function App() {
 
     if (activeSection === 'Investments') {
       return (
-        <div className='investments-view'>
-          <div className='investment-summary-grid'>
-            <div className='investment-summary-card'>
-              <div className='investment-summary-top'>
-                <h2>{t.topInvestment}</h2>
-                <span className='top-investment-name'>· {topInvestment.name}</span>
-              </div>
-              <strong>R$ {displayMoney(topInvestment.investedAmount)}</strong>
-            </div>
-            <div className='investment-summary-card cdi-investment-card'>
-              <h2>{t.totalDailyIncome}</h2>
-              <strong>R$ {displayMoney(totalDailyIncome)}</strong>
-            </div>
-          </div>
-          <div className='assets-panel'>
-            <div className='assets-heading'>
-              <div className='assets-heading-title'>
-                <h2>{t.assets}</h2>
-                <span className='assets-count-label'>{database.assets.length}</span>
-              </div>
-              <div className='assets-heading-actions'>
-                <button
-                  type='button'
-                  className='sync-incomes-btn'
-                  onClick={handleManualSync}
-                  title={t.syncIncomesTip}
-                  aria-label={t.syncIncomes}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 256 256" fill="currentColor">
-                    <path d="M224,128a96,96,0,0,1-96,96A95.8,95.8,0,0,1,64,195.9V216a8,8,0,0,1-16,0V168a8,8,0,0,1,8-8h48a8,8,0,0,1,0,16H76.7A79.9,79.9,0,0,0,128,208a80,80,0,0,0,80-80,8,8,0,0,1,16,0ZM48,88a8,8,0,0,1,8-8H84.3A79.9,79.9,0,0,1,128,48a80,80,0,0,1,80,80,8,8,0,0,1,16,0A96,96,0,0,0,64,60.1V40a8,8,0,0,1-16,0V88A8,8,0,0,1,48,88Z"/>
-                  </svg>
-                  <span>{t.syncIncomes}</span>
-                </button>
-                <button
-                  type='button'
-                  className='add-investment-btn'
-                  aria-label={t.addInvestment}
-                  onClick={() => setIsAssetFormOpen((current) => !current)}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 256 256" fill="currentColor">
-                    <path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"/>
-                  </svg>
-                  <span>{t.addInvestment}</span>
-                </button>
-              </div>
-            </div>
-            {isAssetFormOpen && (
-              <form className='asset-form' onSubmit={addAsset}>
-                <div className='asset-form-grid'>
-                  <label className='asset-form-field'>
-                    <span>{t.name}</span>
-                    <input
-                      placeholder={t.name}
-                      value={assetForm.name}
-                      onChange={(event) => setAssetForm({ ...assetForm, name: event.target.value })}
-                      required
-                    />
-                  </label>
-                  <label className='asset-form-field'>
-                    <span>{t.yieldRate}</span>
-                    <input
-                      placeholder={t.yieldRate}
-                      type='number'
-                      min='0'
-                      step='0.01'
-                      value={assetForm.yieldRate}
-                      onChange={(event) => setAssetForm({ ...assetForm, yieldRate: event.target.value })}
-                    />
-                  </label>
-                  <label className='asset-form-field'>
-                    <span>{t.investedAmount}</span>
-                    <input
-                      placeholder={t.investedAmount}
-                      type='number'
-                      min='0'
-                      step='0.01'
-                      value={assetForm.investedAmount}
-                      onChange={(event) => setAssetForm({ ...assetForm, investedAmount: event.target.value })}
-                      required
-                    />
-                  </label>
-                  <label className='asset-form-field'>
-                    <span>{t.investmentDate}</span>
-                    <input
-                      type='date'
-                      aria-label={t.investmentDate}
-                      max={database.simulatedDate}
-                      value={assetForm.creationDate || ''}
-                      onChange={(event) => setAssetForm({ ...assetForm, creationDate: event.target.value })}
-                    />
-                  </label>
-                </div>
-                <div className='asset-form-footer'>
-                  <label className='asset-tax-checkbox-label'>
-                    <input
-                      type='checkbox'
-                      checked={assetForm.applyTax}
-                      onChange={(event) => setAssetForm({ ...assetForm, applyTax: event.target.checked })}
-                    />
-                    <span>{t.applyTaxLabel}</span>
-                  </label>
-                  <div className='asset-form-actions'>
-                    <button type='button' className='asset-cancel-btn' onClick={() => setIsAssetFormOpen(false)}>
-                      {t.cancel}
-                    </button>
-                    <button type='submit' className='asset-submit-btn'>{t.add}</button>
-                  </div>
-                </div>
-              </form>
-            )}
-            <div className='assets-grid'>
-              {database.assets.map((asset) => {
-                const dailyGross = getDailyAssetIncome(asset, cdiRate);
-                const daysElapsed = getCalendarDaysElapsed(asset.creationDate, actualDate);
-                const dailyTax = calculateTaxBreakdown(dailyGross, daysElapsed);
-                const totalTax = calculateTaxBreakdown(asset.totalIncome, daysElapsed);
-
-                return (
-                  <div className='asset-card' key={asset.id}>
-                    {editingAssetId === asset.id ? (
-                      <form className='asset-edit-form' onSubmit={saveAssetEdit}>
-                        <label className='asset-edit-label'>
-                          <span>{t.name}</span>
-                          <input
-                            value={editAssetForm.name}
-                            onChange={(e) => setEditAssetForm({ ...editAssetForm, name: e.target.value })}
-                            placeholder={t.name}
-                            required
-                          />
-                        </label>
-                        <label className='asset-edit-label'>
-                          <span>{t.yieldRate}</span>
-                          <input
-                            type='number'
-                            min='0'
-                            step='0.01'
-                            value={editAssetForm.yieldRate}
-                            onChange={(e) => setEditAssetForm({ ...editAssetForm, yieldRate: e.target.value })}
-                            placeholder={t.yieldRate}
-                          />
-                        </label>
-                        <label className='asset-edit-label'>
-                          <span>{t.investedAmount}</span>
-                          <input
-                            type='number'
-                            min='0'
-                            step='0.01'
-                            value={editAssetForm.investedAmount}
-                            onChange={(e) => setEditAssetForm({ ...editAssetForm, investedAmount: e.target.value })}
-                            placeholder={t.investedAmount}
-                            required
-                          />
-                        </label>
-                        <label className='asset-edit-label'>
-                          <span>{t.investmentDate}</span>
-                          <input
-                            type='date'
-                            aria-label={t.investmentDate}
-                            max={database.simulatedDate}
-                            value={editAssetForm.creationDate || ''}
-                            onChange={(e) => setEditAssetForm({ ...editAssetForm, creationDate: e.target.value })}
-                          />
-                        </label>
-                        <label className='asset-tax-checkbox-label'>
-                          <input
-                            type='checkbox'
-                            checked={editAssetForm.applyTax}
-                            onChange={(e) => setEditAssetForm({ ...editAssetForm, applyTax: e.target.checked })}
-                          />
-                          <span>{t.applyTaxLabel}</span>
-                        </label>
-                        <div className='asset-edit-actions'>
-                          <button type='submit' className='asset-save-btn'>{t.save}</button>
-                          <button type='button' className='asset-cancel-btn' onClick={cancelEditAsset}>{t.cancel}</button>
-                        </div>
-                      </form>
-                    ) : (
-                      <>
-                        <div className='asset-title'>
-                          <strong>{asset.name}</strong>
-                          <div className='asset-actions'>
-                            <button
-                              type='button'
-                              className={`asset-tax-toggle-btn ${asset.applyTax ? 'taxable' : 'exempt'}`}
-                              onClick={() => toggleAssetTax(asset.id)}
-                              title={t.toggleTaxTip}
-                              aria-label={`${t.toggleTaxTip} - ${asset.name}`}
-                            >
-                              {asset.applyTax ? t.taxableBadge : t.taxExemptBadge}
-                            </button>
-                            <button
-                              type='button'
-                              className='edit-asset-button'
-                              aria-label={`${t.edit} ${asset.name}`}
-                              title={t.edit}
-                              onClick={() => startEditAsset(asset)}
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 256 256" fill="currentColor">
-                                <path d="M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.68,147.31,64l24-24L216,84.68Z"></path>
-                              </svg>
-                            </button>
-                            <RemoveButton label={t.removeSlot} onClick={() => removeAsset(asset.id)}></RemoveButton>
-                          </div>
-                        </div>
-
-                        <div className='asset-metrics-grid'>
-                          <div className='asset-metric'>
-                            <strong>{t.yield}</strong>
-                            <p>{formatDecimal(asset.yieldRate)}% {t.cdi}</p>
-                          </div>
-                          <div className='asset-metric'>
-                            <strong>{t.invested}</strong>
-                            <p>R$ {displayMoney(asset.investedAmount)}</p>
-                          </div>
-
-                          {asset.applyTax ? (
-                            <>
-                              <div className='asset-metric'>
-                                <strong>{t.dailyIncome} ({t.net})</strong>
-                                <p>R$ {displayMoney(dailyTax.netYield)}</p>
-                                <small className='tax-gross-tag'>{t.gross}: R$ {displayMoney(dailyGross)}</small>
-                              </div>
-                              <div className='asset-metric'>
-                                <strong>{t.totalIncome} ({t.net})</strong>
-                                <p>R$ {displayMoney(totalTax.netYield)}</p>
-                                <small className='tax-gross-tag'>{t.gross}: R$ {displayMoney(asset.totalIncome)}</small>
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <div className='asset-metric'>
-                                <strong>{t.dailyIncome}</strong>
-                                <p>R$ {displayMoney(dailyGross)}</p>
-                              </div>
-                              <div className='asset-metric'>
-                                <strong>{t.totalIncome}</strong>
-                                <p>R$ {displayMoney(asset.totalIncome)}</p>
-                              </div>
-                            </>
-                          )}
-                        </div>
-
-                        <div className='asset-footer-meta'>
-                          <span>
-                            <strong>{formatDateKey(asset.creationDate, locale)}</strong> · {daysElapsed} {t.days}
-                          </span>
-                          {asset.applyTax && (
-                            <span className='asset-tax-summary'>
-                              {t.iofRateLabel} {dailyTax.iofRate}% · {t.irRateLabel} {dailyTax.irRate}%
-                            </span>
-                          )}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+        <InvestmentsArea
+          t={t}
+          locale={locale}
+          displayMoney={displayMoney}
+          topInvestment={topInvestment}
+          totalDailyIncome={totalDailyIncome}
+          assets={database.assets}
+          cdiRate={cdiRate}
+          actualDate={actualDate}
+          simulatedDate={database.simulatedDate}
+          getDailyAssetIncome={getDailyAssetIncome}
+          isAssetFormOpen={isAssetFormOpen}
+          setIsAssetFormOpen={setIsAssetFormOpen}
+          assetForm={assetForm}
+          setAssetForm={setAssetForm}
+          onAddAsset={addAsset}
+          editingAssetId={editingAssetId}
+          editAssetForm={editAssetForm}
+          setEditAssetForm={setEditAssetForm}
+          onStartEditAsset={startEditAsset}
+          onCancelEditAsset={cancelEditAsset}
+          onSaveAssetEdit={saveAssetEdit}
+          onToggleAssetTax={toggleAssetTax}
+          onRemoveAsset={removeAsset}
+          onManualSync={handleManualSync}
+        />
       );
     }
 
     if (activeSection === 'Balance') {
-      const totalBalance = spentTotal + investedTotal;
-      const spentRatio = totalBalance > 0 ? (spentTotal / totalBalance) * 100 : 0;
-      const investedRatio = totalBalance > 0 ? (investedTotal / totalBalance) * 100 : 0;
       const lastYearPrefix = String(actualDate.getFullYear() - 1);
       const lastYearSpentTotal = (database.expenses || [])
         .filter((exp) => exp.date && exp.date.startsWith(lastYearPrefix))
         .reduce((sum, exp) => sum + Math.max(toFiniteNumber(exp.amount), 0), 0);
 
       return (
-        <div className='balance-view'>
-          <div className='balance-summary-card'>
-            <div className='balance-year-grid'>
-              <div className='balance-card'>
-                <div className='balance-card-head'>
-                  <h2>{t.invested}</h2>
-                  <span className='balance-year-label'>{actualDate.getFullYear()}</span>
-                </div>
-                <strong>R$ {displayMoney(investedTotal)}</strong>
-                <div className='balance-card-footer'>
-                  <h3>{t.lastYear}</h3>
-                  <strong>R$ {displayMoney(previousYearIncome)}</strong>
-                </div>
-              </div>
-              <div className='balance-card'>
-                <div className='balance-card-head'>
-                  <h2>{t.spent}</h2>
-                  <span className='balance-year-label'>{actualDate.getFullYear()}</span>
-                </div>
-                <strong>R$ {displayMoney(spentTotal)}</strong>
-                <div className='balance-card-footer'>
-                  <h3>{t.lastYear}</h3>
-                  <strong>R$ {displayMoney(lastYearSpentTotal)}</strong>
-                </div>
-              </div>
-            </div>
-
-            <div className='balance-visual-track-wrap'>
-              <div className='balance-track-header'>
-                <span className='track-marker'>
-                  {t.invested} <strong>{formatDecimal(investedRatio)}%</strong>
-                </span>
-                <span className='track-marker'>
-                  {t.spent} <strong>{formatDecimal(spentRatio)}%</strong>
-                </span>
-              </div>
-              <div
-                className='balance-proportional-bar'
-                role='progressbar'
-                aria-valuenow={investedRatio}
-                aria-valuemin='0'
-                aria-valuemax='100'
-                aria-label={t.moneyBalance}
-              >
-                <div
-                  className='bar-segment invested-segment'
-                  style={{ width: `${totalBalance > 0 ? Math.max(investedRatio, 2) : 50}%` }}
-                  title={`${t.invested}: R$ ${displayMoney(investedTotal)} (${formatDecimal(investedRatio)}%)`}
-                />
-                <div
-                  className='bar-segment spent-segment'
-                  style={{ width: `${totalBalance > 0 ? Math.max(spentRatio, 2) : 50}%` }}
-                  title={`${t.spent}: R$ ${displayMoney(spentTotal)} (${formatDecimal(spentRatio)}%)`}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className='balance-expenses-card'>
-            <div className='expenses-card-header'>
-              <div className='expenses-header-titles'>
-                <div className='expenses-badge-row'>
-                  <h2>{t.expensesTitle}</h2>
-                  <span className='expenses-count-badge'>
-                    {expensesYearlyMetrics.count} {expensesYearlyMetrics.count === 1 ? t.itemSingular : t.itemPlural}
-                  </span>
-                  <strong className='expenses-period-total'>- R$ {displayMoney(expensesYearlyMetrics.total)}</strong>
-                </div>
-              </div>
-
-              <div className='expenses-header-actions'>
-                <div className='yearly-filter-pills' role='group' aria-label={t.filterByYear}>
-                  <button
-                    type='button'
-                    className={`filter-pill ${selectedExpenseYear === 'all' ? 'active' : ''}`}
-                    onClick={() => setSelectedExpenseYear('all')}
-                  >
-                    {t.allYears}
-                  </button>
-                  {availableExpenseYears.map((yr) => (
-                    <button
-                      key={yr}
-                      type='button'
-                      className={`filter-pill ${selectedExpenseYear === yr ? 'active' : ''}`}
-                      onClick={() => setSelectedExpenseYear(yr)}
-                    >
-                      {yr}
-                    </button>
-                  ))}
-                </div>
-                <button
-                  type='button'
-                  className='add-expense-btn'
-                  onClick={() => setIsAddDirectExpenseOpen((prev) => !prev)}
-                  title={t.addExpenseCost}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 256 256" fill="currentColor">
-                    <path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"/>
-                  </svg>
-                  <span>{t.addExpenseCost}</span>
-                </button>
-              </div>
-            </div>
-
-            {isAddDirectExpenseOpen && (
-              <form className='direct-expense-form' onSubmit={handleAddDirectExpense}>
-                <div className='direct-expense-grid'>
-                  <div className='direct-expense-field'>
-                    <label>{t.name}</label>
-                    <input
-                      type='text'
-                      required
-                      placeholder={t.expenseName}
-                      value={directExpenseForm.name}
-                      onChange={(e) => setDirectExpenseForm({ ...directExpenseForm, name: e.target.value })}
-                    />
-                  </div>
-                  <div className='direct-expense-field'>
-                    <label>{t.expenseValue}</label>
-                    <input
-                      type='number'
-                      step='0.01'
-                      min='0.01'
-                      required
-                      placeholder='0,00'
-                      value={directExpenseForm.amount}
-                      onChange={(e) => setDirectExpenseForm({ ...directExpenseForm, amount: e.target.value })}
-                    />
-                  </div>
-                  <div className='direct-expense-field'>
-                    <label>{t.date}</label>
-                    <input
-                      type='date'
-                      value={directExpenseForm.date || database.simulatedDate}
-                      onChange={(e) => setDirectExpenseForm({ ...directExpenseForm, date: e.target.value })}
-                    />
-                  </div>
-                  <div className='direct-expense-field'>
-                    <label>{t.capitalAllocation}</label>
-                    <select
-                      value={directExpenseForm.category}
-                      onChange={(e) => setDirectExpenseForm({ ...directExpenseForm, category: e.target.value })}
-                    >
-                      <option value='wishlist'>{t.wishlistCategory}</option>
-                      <option value='recovery'>{t.recoveryCategory}</option>
-                    </select>
-                  </div>
-                </div>
-                <div className='direct-expense-actions'>
-                  <button type='button' className='cancel-btn' onClick={() => setIsAddDirectExpenseOpen(false)}>
-                    {t.cancel}
-                  </button>
-                  <button type='submit' className='submit-btn'>
-                    {t.add}
-                  </button>
-                </div>
-              </form>
-            )}
-
-            <div className='expenses-items-list'>
-              {filteredExpenses.length === 0 ? (
-                <div className='expenses-empty-state'>
-                  <p>{t.noExpensesFound}</p>
-                </div>
-              ) : (
-                filteredExpenses.map((exp) => (
-                  <div key={exp.id} className='expense-item-row'>
-                    <div className='expense-item-meta'>
-                      <strong className='expense-item-name'>{exp.name}</strong>
-                      <span className='expense-category-label'>
-                        {exp.category === 'recovery' ? t.recoveryCategory : t.wishlistCategory}
-                      </span>
-                    </div>
-                    <div className='expense-item-amount'>
-                      <span className='expense-item-date'>{formatDateKey(exp.date, locale)}</span>
-                      <span className='expense-amount-negative'>- R$ {displayMoney(exp.amount)}</span>
-                      <button
-                        type='button'
-                        className='expense-delete-btn'
-                        onClick={() => deleteExpense(exp.id)}
-                        title={locale === 'pt' ? 'Remover despesa' : 'Remove expense'}
-                        aria-label={locale === 'pt' ? 'Remover despesa' : 'Remove expense'}
-                      >
-                        ×
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
+        <BalanceArea
+          t={t}
+          locale={locale}
+          displayMoney={displayMoney}
+          actualDate={actualDate}
+          investedTotal={investedTotal}
+          spentTotal={spentTotal}
+          previousYearIncome={previousYearIncome}
+          lastYearSpentTotal={lastYearSpentTotal}
+          selectedExpenseYear={selectedExpenseYear}
+          onSelectExpenseYear={setSelectedExpenseYear}
+          availableExpenseYears={availableExpenseYears}
+          filteredExpenses={filteredExpenses}
+          expensesYearlyMetrics={expensesYearlyMetrics}
+          simulatedDate={database.simulatedDate}
+          onAddDirectExpense={addDirectExpense}
+          onUpdateExpense={updateExpense}
+          onDeleteExpense={deleteExpense}
+        />
       );
     }
 
     return (
-      <>
-        <div className='middle-summary'>
-          <div className='middle-summary-main'>
-            <MiddleNetWorthCard
-              title={t.total}
-              money={displayMoney(netWorthTotal)}
-              investments={database.assets.length}
-              investmentLabel={t.investmentsCount}
-            ></MiddleNetWorthCard>
-            <MiddleMilestoneCard
-              title={t.milestone}
-              next={displayMoney(nextMilestone)}
-              remaining={`${displayMoney(milestoneRemaining)} - ${milestoneDays > 0 ? `${milestoneDays} ${t.days}` : '—'}`}
-              progress={milestoneProgress}
-            ></MiddleMilestoneCard>
-          </div>
-          <div className='middle-summary-side'>
-            <div className='summary-card today-card'>
-              <h2>{t.today}</h2>
-              <strong>
-                R$ {displayMoney(todayIncome)}
-                <span className={`trend ${todayTrend.className}`}>{todayTrend.symbol}</span>
-              </strong>
-              <h3>{t.yesterday}</h3>
-              <strong>R$ {displayMoney(yesterdayIncome)}</strong>
-            </div>
-            <div className='summary-card cdi-card'>
-              <h2>{t.cdi}</h2>
-              <strong>{formatDecimal(totalCdiRate)}%</strong>
-            </div>
-          </div>
-        </div>
-        <div className='time-cards'>
-          <div className='summary-card period-card'>
-            <h2>{t.week}</h2><strong>R$ {displayMoney(weekIncome)} <span className={`trend ${weekTrend.className}`}>{weekTrend.symbol}</span></strong><h3>{t.lastWeek}</h3><strong>R$ {displayMoney(previousWeekIncome)}</strong>
-          </div>
-          <div className='summary-card period-card'>
-            <h2>{t.month}</h2><strong>R$ {displayMoney(monthIncome)} <span className={`trend ${monthTrend.className}`}>{monthTrend.symbol}</span></strong><h3>{t.lastMonth}</h3><strong>R$ {displayMoney(previousMonthIncome)}</strong>
-          </div>
-          <div className='summary-card period-card'>
-            <h2>{t.year}</h2><strong>R$ {displayMoney(yearIncome)} <span className={`trend ${yearTrend.className}`}>{yearTrend.symbol}</span></strong><h3>{t.lastYearLabel}</h3><strong>R$ {displayMoney(previousYearIncome)}</strong>
-          </div>
-        </div>
-      </>
+      <NetWorthArea
+        t={t}
+        displayMoney={displayMoney}
+        netWorthTotal={netWorthTotal}
+        assetsCount={database.assets.length}
+        nextMilestone={nextMilestone}
+        milestoneRemaining={milestoneRemaining}
+        milestoneDays={milestoneDays}
+        milestoneProgress={milestoneProgress}
+        todayIncome={todayIncome}
+        todayTrend={todayTrend}
+        yesterdayIncome={yesterdayIncome}
+        totalCdiRate={totalCdiRate}
+        weekIncome={weekIncome}
+        weekTrend={weekTrend}
+        previousWeekIncome={previousWeekIncome}
+        monthIncome={monthIncome}
+        monthTrend={monthTrend}
+        previousMonthIncome={previousMonthIncome}
+        yearIncome={yearIncome}
+        yearTrend={yearTrend}
+        previousYearIncome={previousYearIncome}
+      />
     );
   };
 
@@ -1885,6 +1250,11 @@ function App() {
             expenseValue: t.expenseValue,
             total: t.totalLabel,
             days: t.days,
+            noItems: t.noItems,
+            removeSlot: t.removeSlot,
+            completeSlot: t.completeSlot,
+            moveToProcessing: t.moveToProcessing,
+            returnSlot: t.returnSlot,
             readyLabel: locale === 'pt' ? '✓ 100% Financiado' : '✓ 100% Funded'
           }}
           slots={database.wishlistSlots}
@@ -1915,6 +1285,11 @@ function App() {
             expenseValue: t.expenseValue,
             total: t.totalLabel,
             days: t.days,
+            noItems: t.noItems,
+            removeSlot: t.removeSlot,
+            completeSlot: t.completeSlot,
+            moveToProcessing: t.moveToProcessing,
+            returnSlot: t.returnSlot,
             readyLabel: locale === 'pt' ? '✓ 100% Financiado' : '✓ 100% Funded'
           }}
           slots={database.recoverySlots}

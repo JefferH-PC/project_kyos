@@ -4,17 +4,22 @@
     border: 0;
     cursor: pointer;
     overflow: hidden;
-    border-radius: 5px;
-    display: flex;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .remove {
+    width: 28px;
+    height: 28px;
+    padding: 6px;
     fill: var(--text-secondary);
     border: 1px solid var(--border-card);
     background: var(--bg-surface-elevated);
-    border-radius: 5px;
+    border-radius: 0;
     transition: background-color 0.12s ease, fill 0.12s ease, border-color 0.12s ease;
 }
 

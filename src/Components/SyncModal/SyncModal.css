@@ -93,7 +93,7 @@
 .sync-money-hero-card {
   background: var(--bg-surface-card);
   border: 1px solid var(--border-card);
-  border-radius: 10px;
+  border-radius: 10px 10px 0 0;
   padding: 18px 16px;
   display: flex;
   flex-direction: column;
@@ -157,13 +157,13 @@
 .sync-modal-metrics-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 6px;
 }
 
 .sync-submetric-card {
   background-color: var(--bg-surface-card);
   border: 1px solid var(--border-card);
-  border-radius: 8px;
+  border-radius: 0;
   padding: 12px 14px;
   display: flex;
   flex-direction: column;
@@ -172,6 +172,7 @@
 
 .sync-submetric-card.span-two {
   grid-column: span 2;
+  border-radius: 0 0 10px 10px;
 }
 
 .sync-submetric-card span {

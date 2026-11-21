@@ -7,7 +7,7 @@
     border: 0;
     padding: 0;
     cursor: pointer;
-    border-radius: 6px;
+    border-radius: 0;
     transition: background-color 0.12s ease;
 }
 
@@ -17,7 +17,7 @@
     background-color: transparent;
     padding: 7px 14px;
     border: 1px solid transparent;
-    border-radius: 6px;
+    border-radius: 0;
     width: 100%;
     color: var(--text-secondary);
     font-size: 13px;
@@ -26,6 +26,18 @@
     transition: color 0.12s ease, background-color 0.12s ease, border-color 0.12s ease;
     white-space: nowrap;
     text-align: center;
+}
+
+.section-button:first-child,
+.section-button:first-child h2,
+.section-button:first-child .section-title {
+    border-radius: 6px 0 0 6px;
+}
+
+.section-button:last-child,
+.section-button:last-child h2,
+.section-button:last-child .section-title {
+    border-radius: 0 6px 6px 0;
 }
 
 .section-button:hover h2,

@@ -51,17 +51,25 @@
 .catchup-metrics {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 6px;
 }
 
 .catchup-metric-card {
     background-color: var(--bg-surface-card);
     border: 1px solid var(--border-card);
-    border-radius: 8px;
+    border-radius: 0;
     padding: 12px 14px;
     display: flex;
     flex-direction: column;
     gap: 4px;
+}
+
+.catchup-metric-card:first-child {
+    border-radius: 8px 0 0 8px;
+}
+
+.catchup-metric-card:last-child {
+    border-radius: 0 8px 8px 0;
 }
 
 .catchup-metric-card span {
@@ -105,9 +113,10 @@
 .catchup-slots-list {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     max-height: 180px;
     overflow-y: auto;
+    padding-right: 10px;
 }
 
 .catchup-slot-item {
@@ -117,8 +126,20 @@
     padding: 9px 12px;
     background-color: var(--bg-surface-card);
     border: 1px solid var(--border-card);
-    border-radius: 8px;
+    border-radius: 0;
     gap: 10px;
+}
+
+.catchup-slot-item:first-child {
+    border-radius: 8px 8px 0 0;
+}
+
+.catchup-slot-item:last-child {
+    border-radius: 0 0 8px 8px;
+}
+
+.catchup-slot-item:only-child {
+    border-radius: 8px;
 }
 
 .catchup-slot-info {

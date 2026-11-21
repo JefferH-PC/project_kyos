@@ -46,7 +46,7 @@ describe('SimulationArea Component', () => {
     expect(screen.getByText('+ Adicionar Ativo na Simulação')).toBeInTheDocument();
   });
 
-  test('toggles add asset form and adds new simulated asset', () => {
+  test('toggles add asset form and adds new simulated asset without rendering simulation assets section', () => {
     render(
       <SimulationArea
         mainDatabase={mockDatabase}
@@ -55,6 +55,8 @@ describe('SimulationArea Component', () => {
         locale="pt"
       />
     );
+
+    expect(document.querySelector('.simulation-assets-section')).toBeNull();
 
     const addBtn = screen.getByText('+ Adicionar Ativo na Simulação');
     fireEvent.click(addBtn);
@@ -69,8 +71,12 @@ describe('SimulationArea Component', () => {
     fireEvent.change(amountInput, { target: { value: '15000' } });
     fireEvent.click(saveBtn);
 
-    expect(screen.getByText('LCI 95%')).toBeInTheDocument();
-    expect(screen.getByText(/15.000,00/)).toBeInTheDocument();
+    // Form closes after adding asset
+    expect(screen.queryByText('Nome do Ativo')).not.toBeInTheDocument();
+
+    // Selecting a future date includes the newly added R$ 15.000,00 in projected net worth (> R$ 65.000,00)
+    fireEvent.click(screen.getByText('20'));
+    expect(screen.getByText(/65\./)).toBeInTheDocument();
   });
 
   test('toggles inflation control and updates input', () => {
@@ -126,16 +132,19 @@ describe('SimulationArea Component', () => {
     // Add simulated asset
     fireEvent.click(screen.getByText('+ Adicionar Ativo na Simulação'));
     fireEvent.change(screen.getByPlaceholderText('Ex: CDB 110% CDI'), { target: { value: 'Mock CDB' } });
-    fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '5000' } });
+    fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '15000' } });
     fireEvent.click(screen.getByText('Adicionar à Simulação'));
 
-    expect(screen.getByText('Mock CDB')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('20'));
+    expect(screen.getByText(/65\./)).toBeInTheDocument();
 
     // Click Reset
     fireEvent.click(screen.getByText('Restaurar Dados Reais'));
 
-    expect(screen.queryByText('Mock CDB')).not.toBeInTheDocument();
-    expect(screen.getByText('CDB Banco Inter')).toBeInTheDocument();
+    // Re-select day 20 and verify projected net worth is back to baseline (~R$ 50.060,29)
+    fireEvent.click(screen.getByText('20'));
+    expect(screen.queryByText(/65\./)).not.toBeInTheDocument();
+    expect(screen.getByText(/50\./)).toBeInTheDocument();
   });
 
   test('custom simulated asset follows B3 holding-day schedule (Day 0 yields 0, first yield on Day D+1)', () => {

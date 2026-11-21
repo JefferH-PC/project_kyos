@@ -263,13 +263,6 @@ const SimulationArea = ({
     setIsAddAssetOpen(false);
   };
 
-  const handleRemoveSimAsset = (id) => {
-    setSimDatabase((current) => ({
-      ...current,
-      assets: (current.assets || []).filter((a) => a.id !== id)
-    }));
-  };
-
   const handlePrevMonth = () => {
     if (isAtMinMonth) return;
     if (calendarMonth === 0) {
@@ -412,6 +405,19 @@ const SimulationArea = ({
       tooltip = t.weekend;
     }
 
+    const cellIndex = firstDayOfMonth + (day - 1);
+    const col = cellIndex % 7;
+    const hasTopDay = (day - 7) >= 1;
+    const hasBottomDay = (day + 7) <= daysInMonth;
+    const hasLeftDay = col > 0 && (day - 1) >= 1;
+    const hasRightDay = col < 6 && (day + 1) <= daysInMonth;
+
+    const tl = !hasTopDay && !hasLeftDay ? '8px' : '0px';
+    const tr = !hasTopDay && !hasRightDay ? '8px' : '0px';
+    const br = !hasBottomDay && !hasRightDay ? '8px' : '0px';
+    const bl = !hasBottomDay && !hasLeftDay ? '8px' : '0px';
+    const cellBorderRadius = `${tl} ${tr} ${br} ${bl}`;
+
     const classNames = ['calendar-day-cell'];
     if (isNonWorking) classNames.push('non-working');
     if (isBaseline) classNames.push('baseline-day');
@@ -423,6 +429,7 @@ const SimulationArea = ({
       <div
         key={dateKey}
         className={classNames.join(' ')}
+        style={{ borderRadius: cellBorderRadius }}
         title={tooltip}
         onClick={() => {
           if (!isPast && !isBaseline) {
@@ -736,42 +743,6 @@ const SimulationArea = ({
                   : 'Select a future date on the calendar or use one of the horizon shortcuts above.'}
               </p>
             </div>
-          )}
-        </div>
-      </div>
-
-      <div className="simulation-assets-section">
-        <div className="sim-assets-header">
-          <h4>{t.assetsSummary} ({simDatabase.assets?.length || 0})</h4>
-        </div>
-        <div className="sim-assets-chips-grid">
-          {(simDatabase.assets || []).map((asset) => (
-            <div
-              key={asset.id}
-              className={`sim-asset-chip ${asset.isSimulationOnly ? 'is-simulated' : ''}`}
-            >
-              <div className="sim-chip-info">
-                <strong>{asset.name}</strong>
-                <span>R$ {displayMoney(asset.investedAmount)} · {asset.yieldRate}% CDI</span>
-              </div>
-              {asset.isSimulationOnly && (
-                <div className="sim-chip-actions">
-                  <span className="sim-asset-tag">{t.simulatedBadge}</span>
-                  <button
-                    type="button"
-                    className="sim-chip-delete"
-                    onClick={() => handleRemoveSimAsset(asset.id)}
-                    title={t.removeSimAsset}
-                    aria-label={t.removeSimAsset}
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
-          {(!simDatabase.assets || simDatabase.assets.length === 0) && (
-            <p className="catchup-empty">{t.noAssets}</p>
           )}
         </div>
       </div>
