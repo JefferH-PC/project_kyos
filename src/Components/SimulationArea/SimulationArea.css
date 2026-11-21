@@ -59,7 +59,7 @@
     border: 1px solid var(--border-card);
     border-radius: 6px;
     background: var(--bg-surface-elevated);
-    color: var(--text-primary);
+    color: var(--text-secondary);
     cursor: pointer;
     font: inherit;
     font-size: 12.5px;
@@ -70,28 +70,12 @@
 .simulation-btn:hover {
     background: var(--bg-surface-card);
     border-color: var(--border-strong);
-}
-
-.simulation-btn.btn-clear {
-    color: var(--accent-red);
-    background: var(--accent-red-bg);
-    border-color: var(--accent-red-border);
+    color: var(--text-primary);
 }
 
 .simulation-btn.btn-clear:hover {
-    background: var(--accent-red);
-    color: #ffffff;
-}
-
-.simulation-btn.btn-add-sim-asset {
-    color: var(--accent-green);
-    background: var(--accent-green-bg);
-    border-color: var(--accent-green-border);
-}
-
-.simulation-btn.btn-add-sim-asset:hover {
-    background: var(--accent-green);
-    color: #ffffff;
+    border-color: var(--accent-red);
+    color: var(--accent-red);
 }
 
 .simulation-controls-wrap {
@@ -133,18 +117,14 @@
 
 .simulation-cdi-input:focus {
     outline: none;
-    border-color: var(--accent-green);
+    border-color: var(--border-strong);
 }
 
 .simulation-cdi-annual {
     font-family: var(--font-mono);
     font-size: 12px;
     font-weight: 500;
-    color: var(--accent-green);
-    background: var(--accent-green-bg);
-    padding: 3px 8px;
-    border-radius: 4px;
-    border: 1px solid var(--accent-green-border);
+    color: var(--text-muted);
     font-variant-numeric: tabular-nums;
 }
 
@@ -471,14 +451,14 @@
 }
 
 .calendar-day-cell.in-range:not(.non-working) {
-    background-color: rgba(16, 185, 129, 0.08);
-    border-color: rgba(16, 185, 129, 0.22);
+    background-color: rgba(16, 185, 129, 0.14);
+    border-color: rgba(16, 185, 129, 0.28);
 }
 
 .calendar-day-cell.selected-target {
-    border: 1.5px solid var(--accent-green) !important;
-    background-color: rgba(16, 185, 129, 0.22) !important;
-    color: var(--text-primary) !important;
+    border: 1px solid var(--accent-green) !important;
+    background-color: var(--accent-green) !important;
+    color: #ffffff !important;
     font-weight: 700;
 }
 
@@ -518,7 +498,7 @@
 .simulation-target-date-badge {
     font-family: var(--font-mono);
     font-size: 12px;
-    color: var(--accent-blue);
+    color: var(--text-secondary);
     font-variant-numeric: tabular-nums;
 }
 
@@ -531,62 +511,40 @@
     padding: 24px 16px;
     height: 100%;
     min-height: 260px;
-    gap: 10px;
-}
-
-.sim-empty-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 8px;
-    background: var(--bg-surface-elevated);
-    border: 1px solid var(--border-card);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-secondary);
-    margin-bottom: 2px;
-}
-
-.simulation-empty-state h4 {
-    margin: 0;
-    font-size: 14.5px;
-    font-weight: 600;
-    color: var(--text-primary);
 }
 
 .simulation-empty-state p {
     margin: 0;
-    font-size: 12.5px;
-    color: var(--text-secondary);
-    max-width: 300px;
-    line-height: 1.45;
+    font-size: 13px;
+    color: var(--text-muted);
+    max-width: 280px;
+    line-height: 1.5;
 }
 
 .sim-quick-chips {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
+    align-items: center;
     gap: 6px;
-    margin-top: 6px;
 }
 
 .sim-quick-chip {
     font-family: var(--font-mono);
     background: var(--bg-surface-elevated);
     border: 1px solid var(--border-card);
-    color: var(--text-primary);
+    color: var(--text-secondary);
     border-radius: 6px;
-    padding: 5px 11px;
-    font-size: 11.5px;
+    padding: 6px 10px;
+    font-size: 12px;
     font-weight: 500;
     cursor: pointer;
-    transition: border-color 0.12s ease, background-color 0.12s ease;
+    transition: border-color 0.12s ease, background-color 0.12s ease, color 0.12s ease;
 }
 
 .sim-quick-chip:hover {
     background: var(--bg-surface-card);
-    border-color: var(--accent-green);
-    color: var(--accent-green);
+    border-color: var(--border-strong);
+    color: var(--text-primary);
 }
 
 .simulation-results-header {
@@ -638,12 +596,8 @@
     font-weight: 600;
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.02em;
-    color: var(--accent-green);
-    background: transparent;
-}
-
-.simulation-metric.neutral strong {
     color: var(--text-primary);
+    background: transparent;
 }
 
 .simulation-slots-section {
@@ -673,23 +627,10 @@
 
 .simulation-slot-badge {
     font-family: var(--font-mono);
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 4px;
+    font-size: 10.5px;
+    color: var(--text-muted);
     text-transform: uppercase;
-    font-weight: 600;
-}
-
-.simulation-slot-badge.wishlist {
-    background-color: var(--accent-blue-bg);
-    color: var(--accent-blue);
-    border: 1px solid var(--accent-blue-border);
-}
-
-.simulation-slot-badge.recovery {
-    background-color: var(--accent-red-bg);
-    color: var(--accent-red);
-    border: 1px solid var(--accent-red-border);
+    font-weight: 500;
 }
 
 .sim-metric-title-row {
@@ -701,17 +642,10 @@
 
 .sim-badge {
     font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
+    font-size: 10.5px;
+    font-weight: 500;
     text-transform: uppercase;
-    padding: 1px 5px;
-    border-radius: 4px;
-}
-
-.sim-badge.real {
-    background: var(--accent-green-bg);
-    color: var(--accent-green);
-    border: 1px solid var(--accent-green-border);
+    color: var(--text-muted);
 }
 
 .sim-metric-subtext {
@@ -722,21 +656,6 @@
     font-variant-numeric: tabular-nums;
 }
 
-.simulation-metric.highlight-ipca {
-    background: var(--bg-surface-card);
-    border: 1px solid var(--border-card);
-}
-
-.sim-badge-pill {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--accent-blue);
-    background: var(--accent-blue-bg);
-    padding: 1px 6px;
-    border-radius: 4px;
-}
-
 .sim-inflation-details {
     font-size: 12px;
     color: var(--text-secondary);
@@ -745,7 +664,7 @@
 .sim-inflation-details strong {
     font-family: var(--font-mono);
     font-size: 13px;
-    color: var(--accent-green);
+    color: var(--text-primary);
 }
 
 /* Simulation Assets Section */
@@ -761,8 +680,8 @@
 
 .sim-assets-header {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .sim-assets-header h4 {
@@ -770,11 +689,6 @@
     font-size: 13px;
     font-weight: 600;
     color: var(--text-primary);
-}
-
-.sim-assets-subtitle {
-    font-size: 12px;
-    color: var(--text-muted);
 }
 
 .sim-assets-chips-grid {
@@ -794,7 +708,7 @@
 }
 
 .sim-asset-chip.is-simulated {
-    border-color: var(--accent-green-border);
+    border-color: var(--border-strong);
 }
 
 .sim-chip-info {
@@ -825,13 +739,9 @@
 .sim-asset-tag {
     font-family: var(--font-mono);
     font-size: 10px;
-    font-weight: 600;
+    font-weight: 500;
     text-transform: uppercase;
-    color: var(--accent-green);
-    background: var(--accent-green-bg);
-    border: 1px solid var(--accent-green-border);
-    padding: 1px 5px;
-    border-radius: 4px;
+    color: var(--text-muted);
 }
 
 .sim-chip-delete {

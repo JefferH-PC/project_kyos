@@ -56,10 +56,9 @@
     font-weight: 500;
     font-variant-numeric: tabular-nums;
     color: var(--text-muted);
-    background: var(--bg-surface-elevated);
-    border: 1px solid var(--border-subtle);
-    padding: 1px 6px;
-    border-radius: 4px;
+    background: transparent;
+    border: none;
+    padding: 0;
     white-space: nowrap;
 }
 

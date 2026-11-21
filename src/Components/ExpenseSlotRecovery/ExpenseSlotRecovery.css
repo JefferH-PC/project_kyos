@@ -1,7 +1,7 @@
 .expense-slot-recovery {
     width: 100%;
     min-height: 70px;
-    border: 1px solid var(--accent-red-border);
+    border: 1px solid var(--border-card);
     border-radius: 8px;
     padding: 10px 12px;
     background: var(--bg-surface-card);
@@ -12,7 +12,7 @@
 }
 
 .expense-slot-recovery:hover {
-    border-color: var(--accent-red);
+    border-color: var(--border-strong);
 }
 
 .expense-slot-recovery h3 {
@@ -48,18 +48,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.expense-slot-recovery .slot-title::before {
-    content: '';
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background-color: var(--accent-red);
-    flex-shrink: 0;
 }
 
 .expense-slot-recovery .slot-days-pill.recovery {
@@ -67,11 +55,10 @@
     font-size: 11px;
     font-weight: 500;
     font-variant-numeric: tabular-nums;
-    color: var(--accent-red);
-    background: var(--accent-red-bg);
-    border: 1px solid var(--accent-red-border);
-    padding: 1px 6px;
-    border-radius: 4px;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    padding: 0;
     white-space: nowrap;
 }
 
@@ -85,7 +72,7 @@
     font-family: var(--font-mono);
     font-size: 13.5px;
     font-weight: 600;
-    color: var(--accent-red);
+    color: var(--text-primary);
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.02em;
 }
@@ -109,7 +96,7 @@
 
 .expense-slot-recovery .slot-progress-fill.recovery {
     height: 100%;
-    background: var(--accent-red);
+    background: var(--accent-green);
     border-radius: 2px;
     transition: width 0.25s ease;
 }

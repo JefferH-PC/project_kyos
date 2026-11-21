@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import SyncModal from './SyncModal';
 
 describe('SyncModal', () => {
@@ -16,7 +16,7 @@ describe('SyncModal', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  test('renders dialog and starts counting from R$ 0,00 up to targetIncome in real scenario', () => {
+  test('renders dialog with reconciled targetIncome and portfolio balance', () => {
     const handleClose = jest.fn();
     render(
       <SyncModal
@@ -28,31 +28,19 @@ describe('SyncModal', () => {
         businessDays={596}
         referenceDate="2026-10-19"
         locale="pt"
-        duration={1000}
       />
     );
 
-    // Initial state: dialog is present
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByText('Sincronização CDI Bancária')).toBeInTheDocument();
     expect(screen.getByText(/596/)).toBeInTheDocument();
     expect(screen.getByText(/19\/10\/2026/)).toBeInTheDocument();
 
-    // Fast-forward animation to completion
-    act(() => {
-      jest.advanceTimersByTime(1100);
-    });
-
-    // Money display reaches target
     const display = screen.getByTestId('sync-money-display');
     expect(display).toHaveTextContent('20.797,80');
 
-    // Portfolio balance reaches target
     const portfolio = screen.getByTestId('sync-portfolio-balance');
     expect(portfolio).toHaveTextContent('90.046,80');
-
-    // Completion status
-    expect(screen.getByText('✓ 100% Sincronizado e Reconciliado com o Banco!')).toBeInTheDocument();
   });
 
   test('clicking Done button calls onClose callback', () => {

@@ -11,14 +11,15 @@
 }
 
 .update {
-    fill: var(--accent-blue);
-    background: var(--accent-blue-bg);
-    border: 1px solid var(--accent-blue-border);
+    fill: var(--text-secondary);
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--border-card);
     border-radius: 5px;
-    transition: background-color 0.12s ease, fill 0.12s ease;
+    transition: background-color 0.12s ease, fill 0.12s ease, border-color 0.12s ease;
 }
 
 .update:hover {
-    fill: #ffffff;
-    background: var(--accent-blue);
+    fill: var(--text-primary);
+    background: var(--bg-surface);
+    border-color: var(--border-strong);
 }

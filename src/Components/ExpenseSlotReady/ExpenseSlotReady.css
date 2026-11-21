@@ -1,7 +1,7 @@
 .expense-slot-ready {
     width: 100%;
     min-height: 70px;
-    border: 1px solid var(--accent-green-border);
+    border: 1px solid var(--border-strong);
     border-radius: 8px;
     padding: 10px 12px;
     background: var(--bg-surface-card);
@@ -52,13 +52,12 @@
 
 .expense-slot-ready .slot-days-pill.ready {
     font-family: var(--font-mono);
-    font-size: 10.5px;
-    font-weight: 500;
+    font-size: 11px;
+    font-weight: 600;
     color: var(--accent-green);
-    background: var(--accent-green-bg);
-    border: 1px solid var(--accent-green-border);
-    padding: 1px 6px;
-    border-radius: 4px;
+    background: transparent;
+    border: none;
+    padding: 0;
     white-space: nowrap;
 }
 

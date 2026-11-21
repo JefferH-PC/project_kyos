@@ -17,31 +17,26 @@ const ABOUT_TEXT = {
     cards: [
       {
         id: 'daily-income',
-        icon: 'lightning',
         title: 'Daily Income Driven',
         description: 'All calculations, time estimates, and progress in Kyos are driven by your total daily investment income (calculated via CDI and asset yield rates). Your invested principal is never consumed.'
       },
       {
         id: 'milestones',
-        icon: 'flag',
         title: 'Auto 10k Milestones',
         description: 'Your milestone automatically targets the next 10,000 interval above your current net worth (e.g. 10k, 20k, 30k). Kyos continuously calculates the remaining amount and business days to achieve it.'
       },
       {
         id: 'recovery',
-        icon: 'shield',
         title: 'Recovery System',
         description: 'When you record spent money or unexpected expenses, they enter the Recovery column. 100% of your daily yield is prioritized here to pay down the balance before funding any wishlist items.'
       },
       {
         id: 'wishlist',
-        icon: 'gift',
         title: 'Wishlist Funding',
         description: 'Queue up items you want to buy. Daily income amortizes the active item day-by-day. Once the remaining price hits R$ 0, it becomes "Ready", meaning it has been 100% funded by your investment returns.'
       },
       {
         id: 'taxes',
-        icon: 'percent',
         title: 'Tax & IOF Deductions',
         description: 'Toggle optional tax deduction to project real net returns using Brazilian regressive Income Tax (IR from 22.5% to 15%) and IOF (which automatically hits 0% after 30 calendar days).'
       }
@@ -62,72 +57,30 @@ const ABOUT_TEXT = {
     cards: [
       {
         id: 'daily-income',
-        icon: 'lightning',
         title: 'Base no Rendimento Diário',
         description: 'Todos os cálculos, estimativas de prazo e barras de progresso no Kyos são alimentados pelo rendimento diário dos seus investimentos (CDI e taxa de rendimento). Seu capital investido nunca é consumido.'
       },
       {
         id: 'milestones',
-        icon: 'flag',
         title: 'Metas Automáticas de 10k',
         description: 'Sua meta é definida automaticamente para o próximo múltiplo de 10.000 acima do seu patrimônio atual (ex: 10k, 20k, 30k). O Kyos projeta o valor restante e os dias úteis necessários para alcançá-la.'
       },
       {
         id: 'recovery',
-        icon: 'shield',
         title: 'Sistema de Recuperação',
         description: 'Ao registrar um gasto ou despesa não planejada, ele entra na coluna de Recuperação. Todo o rendimento diário é canalizado para cá primeiro até quitar o saldo antes de financiar qualquer item de desejo.'
       },
       {
         id: 'wishlist',
-        icon: 'gift',
         title: 'Financiamento de Desejos',
         description: 'Adicione aquilo que deseja comprar. O rendimento diário reduz o saldo do item ativo dia após dia. Ao atingir R$ 0, ele fica "Pronto", financiado 100% pelos lucros dos seus investimentos.'
       },
       {
         id: 'taxes',
-        icon: 'percent',
         title: 'Tributação e IOF Regressivo',
         description: 'Ative a dedução opcional de impostos para ver o rendimento líquido real segundo o IR Regressivo (22,5% a 15%) e o IOF (que zera exatamente após 30 dias corridos).'
       }
     ]
-  }
-};
-
-const renderIcon = (iconName) => {
-  switch (iconName) {
-    case 'lightning':
-      return (
-        <svg aria-hidden="true" viewBox="0 0 256 256" width="16" height="16" fill="currentColor">
-          <path d="M215.79,118.11a8,8,0,0,0-7.79-6.11H152V32a8,8,0,0,0-13.66-5.66l-96,96a8,8,0,0,0,5.66,13.66H104v80a8,8,0,0,0,13.66,5.66l96-96A8,8,0,0,0,215.79,118.11ZM120,196.69V144a8,8,0,0,0-8-8H59.31L136,59.31V112a8,8,0,0,0,8,8h52.69Z" />
-        </svg>
-      );
-    case 'flag':
-      return (
-        <svg aria-hidden="true" viewBox="0 0 256 256" width="16" height="16" fill="currentColor">
-          <path d="M245.71,77.56A8,8,0,0,0,240,72H149.37L125.75,41.49A16,16,0,0,0,113.11,36c-.46,0-.91,0-1.37,0H40a16,16,0,0,0-16,16V216a8,8,0,0,0,16,0V160h71.69l24.4,29.88A16,16,0,0,0,148.73,196H240a8,8,0,0,0,7.71-10.44ZM40,52h71.74l24.4,30.5A16,16,0,0,0,148.78,88H230l-17.65,44L230,176H148.73l-24.4-30.5A16,16,0,0,0,111.69,140H40Z" />
-        </svg>
-      );
-    case 'shield':
-      return (
-        <svg aria-hidden="true" viewBox="0 0 256 256" width="16" height="16" fill="currentColor">
-          <path d="M208,40H48A16,16,0,0,0,32,56v58.77c0,89.61,75.82,119.34,91,124.39a15.54,15.54,0,0,0,10,0c15.2-5.05,91-34.78,91-124.39V56A16,16,0,0,0,208,40ZM128,223.44C114,218.49,48,190.62,48,114.77V56H208v58.77C208,190.57,142,218.47,128,223.44ZM165.66,101.66,120,147.31,98.34,125.66a8,8,0,0,0-11.32,11.31l27.32,27.32a8,8,0,0,0,11.32,0l51.32-51.32a8,8,0,0,0-11.32-11.31Z" />
-        </svg>
-      );
-    case 'gift':
-      return (
-        <svg aria-hidden="true" viewBox="0 0 256 256" width="16" height="16" fill="currentColor">
-          <path d="M216,72H180.49A44,44,0,0,0,108,48a43.59,43.59,0,0,0-4,18.4A44,44,0,0,0,32,108a8,8,0,0,0,8,8h8v96a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V116h8a8,8,0,0,0,8-8V80A8,8,0,0,0,216,72ZM120,52a28,28,0,0,1,50.7,16.57A27.67,27.67,0,0,1,168.49,72H120ZM60,100a28,28,0,0,1,56-4.57A27.67,27.67,0,0,1,118.49,100H60Zm60,16h72v44H120Zm-16,0v44H48V116Zm0,60v48H64a4,4,0,0,1-4-4V176Zm16,48V176h72v44a4,4,0,0,1-4,4Zm96-120H136V88h80Z" />
-        </svg>
-      );
-    case 'percent':
-      return (
-        <svg aria-hidden="true" viewBox="0 0 256 256" width="16" height="16" fill="currentColor">
-          <path d="M205.66,61.66l-144,144a8,8,0,0,1-11.32-11.32l144-144a8,8,0,0,1,11.32,11.32ZM64,104A36,36,0,1,0,28,68,36,36,0,0,0,64,104Zm0-56A20,20,0,1,1,44,68,20,20,0,0,1,64,48Zm128,104a36,36,0,1,0,36,36A36,36,0,0,0,192,152Zm0,56a20,20,0,1,1,20-20A20,20,0,0,1,192,208Z" />
-        </svg>
-      );
-    default:
-      return null;
   }
 };
 
@@ -210,15 +163,9 @@ const AboutModal = ({ isOpen, onClose, locale = 'en' }) => {
         </section>
 
         <div className="about-cards-grid">
-          {t.cards.map((card, index) => (
+          {t.cards.map((card) => (
             <article className={`about-card card-${card.id}`} key={card.id}>
-              <div className="about-card-top">
-                <span className="about-card-index">0{index + 1}</span>
-                <div className="about-card-icon-wrap">
-                  {renderIcon(card.icon)}
-                </div>
-                <h3 className="about-card-title">{card.title}</h3>
-              </div>
+              <h3 className="about-card-title">{card.title}</h3>
               <p className="about-card-desc">{card.description}</p>
             </article>
           ))}

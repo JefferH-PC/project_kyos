@@ -40,7 +40,7 @@ describe('SimulationArea Component', () => {
       />
     );
 
-    expect(screen.getByText('Ambiente Dedicado de Simulação')).toBeInTheDocument();
+    expect(screen.getByText('+30 dias')).toBeInTheDocument();
     expect(screen.getByText('Restaurar Dados Reais')).toBeInTheDocument();
     expect(screen.getByText('Limpar Tudo')).toBeInTheDocument();
     expect(screen.getByText('+ Adicionar Ativo na Simulação')).toBeInTheDocument();

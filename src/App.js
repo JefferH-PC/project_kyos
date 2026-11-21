@@ -5,7 +5,6 @@ import MiddleMilestoneCard from './Components/MiddleMilestoneCard/MiddleMileston
 import SectionButton from './Components/SectionButton/SectionButton';
 import TimeArea from './Components/TimeArea/TimeArea';
 import MiddleNetWorthCard from './MiddleNetWorthCard/MiddleNetWorthCard';
-import AddMoreButton from './Components/AddMoreButton/AddMoreButton';
 import RemoveButton from './Components/RemoveButton/RemoveButton';
 import CatchUpModal from './Components/CatchUpModal/CatchUpModal';
 import AboutModal from './Components/AboutModal/AboutModal';
@@ -1310,20 +1309,23 @@ function App() {
         <div className='investments-view'>
           <div className='investment-summary-grid'>
             <div className='investment-summary-card'>
-              <h2>{t.topInvestment}</h2>
-              <strong>{topInvestment.name}<br />R$ {displayMoney(topInvestment.investedAmount)}</strong>
+              <div className='investment-summary-top'>
+                <h2>{t.topInvestment}</h2>
+                <span className='top-investment-name'>· {topInvestment.name}</span>
+              </div>
+              <strong>R$ {displayMoney(topInvestment.investedAmount)}</strong>
             </div>
             <div className='investment-summary-card cdi-investment-card'>
-              <h2>{t.cdi}</h2>
-              <strong>{formatDecimal(totalCdiRate)}%</strong>
+              <h2>{t.totalDailyIncome}</h2>
+              <strong>R$ {displayMoney(totalDailyIncome)}</strong>
             </div>
           </div>
           <div className='assets-panel'>
             <div className='assets-heading'>
-              <h2>{t.assets}</h2>
-              <span className='total-daily-income'>
-                {t.totalDailyIncome}: R$ {displayMoney(totalDailyIncome)}
-              </span>
+              <div className='assets-heading-title'>
+                <h2>{t.assets}</h2>
+                <span className='assets-count-label'>{database.assets.length}</span>
+              </div>
               <div className='assets-heading-actions'>
                 <button
                   type='button'
@@ -1332,58 +1334,86 @@ function App() {
                   title={t.syncIncomesTip}
                   aria-label={t.syncIncomes}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 256 256" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 256 256" fill="currentColor">
                     <path d="M224,128a96,96,0,0,1-96,96A95.8,95.8,0,0,1,64,195.9V216a8,8,0,0,1-16,0V168a8,8,0,0,1,8-8h48a8,8,0,0,1,0,16H76.7A79.9,79.9,0,0,0,128,208a80,80,0,0,0,80-80,8,8,0,0,1,16,0ZM48,88a8,8,0,0,1,8-8H84.3A79.9,79.9,0,0,1,128,48a80,80,0,0,1,80,80,8,8,0,0,1,16,0A96,96,0,0,0,64,60.1V40a8,8,0,0,1-16,0V88A8,8,0,0,1,48,88Z"/>
                   </svg>
                   <span>{t.syncIncomes}</span>
                 </button>
-                <AddMoreButton label={t.addInvestment} onClick={() => setIsAssetFormOpen((current) => !current)}></AddMoreButton>
+                <button
+                  type='button'
+                  className='add-investment-btn'
+                  aria-label={t.addInvestment}
+                  onClick={() => setIsAssetFormOpen((current) => !current)}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 256 256" fill="currentColor">
+                    <path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"/>
+                  </svg>
+                  <span>{t.addInvestment}</span>
+                </button>
               </div>
             </div>
             {isAssetFormOpen && (
               <form className='asset-form' onSubmit={addAsset}>
-                <input
-                  placeholder={t.name}
-                  value={assetForm.name}
-                  onChange={(event) => setAssetForm({ ...assetForm, name: event.target.value })}
-                  required
-                />
-                <input
-                  placeholder={t.yieldRate}
-                  type='number'
-                  min='0'
-                  step='0.01'
-                  value={assetForm.yieldRate}
-                  onChange={(event) => setAssetForm({ ...assetForm, yieldRate: event.target.value })}
-                />
-                <input
-                  placeholder={t.investedAmount}
-                  type='number'
-                  min='0'
-                  step='0.01'
-                  value={assetForm.investedAmount}
-                  onChange={(event) => setAssetForm({ ...assetForm, investedAmount: event.target.value })}
-                  required
-                />
-                <label className='asset-date-input-label'>
-                  <span>{t.investmentDate}</span>
-                  <input
-                    type='date'
-                    aria-label={t.investmentDate}
-                    max={database.simulatedDate}
-                    value={assetForm.creationDate || ''}
-                    onChange={(event) => setAssetForm({ ...assetForm, creationDate: event.target.value })}
-                  />
-                </label>
-                <label className='asset-tax-checkbox-label'>
-                  <input
-                    type='checkbox'
-                    checked={assetForm.applyTax}
-                    onChange={(event) => setAssetForm({ ...assetForm, applyTax: event.target.checked })}
-                  />
-                  <span>{t.applyTaxLabel}</span>
-                </label>
-                <button type='submit'>{t.add}</button>
+                <div className='asset-form-grid'>
+                  <label className='asset-form-field'>
+                    <span>{t.name}</span>
+                    <input
+                      placeholder={t.name}
+                      value={assetForm.name}
+                      onChange={(event) => setAssetForm({ ...assetForm, name: event.target.value })}
+                      required
+                    />
+                  </label>
+                  <label className='asset-form-field'>
+                    <span>{t.yieldRate}</span>
+                    <input
+                      placeholder={t.yieldRate}
+                      type='number'
+                      min='0'
+                      step='0.01'
+                      value={assetForm.yieldRate}
+                      onChange={(event) => setAssetForm({ ...assetForm, yieldRate: event.target.value })}
+                    />
+                  </label>
+                  <label className='asset-form-field'>
+                    <span>{t.investedAmount}</span>
+                    <input
+                      placeholder={t.investedAmount}
+                      type='number'
+                      min='0'
+                      step='0.01'
+                      value={assetForm.investedAmount}
+                      onChange={(event) => setAssetForm({ ...assetForm, investedAmount: event.target.value })}
+                      required
+                    />
+                  </label>
+                  <label className='asset-form-field'>
+                    <span>{t.investmentDate}</span>
+                    <input
+                      type='date'
+                      aria-label={t.investmentDate}
+                      max={database.simulatedDate}
+                      value={assetForm.creationDate || ''}
+                      onChange={(event) => setAssetForm({ ...assetForm, creationDate: event.target.value })}
+                    />
+                  </label>
+                </div>
+                <div className='asset-form-footer'>
+                  <label className='asset-tax-checkbox-label'>
+                    <input
+                      type='checkbox'
+                      checked={assetForm.applyTax}
+                      onChange={(event) => setAssetForm({ ...assetForm, applyTax: event.target.checked })}
+                    />
+                    <span>{t.applyTaxLabel}</span>
+                  </label>
+                  <div className='asset-form-actions'>
+                    <button type='button' className='asset-cancel-btn' onClick={() => setIsAssetFormOpen(false)}>
+                      {t.cancel}
+                    </button>
+                    <button type='submit' className='asset-submit-btn'>{t.add}</button>
+                  </div>
+                </div>
               </form>
             )}
             <div className='assets-grid'>
@@ -1473,18 +1503,12 @@ function App() {
                               title={t.edit}
                               onClick={() => startEditAsset(asset)}
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 256 256" fill="currentColor">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 256 256" fill="currentColor">
                                 <path d="M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.68,147.31,64l24-24L216,84.68Z"></path>
                               </svg>
                             </button>
                             <RemoveButton label={t.removeSlot} onClick={() => removeAsset(asset.id)}></RemoveButton>
                           </div>
-                        </div>
-
-                        <div className='asset-meta-badge'>
-                          <small>
-                            {t.investedSince}: <strong>{formatDateKey(asset.creationDate, locale)}</strong> ({daysElapsed} {t.days})
-                          </small>
                         </div>
 
                         <div className='asset-metrics-grid'>
@@ -1498,30 +1522,18 @@ function App() {
                           </div>
 
                           {asset.applyTax ? (
-                            <div className='asset-tax-block'>
+                            <>
                               <div className='asset-metric'>
                                 <strong>{t.dailyIncome} ({t.net})</strong>
-                                <p>
-                                  R$ {displayMoney(dailyTax.netYield)}
-                                  <small className='tax-gross-tag'>({t.gross}: R$ {displayMoney(dailyGross)})</small>
-                                </p>
+                                <p>R$ {displayMoney(dailyTax.netYield)}</p>
+                                <small className='tax-gross-tag'>{t.gross}: R$ {displayMoney(dailyGross)}</small>
                               </div>
                               <div className='asset-metric'>
                                 <strong>{t.totalIncome} ({t.net})</strong>
-                                <p>
-                                  R$ {displayMoney(totalTax.netYield)}
-                                  <small className='tax-gross-tag'>({t.gross}: R$ {displayMoney(asset.totalIncome)})</small>
-                                </p>
+                                <p>R$ {displayMoney(totalTax.netYield)}</p>
+                                <small className='tax-gross-tag'>{t.gross}: R$ {displayMoney(asset.totalIncome)}</small>
                               </div>
-                              <div className='asset-tax-tags'>
-                                <span className={`tax-rate-pill ${dailyTax.iofRate === 0 ? 'zero-iof' : ''}`}>
-                                  {t.iofRateLabel}: {dailyTax.iofRate}%
-                                </span>
-                                <span className='tax-rate-pill'>
-                                  {t.irRateLabel}: {dailyTax.irRate}%
-                                </span>
-                              </div>
-                            </div>
+                            </>
                           ) : (
                             <>
                               <div className='asset-metric'>
@@ -1533,6 +1545,17 @@ function App() {
                                 <p>R$ {displayMoney(asset.totalIncome)}</p>
                               </div>
                             </>
+                          )}
+                        </div>
+
+                        <div className='asset-footer-meta'>
+                          <span>
+                            <strong>{formatDateKey(asset.creationDate, locale)}</strong> · {daysElapsed} {t.days}
+                          </span>
+                          {asset.applyTax && (
+                            <span className='asset-tax-summary'>
+                              {t.iofRateLabel} {dailyTax.iofRate}% · {t.irRateLabel} {dailyTax.irRate}%
+                            </span>
                           )}
                         </div>
                       </>
@@ -1554,55 +1577,42 @@ function App() {
       const lastYearSpentTotal = (database.expenses || [])
         .filter((exp) => exp.date && exp.date.startsWith(lastYearPrefix))
         .reduce((sum, exp) => sum + Math.max(toFiniteNumber(exp.amount), 0), 0);
-      const portfolioColors = [
-        '#10b981',
-        '#0d9488',
-        '#0284c7',
-        '#64748b',
-        '#059669',
-        '#475569'
-      ];
 
       return (
         <div className='balance-view'>
-          <div className='balance-year-grid'>
-            <div className='balance-card'>
-              <h2>{t.spent}</h2>
-              <strong>{actualDate.getFullYear()}</strong>
-              <strong>R$ {displayMoney(spentTotal)}</strong>
-              <h3>{t.lastYear}</h3>
-              <strong>R$ {displayMoney(lastYearSpentTotal)}</strong>
-            </div>
-            <div className='balance-card'>
-              <h2>{t.invested}</h2>
-              <strong>{actualDate.getFullYear()}</strong>
-              <strong>R$ {displayMoney(investedTotal)}</strong>
-              <h3>{t.lastYear}</h3>
-              <strong>R$ {displayMoney(previousYearIncome)}</strong>
-            </div>
-          </div>
-
-          <div className='balance-chart-card balance-graphic-card'>
-            <div className='balance-graphic-header'>
-              <div className='graphic-title-group'>
-                <h2>{t.moneyBalance}</h2>
-                <span className='graphic-subtitle'>{t.capitalAllocation}</span>
+          <div className='balance-summary-card'>
+            <div className='balance-year-grid'>
+              <div className='balance-card'>
+                <div className='balance-card-head'>
+                  <h2>{t.invested}</h2>
+                  <span className='balance-year-label'>{actualDate.getFullYear()}</span>
+                </div>
+                <strong>R$ {displayMoney(investedTotal)}</strong>
+                <div className='balance-card-footer'>
+                  <h3>{t.lastYear}</h3>
+                  <strong>R$ {displayMoney(previousYearIncome)}</strong>
+                </div>
               </div>
-              <div className='graphic-total-badge'>
-                <span className='total-badge-label'>{t.totalFlow}</span>
-                <strong>R$ {displayMoney(totalBalance)}</strong>
+              <div className='balance-card'>
+                <div className='balance-card-head'>
+                  <h2>{t.spent}</h2>
+                  <span className='balance-year-label'>{actualDate.getFullYear()}</span>
+                </div>
+                <strong>R$ {displayMoney(spentTotal)}</strong>
+                <div className='balance-card-footer'>
+                  <h3>{t.lastYear}</h3>
+                  <strong>R$ {displayMoney(lastYearSpentTotal)}</strong>
+                </div>
               </div>
             </div>
 
             <div className='balance-visual-track-wrap'>
               <div className='balance-track-header'>
-                <span className='track-marker invested-marker'>
-                  <span className='marker-dot invested'></span>
-                  {t.invested}: <strong>{formatDecimal(investedRatio)}%</strong>
+                <span className='track-marker'>
+                  {t.invested} <strong>{formatDecimal(investedRatio)}%</strong>
                 </span>
-                <span className='track-marker spent-marker'>
-                  <span className='marker-dot spent'></span>
-                  {t.spent}: <strong>{formatDecimal(spentRatio)}%</strong>
+                <span className='track-marker'>
+                  {t.spent} <strong>{formatDecimal(spentRatio)}%</strong>
                 </span>
               </div>
               <div
@@ -1615,94 +1625,16 @@ function App() {
               >
                 <div
                   className='bar-segment invested-segment'
-                  style={{ width: `${totalBalance > 0 ? Math.max(investedRatio, 3) : 50}%` }}
+                  style={{ width: `${totalBalance > 0 ? Math.max(investedRatio, 2) : 50}%` }}
                   title={`${t.invested}: R$ ${displayMoney(investedTotal)} (${formatDecimal(investedRatio)}%)`}
-                >
-                  {investedRatio >= 14 && <span className='segment-label'>{formatDecimal(investedRatio)}%</span>}
-                </div>
+                />
                 <div
                   className='bar-segment spent-segment'
-                  style={{ width: `${totalBalance > 0 ? Math.max(spentRatio, 3) : 50}%` }}
+                  style={{ width: `${totalBalance > 0 ? Math.max(spentRatio, 2) : 50}%` }}
                   title={`${t.spent}: R$ ${displayMoney(spentTotal)} (${formatDecimal(spentRatio)}%)`}
-                >
-                  {spentRatio >= 14 && <span className='segment-label'>{formatDecimal(spentRatio)}%</span>}
-                </div>
+                />
               </div>
             </div>
-
-            <div className='balance-graphic-grid'>
-              <div className='graphic-flow-card invested-flow'>
-                <div className='flow-card-top'>
-                  <div className='flow-icon-wrap invested'>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 256 256" fill="currentColor">
-                      <path d="M240,56v48a8,8,0,0,1-13.66,5.66L205.66,89,141.66,153a8,8,0,0,1-11.32,0L96,118.63,29.66,185a8,8,0,0,1-11.32-11.32l72-72a8,8,0,0,1,11.32,0L136,136.69l58.34-58.35L173.66,57.66A8,8,0,0,1,184,48h48A8,8,0,0,1,240,56Z"></path>
-                    </svg>
-                  </div>
-                  <div className='flow-meta'>
-                    <span className='flow-type-label'>{t.invested}</span>
-                    <span className='flow-ratio-pill invested'>{formatDecimal(investedRatio)}%</span>
-                  </div>
-                </div>
-                <strong className='flow-amount'>R$ {displayMoney(investedTotal)}</strong>
-                <div className='flow-bar-container'>
-                  <div className='flow-mini-bar invested' style={{ width: `${totalBalance > 0 ? investedRatio : 0}%` }}></div>
-                </div>
-              </div>
-
-              <div className='graphic-flow-card spent-flow'>
-                <div className='flow-card-top'>
-                  <div className='flow-icon-wrap spent'>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 256 256" fill="currentColor">
-                      <path d="M240,192a8,8,0,0,1-8,8H184a8,8,0,0,1-5.66-13.66L199,165.66l-58.34-58.35L106.34,142a8,8,0,0,1-11.32,0l-72-72A8,8,0,0,1,34.34,58.69L96,120.34l34.34-34.35a8,8,0,0,1,11.32,0l64,64,20.68-20.69A8,8,0,0,1,240,136Z"></path>
-                    </svg>
-                  </div>
-                  <div className='flow-meta'>
-                    <span className='flow-type-label'>{t.spent}</span>
-                    <span className='flow-ratio-pill spent'>{formatDecimal(spentRatio)}%</span>
-                  </div>
-                </div>
-                <strong className='flow-amount'>R$ {displayMoney(spentTotal)}</strong>
-                <div className='flow-bar-container'>
-                  <div className='flow-mini-bar spent' style={{ width: `${totalBalance > 0 ? spentRatio : 0}%` }}></div>
-                </div>
-              </div>
-            </div>
-
-            {database.assets.length > 0 && investedTotal > 0 && (
-              <div className='balance-asset-breakdown'>
-                <div className='asset-breakdown-header'>
-                  <span className='asset-breakdown-title'>{locale === 'pt' ? 'Composição dos Investimentos' : 'Investment Portfolio Breakdown'}</span>
-                  <span className='asset-breakdown-count'>{database.assets.length} {t.investmentsCount}</span>
-                </div>
-                <div className='breakdown-track' role='progressbar' aria-label={locale === 'pt' ? 'Composição dos Investimentos' : 'Investment Portfolio Breakdown'}>
-                  {database.assets.map((asset, index) => {
-                    const ratio = investedTotal > 0 ? (asset.investedAmount / investedTotal) * 100 : 0;
-                    const color = portfolioColors[index % portfolioColors.length];
-                    return (
-                      <div
-                        key={asset.id}
-                        className='breakdown-segment'
-                        style={{ width: `${Math.max(ratio, 1.5)}%`, backgroundColor: color }}
-                        title={`${asset.name}: R$ ${displayMoney(asset.investedAmount)} (${formatDecimal(ratio)}%)`}
-                      />
-                    );
-                  })}
-                </div>
-                <div className='breakdown-legend'>
-                  {database.assets.map((asset, index) => {
-                    const ratio = investedTotal > 0 ? (asset.investedAmount / investedTotal) * 100 : 0;
-                    const color = portfolioColors[index % portfolioColors.length];
-                    return (
-                      <div key={asset.id} className='breakdown-legend-item'>
-                        <span className='legend-color-dot' style={{ backgroundColor: color }} />
-                        <span className='legend-asset-name'>{asset.name}</span>
-                        <strong className='legend-asset-pct'>{formatDecimal(ratio)}%</strong>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
           </div>
 
           <div className='balance-expenses-card'>
@@ -1713,8 +1645,8 @@ function App() {
                   <span className='expenses-count-badge'>
                     {expensesYearlyMetrics.count} {expensesYearlyMetrics.count === 1 ? t.itemSingular : t.itemPlural}
                   </span>
+                  <strong className='expenses-period-total'>- R$ {displayMoney(expensesYearlyMetrics.total)}</strong>
                 </div>
-                <p className='expenses-subtitle'>{t.expensesSubtitle}</p>
               </div>
 
               <div className='expenses-header-actions'>
@@ -1743,7 +1675,7 @@ function App() {
                   onClick={() => setIsAddDirectExpenseOpen((prev) => !prev)}
                   title={t.addExpenseCost}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 256 256" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 256 256" fill="currentColor">
                     <path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"/>
                   </svg>
                   <span>{t.addExpenseCost}</span>
@@ -1806,43 +1738,22 @@ function App() {
               </form>
             )}
 
-            <div className='expenses-summary-strip'>
-              <div className='expense-kpi-card total-kpi'>
-                <span className='kpi-label'>{t.totalExpenses}</span>
-                <strong className='kpi-value outflow'>- R$ {displayMoney(expensesYearlyMetrics.total)}</strong>
-                <span className='kpi-sub'>{selectedExpenseYear === 'all' ? t.allYears : selectedExpenseYear}</span>
-              </div>
-              <div className='expense-kpi-card wishlist-kpi'>
-                <span className='kpi-label'>{t.wishlistOutflows}</span>
-                <strong className='kpi-value'>R$ {displayMoney(expensesYearlyMetrics.wishlistTotal)}</strong>
-                <span className='kpi-sub'>{expensesYearlyMetrics.wishlistCount} {locale === 'pt' ? 'desejos' : 'items'}</span>
-              </div>
-              <div className='expense-kpi-card recovery-kpi'>
-                <span className='kpi-label'>{t.recoveryOutflows}</span>
-                <strong className='kpi-value'>R$ {displayMoney(expensesYearlyMetrics.recoveryTotal)}</strong>
-                <span className='kpi-sub'>{expensesYearlyMetrics.recoveryCount} {locale === 'pt' ? 'quitados' : 'cleared'}</span>
-              </div>
-            </div>
-
             <div className='expenses-items-list'>
               {filteredExpenses.length === 0 ? (
                 <div className='expenses-empty-state'>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256" fill="currentColor">
-                    <path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM216,200H40V56H216V200ZM176,88a48,48,0,0,1-96,0,8,8,0,0,1,16,0,32,32,0,0,0,64,0,8,8,0,0,1,16,0Z"/>
-                  </svg>
                   <p>{t.noExpensesFound}</p>
                 </div>
               ) : (
                 filteredExpenses.map((exp) => (
                   <div key={exp.id} className='expense-item-row'>
                     <div className='expense-item-meta'>
-                      <span className={`expense-category-pill ${exp.category}`}>
+                      <strong className='expense-item-name'>{exp.name}</strong>
+                      <span className='expense-category-label'>
                         {exp.category === 'recovery' ? t.recoveryCategory : t.wishlistCategory}
                       </span>
-                      <strong className='expense-item-name'>{exp.name}</strong>
-                      <span className='expense-item-date'>{formatDateKey(exp.date, locale)}</span>
                     </div>
                     <div className='expense-item-amount'>
+                      <span className='expense-item-date'>{formatDateKey(exp.date, locale)}</span>
                       <span className='expense-amount-negative'>- R$ {displayMoney(exp.amount)}</span>
                       <button
                         type='button'

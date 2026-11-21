@@ -11,14 +11,15 @@
 }
 
 .buy {
-    fill: var(--accent-green);
-    border: 1px solid var(--accent-green-border);
-    background: var(--accent-green-bg);
+    fill: var(--text-secondary);
+    border: 1px solid var(--border-card);
+    background: var(--bg-surface-elevated);
     border-radius: 5px;
-    transition: background-color 0.12s ease, fill 0.12s ease;
+    transition: background-color 0.12s ease, fill 0.12s ease, border-color 0.12s ease;
 }
 
 .buy:hover {
     background: var(--accent-green);
+    border-color: var(--accent-green);
     fill: #ffffff;
 }

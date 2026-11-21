@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import './SyncModal.css';
 import { formatMoney, formatDateKey } from '../../utils/formatters';
 
@@ -10,12 +10,7 @@ const SYNC_MODAL_TEXT = {
     portfolioBalanceLabel: 'Total Portfolio Balance',
     businessDaysLabel: 'Business Days Accrued',
     settlementDateLabel: 'Bank Position Date',
-    statusConnecting: 'Reading BCB SGS Series 12 rates...',
-    statusCompounding: 'Compounding daily CDI across business days...',
-    statusReconciling: 'Verifying position balance...',
-    statusCompleted: '✓ 100% Synced & Reconciled with Bank!',
     done: 'Done',
-    stopwatch: 'Stopwatch',
     daysUnit: 'business days'
   },
   pt: {
@@ -25,12 +20,7 @@ const SYNC_MODAL_TEXT = {
     portfolioBalanceLabel: 'Saldo Total em Carteira',
     businessDaysLabel: 'Dias Úteis Acumulados',
     settlementDateLabel: 'Data da Posição Bancária',
-    statusConnecting: 'Consultando taxas BCB SGS Série 12...',
-    statusCompounding: 'Calculando juros compostos nos dias úteis...',
-    statusReconciling: 'Conferindo saldo da posição...',
-    statusCompleted: '✓ 100% Sincronizado e Reconciliado com o Banco!',
     done: 'Concluir',
-    stopwatch: 'Cronômetro',
     daysUnit: 'dias úteis'
   }
 };
@@ -40,69 +30,13 @@ const SyncModal = ({
   onClose,
   targetIncome = 0,
   targetTotal = 0,
-  initialPrincipal = 0,
   businessDays = 0,
   referenceDate = '',
-  locale = 'pt',
-  duration = 650
+  locale = 'pt'
 }) => {
-  const [currentIncome, setCurrentIncome] = useState(0);
-  const [currentTotal, setCurrentTotal] = useState(initialPrincipal);
-  const [elapsedMs, setElapsedMs] = useState(0);
-  const [isCompleted, setIsCompleted] = useState(false);
-  const animationFrameRef = useRef(null);
-
   const t = SYNC_MODAL_TEXT[locale] || SYNC_MODAL_TEXT.pt;
   const targetIncomeNum = Math.max(0, Number(targetIncome) || 0);
   const targetTotalNum = Math.max(0, Number(targetTotal) || 0);
-  const startingPrincipal = Number.isFinite(Number(initialPrincipal)) && Number(initialPrincipal) > 0
-    ? Number(initialPrincipal)
-    : Math.max(0, targetTotalNum - targetIncomeNum);
-
-  useEffect(() => {
-    if (!isOpen) {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-      setCurrentIncome(0);
-      setCurrentTotal(startingPrincipal);
-      setElapsedMs(0);
-      setIsCompleted(false);
-      return;
-    }
-
-    const startTime = performance.now();
-
-    const animate = (currentTime) => {
-      const elapsed = currentTime - startTime;
-      const progress = duration > 0 ? Math.min(elapsed / duration, 1) : 1;
-      const easedProgress = 1 - Math.pow(1 - progress, 3);
-
-      const calculatedIncome = targetIncomeNum * easedProgress;
-      const calculatedTotal = startingPrincipal + (targetTotalNum - startingPrincipal) * easedProgress;
-
-      setCurrentIncome(calculatedIncome);
-      setCurrentTotal(calculatedTotal);
-      setElapsedMs(elapsed);
-
-      if (progress < 1) {
-        animationFrameRef.current = requestAnimationFrame(animate);
-      } else {
-        setCurrentIncome(targetIncomeNum);
-        setCurrentTotal(targetTotalNum);
-        setElapsedMs(duration);
-        setIsCompleted(true);
-      }
-    };
-
-    animationFrameRef.current = requestAnimationFrame(animate);
-
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, [isOpen, targetIncomeNum, targetTotalNum, startingPrincipal, duration]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -116,32 +50,6 @@ const SyncModal = ({
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
-
-  const totalSeconds = Math.floor(elapsedMs / 1000);
-  const hundredths = Math.floor((elapsedMs % 1000) / 10);
-  const timerDisplay = `${String(totalSeconds).padStart(2, '0')}:${String(hundredths).padStart(2, '0')}`;
-  const progressPct = duration > 0 ? Math.min(100, Math.round((elapsedMs / duration) * 100)) : 100;
-
-  let statusText = t.statusConnecting;
-  if (isCompleted || progressPct >= 100) {
-    statusText = t.statusCompleted;
-  } else if (progressPct >= 70) {
-    statusText = t.statusReconciling;
-  } else if (progressPct >= 20) {
-    statusText = t.statusCompounding;
-  }
-
-  const handleHeroClick = () => {
-    if (!isCompleted) {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-      setCurrentIncome(targetIncomeNum);
-      setCurrentTotal(targetTotalNum);
-      setElapsedMs(duration);
-      setIsCompleted(true);
-    }
-  };
 
   return (
     <div
@@ -160,37 +68,16 @@ const SyncModal = ({
         <div className="sync-modal-header">
           <div className="sync-modal-header-text">
             <h2 id="sync-modal-title" className="sync-modal-title">
-              <span>{t.title}</span>
-              <span className="sync-stopwatch-timer-badge" aria-label={t.stopwatch}>
-                {timerDisplay}s
-              </span>
+              {t.title}
             </h2>
             <p className="sync-modal-subtitle">{t.subtitle}</p>
           </div>
         </div>
 
-        <div
-          className={`sync-money-hero-card ${isCompleted ? 'completed' : ''}`}
-          onClick={handleHeroClick}
-          title={!isCompleted ? 'Click to jump to end' : ''}
-          role="region"
-          aria-live="polite"
-        >
+        <div className="sync-money-hero-card" role="region" aria-live="polite">
           <span className="sync-money-label">{t.accruedIncomeLabel}</span>
           <div className="sync-money-counter-display" data-testid="sync-money-display">
-            R$ {formatMoney(currentIncome, locale)}
-          </div>
-
-          <div className="sync-progress-bar-wrapper">
-            <div
-              className="sync-progress-bar-fill"
-              style={{ width: `${progressPct}%` }}
-            />
-          </div>
-
-          <div className={`sync-status-ticker ${isCompleted ? 'completed' : ''}`}>
-            {!isCompleted && <span className="sync-status-indicator-dot" />}
-            <span>{statusText}</span>
+            R$ {formatMoney(targetIncomeNum, locale)}
           </div>
         </div>
 
@@ -198,7 +85,7 @@ const SyncModal = ({
           <div className="sync-submetric-card highlight">
             <span>{t.portfolioBalanceLabel}</span>
             <strong data-testid="sync-portfolio-balance">
-              R$ {formatMoney(currentTotal, locale)}
+              R$ {formatMoney(targetTotalNum, locale)}
             </strong>
           </div>
 

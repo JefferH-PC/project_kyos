@@ -442,20 +442,33 @@ const SimulationArea = ({
     <div className="simulation-area">
       <div className="simulation-toolbar-card">
         <div className="simulation-header-bar">
-          <h3 className="simulation-area-title">{t.title}</h3>
+          <div className="sim-quick-chips" role="group" aria-label={locale === 'pt' ? 'Horizontes rápidos' : 'Quick horizons'}>
+            <button type="button" className="sim-quick-chip" onClick={() => handleQuickHorizon(30)}>
+              +30 {locale === 'pt' ? 'dias' : 'days'}
+            </button>
+            <button type="button" className="sim-quick-chip" onClick={() => handleQuickHorizon(90)}>
+              +90 {locale === 'pt' ? 'dias' : 'days'}
+            </button>
+            <button type="button" className="sim-quick-chip" onClick={() => handleQuickHorizon(180)}>
+              +6 {locale === 'pt' ? 'meses' : 'months'}
+            </button>
+            <button type="button" className="sim-quick-chip" onClick={() => handleQuickHorizon(365)}>
+              +1 {locale === 'pt' ? 'ano' : 'year'}
+            </button>
+          </div>
           <div className="simulation-actions">
+            <button
+              type="button"
+              className="simulation-btn"
+              onClick={() => setIsAddAssetOpen((prev) => !prev)}
+            >
+              {t.addSimAsset}
+            </button>
             <button type="button" className="simulation-btn" onClick={handleResetToBaseline}>
               {t.resetToLive}
             </button>
             <button type="button" className="simulation-btn btn-clear" onClick={handleClearAll}>
               {t.clearAll}
-            </button>
-            <button
-              type="button"
-              className="simulation-btn btn-add-sim-asset"
-              onClick={() => setIsAddAssetOpen((prev) => !prev)}
-            >
-              {t.addSimAsset}
             </button>
           </div>
         </div>
@@ -474,7 +487,7 @@ const SimulationArea = ({
                 onChange={(e) => setCustomCdi(e.target.value)}
               />
               <span className="simulation-cdi-annual">
-                ({t.cdiAnnual} {formatDecimal(annualCdi)}%)
+                {t.cdiAnnual} {formatDecimal(annualCdi)}%
               </span>
             </div>
 
@@ -635,7 +648,7 @@ const SimulationArea = ({
         <div className="simulation-results-card">
           <div className="simulation-results-header">
             <h3>{t.projectionsTitle}</h3>
-            {targetDate && <span className="simulation-target-date-badge">{t.targetDate}: {formatDateKey(targetDate, locale)}</span>}
+            {targetDate && <span className="simulation-target-date-badge">{formatDateKey(targetDate, locale)}</span>}
           </div>
 
           {projection ? (
@@ -654,7 +667,7 @@ const SimulationArea = ({
                 <div className="simulation-metric">
                   <div className="sim-metric-title-row">
                     <span>{t.projectedYield}</span>
-                    {adjustInflation && <span className="sim-badge real">{t.realBadge}</span>}
+                    {adjustInflation && <span className="sim-badge">{t.realBadge}</span>}
                   </div>
                   <strong>
                     R$ {displayMoney(adjustInflation ? projection.realProjectedIncome : projection.totalProjectedIncome)}
@@ -669,7 +682,7 @@ const SimulationArea = ({
                 <div className="simulation-metric">
                   <div className="sim-metric-title-row">
                     <span>{t.projectedNetWorth}</span>
-                    {adjustInflation && <span className="sim-badge real">{t.realBadge}</span>}
+                    {adjustInflation && <span className="sim-badge">{t.realBadge}</span>}
                   </div>
                   <strong>
                     R$ {displayMoney(adjustInflation ? projection.realProjectedNetWorth : projection.projectedInvestedTotal)}
@@ -682,10 +695,10 @@ const SimulationArea = ({
                 </div>
 
                 {adjustInflation && (
-                  <div className="simulation-metric highlight-ipca span-two">
+                  <div className="simulation-metric span-two">
                     <div className="sim-metric-title-row">
                       <span>{t.accumulatedInflation} ({annualIpca}% a.a.)</span>
-                      <span className="sim-badge-pill">+{formatDecimal(projection.accumulatedInflationPct)}%</span>
+                      <span className="sim-badge">+{formatDecimal(projection.accumulatedInflationPct)}%</span>
                     </div>
                     <small className="sim-inflation-details">
                       {t.realPurchasingPower}: <strong>R$ {displayMoney(projection.realProjectedNetWorth)}</strong>
@@ -701,7 +714,7 @@ const SimulationArea = ({
                     {projection.completedSlots.map((slot, index) => (
                       <div className="catchup-slot-item" key={slot.id || index}>
                         <div className="catchup-slot-info">
-                          <span className={`simulation-slot-badge ${slot.type}`}>
+                          <span className="simulation-slot-badge">
                             {slot.type === 'recovery' ? t.recovery : t.wishlist}
                           </span>
                           <span className="catchup-slot-name">{slot.name}</span>
@@ -717,34 +730,11 @@ const SimulationArea = ({
             </>
           ) : (
             <div className="simulation-empty-state">
-              <div className="sim-empty-icon" aria-hidden="true">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                  <line x1="16" y1="2" x2="16" y2="6" />
-                  <line x1="8" y1="2" x2="8" y2="6" />
-                  <line x1="3" y1="10" x2="21" y2="10" />
-                </svg>
-              </div>
-              <h4>{locale === 'pt' ? 'Escolha uma Data Alvo' : 'Select Target Date'}</h4>
               <p>
                 {locale === 'pt'
-                  ? 'Selecione um dia útil no calendário ou use um horizonte rápido abaixo.'
-                  : 'Select a business day on the calendar or pick a horizon shortcut below.'}
+                  ? 'Selecione uma data futura no calendário ou use um dos atalhos de horizonte acima.'
+                  : 'Select a future date on the calendar or use one of the horizon shortcuts above.'}
               </p>
-              <div className="sim-quick-chips">
-                <button type="button" className="sim-quick-chip" onClick={() => handleQuickHorizon(30)}>
-                  +30 {locale === 'pt' ? 'dias' : 'days'}
-                </button>
-                <button type="button" className="sim-quick-chip" onClick={() => handleQuickHorizon(90)}>
-                  +90 {locale === 'pt' ? 'dias' : 'days'}
-                </button>
-                <button type="button" className="sim-quick-chip" onClick={() => handleQuickHorizon(180)}>
-                  +6 {locale === 'pt' ? 'meses' : 'months'}
-                </button>
-                <button type="button" className="sim-quick-chip" onClick={() => handleQuickHorizon(365)}>
-                  +1 {locale === 'pt' ? 'ano' : 'year'}
-                </button>
-              </div>
             </div>
           )}
         </div>
@@ -753,9 +743,6 @@ const SimulationArea = ({
       <div className="simulation-assets-section">
         <div className="sim-assets-header">
           <h4>{t.assetsSummary} ({simDatabase.assets?.length || 0})</h4>
-          <span className="sim-assets-subtitle">
-            {locale === 'pt' ? 'Ativos vigentes na simulação (reiniciam ao clicar em Restaurar)' : 'Active assets in simulation (resets upon clicking Reset to Live)'}
-          </span>
         </div>
         <div className="sim-assets-chips-grid">
           {(simDatabase.assets || []).map((asset) => (
@@ -765,7 +752,7 @@ const SimulationArea = ({
             >
               <div className="sim-chip-info">
                 <strong>{asset.name}</strong>
-                <span>R$ {displayMoney(asset.investedAmount)} ({asset.yieldRate}% CDI)</span>
+                <span>R$ {displayMoney(asset.investedAmount)} · {asset.yieldRate}% CDI</span>
               </div>
               {asset.isSimulationOnly && (
                 <div className="sim-chip-actions">

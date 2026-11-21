@@ -281,53 +281,72 @@ test('dedicated simulation section operates independently without mutating main 
 });
 
 test('simulation calendar restricts backward month navigation to current and future months only', async () => {
-  const simulatedDateKey = '2026-10-10';
-  window.localStorage.setItem('kyos-last-opened-date', simulatedDateKey);
-  window.localStorage.setItem('kyos-database', JSON.stringify({
-    schemaVersion: 11,
-    simulatedDate: simulatedDateKey,
-    wishlistSlots: [],
-    recoverySlots: [],
-    assets: [],
-    milestone: { target: 0 },
-    purchasedTotal: 0,
-    recoverySpentTotal: 0
-  }));
+  const RealDate = Date;
+  class MockDate extends RealDate {
+    constructor(...args) {
+      if (args.length === 0) {
+        super('2026-10-10T12:00:00Z');
+      } else {
+        super(...args);
+      }
+    }
+    static now() {
+      return new RealDate('2026-10-10T12:00:00Z').getTime();
+    }
+  }
+  global.Date = MockDate;
 
-  render(<App />);
+  try {
+    const simulatedDateKey = '2026-10-10';
+    window.localStorage.setItem('kyos-last-opened-date', simulatedDateKey);
+    window.localStorage.setItem('kyos-database', JSON.stringify({
+      schemaVersion: 11,
+      simulatedDate: simulatedDateKey,
+      wishlistSlots: [],
+      recoverySlots: [],
+      assets: [],
+      milestone: { target: 0 },
+      purchasedTotal: 0,
+      recoverySpentTotal: 0
+    }));
 
-  // Navigate to Simulation tab
-  const simBtn = await screen.findByRole('button', { name: 'Simulation' });
-  await userEvent.click(simBtn);
+    render(<App />);
 
-  // Month header initially displays October 2026
-  expect(await screen.findByText(/October 2026/i)).toBeInTheDocument();
+    // Navigate to Simulation tab
+    const simBtn = await screen.findByRole('button', { name: 'Simulation' });
+    await userEvent.click(simBtn);
 
-  // Previous month button must be disabled on the current baseline month
-  const prevBtn = screen.getByRole('button', { name: /previous month/i });
-  const nextBtn = screen.getByRole('button', { name: /next month/i });
+    // Month header initially displays October 2026
+    expect(await screen.findByText(/October 2026/i)).toBeInTheDocument();
 
-  expect(prevBtn).toBeDisabled();
-  expect(nextBtn).toBeEnabled();
+    // Previous month button must be disabled on the current baseline month
+    const prevBtn = screen.getByRole('button', { name: /previous month/i });
+    const nextBtn = screen.getByRole('button', { name: /next month/i });
 
-  // Clicking prevBtn while disabled does NOT go backward to September 2026
-  await userEvent.click(prevBtn);
-  expect(screen.getByText(/October 2026/i)).toBeInTheDocument();
-  expect(screen.queryByText(/September 2026/i)).toBeNull();
+    expect(prevBtn).toBeDisabled();
+    expect(nextBtn).toBeEnabled();
 
-  // Navigate forward to November 2026
-  await userEvent.click(nextBtn);
-  expect(await screen.findByText(/November 2026/i)).toBeInTheDocument();
+    // Clicking prevBtn while disabled does NOT go backward to September 2026
+    await userEvent.click(prevBtn);
+    expect(screen.getByText(/October 2026/i)).toBeInTheDocument();
+    expect(screen.queryByText(/September 2026/i)).toBeNull();
 
-  // Now previous month button should be enabled
-  expect(prevBtn).toBeEnabled();
+    // Navigate forward to November 2026
+    await userEvent.click(nextBtn);
+    expect(await screen.findByText(/November 2026/i)).toBeInTheDocument();
 
-  // Navigate back to October 2026
-  await userEvent.click(prevBtn);
-  expect(await screen.findByText(/October 2026/i)).toBeInTheDocument();
+    // Now previous month button should be enabled
+    expect(prevBtn).toBeEnabled();
 
-  // Once back at October 2026 (current month), it is disabled again
-  expect(prevBtn).toBeDisabled();
+    // Navigate back to October 2026
+    await userEvent.click(prevBtn);
+    expect(await screen.findByText(/October 2026/i)).toBeInTheDocument();
+
+    // Once back at October 2026 (current month), it is disabled again
+    expect(prevBtn).toBeDisabled();
+  } finally {
+    global.Date = RealDate;
+  }
 });
 
 test('catch-up modal displays accurate non-zero accrued income and completed slots rather than R$ 0,00', async () => {
@@ -861,21 +880,20 @@ test('balance section maintains stable 2-card layout without breaking when inves
   const balanceView = document.querySelector('.balance-view');
   expect(balanceView).toBeInTheDocument();
 
-  // Contains balanced layout: year grid, chart card, and expenses card
-  expect(balanceView.children.length).toBe(3);
-  expect(balanceView.children[0]).toHaveClass('balance-year-grid');
-  expect(balanceView.children[1]).toHaveClass('balance-chart-card');
-  expect(balanceView.children[2]).toHaveClass('balance-expenses-card');
+  // Contains streamlined 2-part layout: summary card and expenses card
+  expect(balanceView.children.length).toBe(2);
+  expect(balanceView.children[0]).toHaveClass('balance-summary-card');
+  expect(balanceView.children[1]).toHaveClass('balance-expenses-card');
 
-  // Verify Spent and Invested values render properly in cards and graphic
+  // Verify Spent and Invested values render properly in summary cards
   expect(screen.getAllByText('R$ 25.000,00').length).toBeGreaterThanOrEqual(1);
   expect(screen.getAllByText('R$ 5.000,00').length).toBeGreaterThanOrEqual(1);
 
-  // Verify Graphic Card and proportional bar exist, donut is replaced, and no extraneous layout breaking cards
-  expect(document.querySelector('.balance-graphic-card')).toBeInTheDocument();
+  // Verify single proportional bar exists and redundant charts/grids are removed
+  expect(document.querySelector('.balance-year-grid')).toBeInTheDocument();
   expect(document.querySelector('.balance-proportional-bar')).toBeInTheDocument();
-  expect(document.querySelector('.balance-graphic-grid')).toBeInTheDocument();
   expect(document.querySelector('.balance-expenses-card')).toBeInTheDocument();
+  expect(document.querySelector('.balance-graphic-grid')).toBeNull();
   expect(document.querySelector('.balance-donut')).toBeNull();
   expect(document.querySelector('.portfolio-allocation-card')).toBeNull();
 });
