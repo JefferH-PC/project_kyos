@@ -234,14 +234,15 @@
 
 .sim-form-fields {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
 }
 
 .sim-form-field {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    min-width: 0;
 }
 
 .sim-form-field label {
@@ -253,14 +254,28 @@
 .sim-form-field input[type="text"],
 .sim-form-field input[type="number"],
 .sim-form-field input[type="date"] {
+    width: 100%;
     padding: 7px 10px;
     border: 1px solid var(--border-card);
-    border-radius: 6px;
+    border-radius: 0;
     background: var(--bg-input);
     color: var(--text-primary);
     font: inherit;
     font-size: 13px;
     font-weight: 500;
+}
+
+.sim-form-fields .sim-form-field:nth-child(1) input {
+    border-radius: 6px 0 0 6px;
+}
+
+.sim-form-fields .sim-form-field:nth-child(4) input {
+    border-radius: 0 6px 6px 0;
+}
+
+.sim-form-field.checkbox-field {
+    grid-column: 1 / -1;
+    padding-top: 2px;
 }
 
 .sim-form-field input[type="number"],
@@ -706,13 +721,71 @@
     color: var(--text-primary);
 }
 
+@media (max-width: 860px) {
+    .simulation-calendar-card {
+        border-radius: 0 0 0 12px;
+    }
+
+    .simulation-results-card {
+        border-radius: 0 0 12px 0;
+    }
+}
+
 @media (max-width: 720px) {
     .simulation-content {
         grid-template-columns: 1fr;
     }
+
+    .simulation-calendar-card {
+        border-radius: 0;
+        min-height: 0;
+    }
+
+    .simulation-results-card {
+        border-radius: 0 0 12px 12px;
+        min-height: 240px;
+    }
+
+    .sim-form-fields {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .sim-form-fields .sim-form-field:nth-child(1) input {
+        border-radius: 6px 0 0 0;
+    }
+
+    .sim-form-fields .sim-form-field:nth-child(2) input {
+        border-radius: 0 6px 0 0;
+    }
+
+    .sim-form-fields .sim-form-field:nth-child(3) input {
+        border-radius: 0 0 0 6px;
+    }
+
+    .sim-form-fields .sim-form-field:nth-child(4) input {
+        border-radius: 0 0 6px 0;
+    }
 }
 
 @media (max-width: 600px) {
+    .simulation-header-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .sim-quick-chips {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        width: 100%;
+        gap: 4px;
+    }
+
+    .sim-quick-chip {
+        text-align: center;
+        padding: 7px 4px;
+    }
+
     .simulation-toolbar {
         flex-direction: column;
         align-items: stretch;
@@ -720,16 +793,30 @@
     }
 
     .simulation-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
         width: 100%;
-        gap: 8px;
+        gap: 4px;
+    }
+
+    .simulation-actions .simulation-btn:nth-child(1) {
+        grid-column: span 2;
+        border-radius: 6px 6px 0 0;
+    }
+
+    .simulation-actions .simulation-btn:nth-child(2) {
+        border-radius: 0 0 0 6px;
+    }
+
+    .simulation-actions .simulation-btn:nth-child(3) {
+        border-radius: 0 0 6px 0;
     }
 
     .simulation-btn {
-        flex: 1 1 0;
         text-align: center;
         padding: 8px 8px;
         font-size: 12px;
-        min-height: 38px;
+        min-height: 36px;
     }
 
     .simulation-cdi-control {
@@ -740,12 +827,12 @@
     .simulation-cdi-input {
         font-size: 16px;
         padding: 6px 8px;
-        width: 80px;
+        width: 88px;
     }
 
     .simulation-calendar-card,
     .simulation-results-card {
-        padding: 12px;
+        padding: 14px;
         gap: 10px;
     }
 
@@ -760,7 +847,6 @@
 
     .calendar-day-cell {
         font-size: 12px;
-        border-radius: 6px;
     }
 
     .calendar-legend {
@@ -769,7 +855,7 @@
     }
 
     .simulation-metric-grid {
-        gap: 8px;
+        gap: 6px;
     }
 
     .simulation-metric {
@@ -778,5 +864,24 @@
 
     .simulation-metric strong {
         font-size: 16px;
+    }
+}
+
+@media (max-width: 420px) {
+    .sim-form-fields {
+        grid-template-columns: 1fr;
+    }
+
+    .sim-form-fields .sim-form-field:nth-child(1) input {
+        border-radius: 6px 6px 0 0;
+    }
+
+    .sim-form-fields .sim-form-field:nth-child(2) input,
+    .sim-form-fields .sim-form-field:nth-child(3) input {
+        border-radius: 0;
+    }
+
+    .sim-form-fields .sim-form-field:nth-child(4) input {
+        border-radius: 0 0 6px 6px;
     }
 }

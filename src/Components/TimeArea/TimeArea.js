@@ -116,13 +116,8 @@ const TimeArea = (props) => {
         }
     };
 
-    const handleDrop = (event, targetSlotId) => {
-        event.preventDefault();
-        const sourceId = draggedSlotId || (event.dataTransfer && event.dataTransfer.getData('text/plain'));
-        setDraggedSlotId(null);
-        setDragOverSlotId(null);
-
-        if (!sourceId || sourceId === targetSlotId) return;
+    const reorderSlots = (sourceId, targetSlotId) => {
+        if (!sourceId || !targetSlotId || sourceId === targetSlotId) return;
 
         const sourceIndex = slots.findIndex((s) => s.id === sourceId);
         const targetIndex = slots.findIndex((s) => s.id === targetSlotId);
@@ -159,7 +154,40 @@ const TimeArea = (props) => {
         props.onSlotsChange(nextSlots);
     };
 
+    const handleDrop = (event, targetSlotId) => {
+        event.preventDefault();
+        const sourceId = draggedSlotId || (event.dataTransfer && event.dataTransfer.getData('text/plain'));
+        setDraggedSlotId(null);
+        setDragOverSlotId(null);
+        reorderSlots(sourceId, targetSlotId);
+    };
+
     const handleDragEnd = () => {
+        setDraggedSlotId(null);
+        setDragOverSlotId(null);
+    };
+
+    const handleTouchStart = (slotId) => {
+        setDraggedSlotId(slotId);
+    };
+
+    const handleTouchMove = (event) => {
+        if (!draggedSlotId) return;
+        const touch = event.touches?.[0];
+        if (!touch || typeof document.elementFromPoint !== 'function') return;
+        const targetEl = document.elementFromPoint(touch.clientX, touch.clientY)?.closest?.('[data-slot-id]');
+        const overId = targetEl?.getAttribute?.('data-slot-id') || null;
+        if (overId && overId !== draggedSlotId) {
+            setDragOverSlotId(overId);
+        } else if (!overId && dragOverSlotId) {
+            setDragOverSlotId(null);
+        }
+    };
+
+    const handleTouchEnd = () => {
+        if (draggedSlotId && dragOverSlotId && draggedSlotId !== dragOverSlotId) {
+            reorderSlots(draggedSlotId, dragOverSlotId);
+        }
         setDraggedSlotId(null);
         setDragOverSlotId(null);
     };
@@ -203,7 +231,10 @@ const TimeArea = (props) => {
             onDragOver: (e) => handleDragOver(e, slot.id),
             onDragLeave: () => handleDragLeave(slot.id),
             onDrop: (e) => handleDrop(e, slot.id),
-            onDragEnd: handleDragEnd
+            onDragEnd: handleDragEnd,
+            onTouchStart: () => handleTouchStart(slot.id),
+            onTouchMove: handleTouchMove,
+            onTouchEnd: handleTouchEnd
         };
 
         return <ExpenseSlot key={slot.id} {...slotProps} />;

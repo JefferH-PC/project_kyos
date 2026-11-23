@@ -775,12 +775,20 @@ select,
     width: 100%;
     padding: 6px 10px;
     border: 1px solid var(--border-card);
-    border-radius: 6px;
+    border-radius: 0;
     background: var(--bg-input);
     color: var(--text-primary);
     font: inherit;
     font-size: 13px;
     font-weight: 500;
+}
+
+.asset-edit-form .asset-edit-label:first-of-type input {
+    border-radius: 6px 6px 0 0;
+}
+
+.asset-edit-form .asset-edit-label:nth-of-type(4) input {
+    border-radius: 0 0 6px 6px;
 }
 
 .asset-edit-label input:focus {
@@ -856,7 +864,7 @@ select,
 
 .asset-form-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 6px;
 }
 
@@ -1238,7 +1246,7 @@ select,
 
 .direct-expense-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 6px;
 }
 
@@ -1569,32 +1577,33 @@ select,
     gap: 4px;
     padding: 5px;
     background: var(--bg-surface);
-    border: 1px solid var(--border-subtle);
-    border-radius: 12px;
-    margin-bottom: 12px;
+    border: 1px solid var(--border-card);
+    border-radius: 12px 12px 0 0;
+    margin-bottom: 6px;
     box-shadow: var(--shadow-card);
 }
 
 .mobile-tab-btn {
     flex: 1;
-    padding: 8px 12px;
+    padding: 7px 10px;
     border: 1px solid transparent;
     border-radius: 0;
     background: transparent;
     color: var(--text-secondary);
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
-    transition: all 0.18s ease;
+    transition: color 0.12s ease, background-color 0.12s ease, border-color 0.12s ease;
     text-align: center;
+    white-space: nowrap;
 }
 
 .mobile-view-tabs .mobile-tab-btn:first-child {
-    border-radius: 8px 0 0 8px;
+    border-radius: 7px 0 0 7px;
 }
 
 .mobile-view-tabs .mobile-tab-btn:last-child {
-    border-radius: 0 8px 8px 0;
+    border-radius: 0 7px 7px 0;
 }
 
 .mobile-tab-btn:hover {
@@ -1603,10 +1612,10 @@ select,
 }
 
 .mobile-tab-btn.active {
-    background: var(--accent-green-bg);
-    color: var(--accent-green);
-    border-color: var(--accent-green-border);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+    background: var(--bg-surface-elevated);
+    color: var(--text-primary);
+    border-color: var(--border-card);
+    font-weight: 600;
 }
 
 /* Holiday Error Banner */
@@ -1761,7 +1770,7 @@ select,
         display: flex;
         height: auto;
         flex-direction: column;
-        gap: 16px;
+        gap: 6px;
         min-height: 0;
     }
 
@@ -1798,12 +1807,27 @@ select,
         display: none !important;
     }
 
-    .middle {
+    .middle,
+    .app-areas.section-simulation .middle {
         order: -1;
         height: auto;
         min-height: 0;
         padding: 0;
         overflow: visible;
+    }
+
+    .section-buttons {
+        border-radius: 0;
+        margin-bottom: 6px;
+    }
+
+    /* Bottom outer perimeter rounding on tablet/mobile (601px - 860px) */
+    .time-cards .period-card:first-child {
+        border-radius: 0 0 0 12px;
+    }
+
+    .time-cards .period-card:last-child {
+        border-radius: 0 0 12px 0;
     }
 
     .balance-view,
@@ -1812,17 +1836,58 @@ select,
         max-height: none;
         overflow: visible;
     }
+
+    .balance-expenses-card {
+        border-radius: 0 0 12px 12px;
+    }
+
+    .assets-panel {
+        border-radius: 0 0 12px 12px;
+    }
+}
+
+@media (max-width: 720px) {
+    .asset-form-grid,
+    .direct-expense-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .asset-form-grid .asset-form-field:nth-child(1) input,
+    .direct-expense-grid .direct-expense-field:nth-child(1) input {
+        border-radius: 6px 0 0 0;
+    }
+
+    .asset-form-grid .asset-form-field:nth-child(2) input,
+    .direct-expense-grid .direct-expense-field:nth-child(2) input {
+        border-radius: 0 6px 0 0;
+    }
+
+    .asset-form-grid .asset-form-field:nth-child(3) input,
+    .direct-expense-grid .direct-expense-field:nth-child(3) input {
+        border-radius: 0 0 0 6px;
+    }
+
+    .asset-form-grid .asset-form-field:nth-child(4) input,
+    .direct-expense-grid .direct-expense-field:nth-child(4) select {
+        border-radius: 0 0 6px 0;
+    }
 }
 
 @media (max-width: 600px) {
+    .mobile-tab-btn {
+        padding: 7px 6px;
+        font-size: 12px;
+    }
+
     .section-buttons {
-        gap: 6px;
+        gap: 4px;
         padding: 4px;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
         flex-wrap: nowrap;
-        border-radius: 12px;
+        border-radius: 0;
+        margin-bottom: 6px;
     }
 
     .section-buttons::-webkit-scrollbar {
@@ -1830,39 +1895,42 @@ select,
     }
 
     .section-button {
-        flex: 1 0 auto;
-        min-width: max-content;
+        flex: 1 1 0;
+        min-width: 0;
     }
 
     .section-buttons .section-button h2 {
-        padding: 8px 14px;
-        font-size: 13px;
+        padding: 7px 6px;
+        font-size: 12px;
         white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .middle-summary {
         grid-template-columns: 1fr;
-        gap: 10px;
-        padding: 12px;
-        border-radius: 14px;
+        gap: 6px;
+        padding: 0;
+        border-radius: 0;
     }
 
     .middle-summary-side {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         grid-template-rows: auto;
-        gap: 10px;
+        gap: 6px;
     }
 
     .today-card,
     .cdi-card {
         height: auto;
         min-height: 110px;
-        padding: 12px;
+        padding: 14px 16px;
         gap: 6px;
+        border-radius: 0;
     }
 
     .today-card strong {
-        font-size: clamp(16px, 4.5vw, 20px);
+        font-size: clamp(18px, 4.8vw, 22px);
         gap: 4px;
         flex-wrap: wrap;
     }
@@ -1872,29 +1940,38 @@ select,
     }
 
     .cdi-card strong {
-        font-size: clamp(20px, 5.5vw, 28px);
+        font-size: clamp(22px, 5.5vw, 28px);
     }
 
     .trend {
         font-size: 13px;
-        padding: 1px 6px;
+        padding: 0;
     }
 
     .time-cards {
         grid-template-columns: 1fr;
-        gap: 10px;
-        margin-top: 10px;
+        gap: 6px;
+        margin-top: 6px;
     }
 
     .period-card {
         height: auto;
-        min-height: 80px;
-        padding: 14px;
+        min-height: 88px;
+        padding: 14px 16px;
         gap: 4px;
+        border-radius: 0;
+    }
+
+    .time-cards .period-card:first-child {
+        border-radius: 0;
+    }
+
+    .time-cards .period-card:last-child {
+        border-radius: 0 0 12px 12px;
     }
 
     .period-card strong {
-        font-size: clamp(18px, 4.5vw, 22px);
+        font-size: clamp(18px, 4.8vw, 22px);
         gap: 6px;
     }
 
@@ -1903,57 +1980,50 @@ select,
     }
 
     .balance-view {
-        padding: 12px;
+        padding: 0;
+        gap: 6px;
+        border-radius: 0;
+    }
+
+    .balance-summary-card {
+        padding: 14px 16px;
         gap: 12px;
-        border-radius: 14px;
+        border-radius: 0;
     }
 
     .balance-year-grid {
         grid-template-columns: 1fr;
-        gap: 10px;
+        gap: 6px;
     }
 
     .balance-card {
         padding: 14px;
-        min-height: 100px;
+        min-height: 96px;
         gap: 6px;
+    }
+
+    .balance-year-grid .balance-card:first-child {
+        border-radius: 8px 8px 0 0;
+    }
+
+    .balance-year-grid .balance-card:last-child {
+        border-radius: 0 0 8px 8px;
     }
 
     .balance-card strong {
         font-size: clamp(20px, 5vw, 26px);
     }
 
-    .balance-chart-card {
-        padding: 16px 14px;
-        gap: 14px;
-        min-height: 0;
-    }
-
-    .balance-graphic-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-    }
-
-    .graphic-total-badge {
-        align-items: flex-start;
-        width: 100%;
-    }
-
-    .balance-graphic-grid {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-
     .balance-expenses-card {
-        padding: 16px 14px;
-        gap: 14px;
+        padding: 14px 16px;
+        gap: 12px;
+        border-radius: 0 0 12px 12px;
     }
 
     .expenses-card-header {
         flex-direction: column;
         align-items: flex-start;
-        gap: 12px;
+        gap: 10px;
     }
 
     .expenses-header-actions {
@@ -1964,11 +2034,6 @@ select,
     .yearly-filter-pills {
         overflow-x: auto;
         max-width: 100%;
-    }
-
-    .expenses-summary-strip {
-        grid-template-columns: 1fr;
-        gap: 10px;
     }
 
     .expense-item-row {
@@ -1982,21 +2047,63 @@ select,
         justify-content: space-between;
     }
 
+    .expense-inline-edit-form {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+    }
+
+    .expense-inline-edit-form .expense-edit-input,
+    .expense-inline-edit-form .expense-edit-select {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .expense-inline-edit-form .expense-edit-input:nth-child(1) {
+        border-radius: 6px 0 0 0;
+    }
+
+    .expense-inline-edit-form .expense-edit-input:nth-child(2) {
+        border-radius: 0 6px 0 0;
+    }
+
+    .expense-inline-edit-form .expense-edit-input:nth-child(3) {
+        border-radius: 0 0 0 6px;
+    }
+
+    .expense-inline-edit-form .expense-edit-select {
+        border-radius: 0 0 6px 0;
+    }
+
+    .expense-edit-actions {
+        grid-column: span 2;
+        width: 100%;
+        margin-left: 0;
+        margin-top: 2px;
+    }
+
+    .expense-save-btn,
+    .expense-cancel-btn {
+        flex: 1;
+        padding: 7px 10px;
+    }
+
     .investments-view {
-        padding: 12px;
-        gap: 12px;
-        border-radius: 14px;
+        padding: 0;
+        gap: 6px;
+        border-radius: 0;
     }
 
     .investment-summary-grid {
         grid-template-columns: 1fr;
-        gap: 10px;
+        gap: 6px;
     }
 
     .investment-summary-card {
-        padding: 14px;
-        min-height: 90px;
+        padding: 14px 16px;
+        min-height: 88px;
         gap: 6px;
+        border-radius: 0;
     }
 
     .investment-summary-card strong {
@@ -2008,9 +2115,9 @@ select,
     }
 
     .assets-panel {
-        padding: 12px;
+        padding: 14px 16px;
         gap: 12px;
-        border-radius: 12px;
+        border-radius: 0 0 12px 12px;
     }
 
     .assets-heading {
@@ -2018,32 +2125,15 @@ select,
     }
 
     .assets-heading h2 {
-        font-size: 18px;
-    }
-
-    .total-daily-income {
-        font-size: 12px;
-        padding: 2px 8px;
+        font-size: 16px;
     }
 
     .asset-form {
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-        padding: 10px;
+        padding: 12px;
+        gap: 10px;
     }
 
-    .asset-form input:nth-child(1) {
-        grid-column: span 2;
-    }
-
-    .asset-form button {
-        grid-column: span 2;
-        width: 100%;
-        min-height: 42px;
-        font-size: 14px;
-    }
-
-    .asset-form input,
+    .asset-form-field input,
     .asset-edit-label input {
         font-size: 16px;
         padding: 8px 10px;
@@ -2051,19 +2141,15 @@ select,
 
     .assets-grid {
         grid-template-columns: 1fr;
-        gap: 10px;
+        gap: 6px;
         max-height: none;
         overflow: visible;
+        padding-right: 0;
     }
 
     .asset-card {
         min-height: auto;
-        padding: 12px 14px;
-    }
-
-    .edit-asset-button {
-        width: 32px;
-        height: 28px;
+        padding: 14px 16px;
     }
 
     .holiday-error-banner {
@@ -2075,35 +2161,35 @@ select,
     .holiday-error-banner span {
         font-size: 13px;
     }
+}
 
-    .time-area .buttons-action {
-        width: 32px;
+@media (max-width: 420px) {
+    .asset-form-grid,
+    .direct-expense-grid {
+        grid-template-columns: 1fr;
     }
 
-    .time-area .buttons-action>div,
-    .time-area .buttons-action>button {
-        width: 32px;
-        height: 28px;
+    .asset-form-grid .asset-form-field:nth-child(1) input,
+    .direct-expense-grid .direct-expense-field:nth-child(1) input {
+        border-radius: 6px 6px 0 0;
     }
 
-    .time-area .buttons-action svg {
-        width: 32px;
-        height: 28px;
+    .asset-form-grid .asset-form-field:nth-child(2) input,
+    .asset-form-grid .asset-form-field:nth-child(3) input,
+    .direct-expense-grid .direct-expense-field:nth-child(2) input,
+    .direct-expense-grid .direct-expense-field:nth-child(3) input {
+        border-radius: 0;
+    }
+
+    .asset-form-grid .asset-form-field:nth-child(4) input,
+    .direct-expense-grid .direct-expense-field:nth-child(4) select {
+        border-radius: 0 0 6px 6px;
     }
 }
 
 @media (max-width: 380px) {
     .middle-summary-side {
         grid-template-columns: 1fr;
-    }
-
-    .asset-form {
-        grid-template-columns: 1fr;
-    }
-
-    .asset-form input:nth-child(1),
-    .asset-form button {
-        grid-column: span 1;
     }
 
     .app {

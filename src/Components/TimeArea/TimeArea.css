@@ -191,7 +191,7 @@
     border-radius: 0 0 8px 0;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 860px) {
     .time-area,
     .time-area.area-wishlist,
     .time-area.area-recovery {
@@ -199,7 +199,12 @@
         width: 100%;
         height: auto;
         min-height: 260px;
-        border-radius: 12px;
+        border-radius: 0 0 12px 12px;
+    }
+
+    .time-area.area-wishlist .total h3,
+    .time-area.area-recovery .total h3 {
+        border-radius: 0 0 8px 8px;
     }
 
     .expense-area {
@@ -218,9 +223,11 @@
 }
 
 @media (max-width: 600px) {
-    .time-area {
+    .time-area,
+    .time-area.area-wishlist,
+    .time-area.area-recovery {
         padding: 12px 10px;
-        border-radius: 10px;
+        border-radius: 0 0 12px 12px;
     }
 
     .time-area .top h2 {

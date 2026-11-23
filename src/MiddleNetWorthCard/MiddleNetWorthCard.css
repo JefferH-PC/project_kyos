@@ -60,6 +60,6 @@
         min-height: 128px;
         padding: 14px 16px;
         gap: 8px;
-        border-radius: 12px 12px 0 0;
+        border-radius: 0;
     }
 }

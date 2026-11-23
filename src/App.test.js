@@ -1943,10 +1943,59 @@ test('edits an existing expense inline in Balance section and updates totals', a
   expect(savedDb.purchasedTotal).toBe(1500);
 });
 
+test('mobile viewport adapts asset cards to 1-column vertical connected perimeter border-radius and supports touch queue reordering', async () => {
+  const originalInnerWidth = window.innerWidth;
+  window.innerWidth = 390;
 
+  try {
+    window.localStorage.setItem('kyos-last-opened-date', '2026-10-19');
+    window.localStorage.setItem('kyos-database', JSON.stringify({
+      schemaVersion: 11,
+      simulatedDate: '2026-10-19',
+      assets: [
+        { id: 'a1', name: 'Asset Top', investedAmount: 1000, initialInvestedAmount: 1000, yieldRate: 100, creationDate: '2026-10-01', applyTax: false, incomeHistory: {} },
+        { id: 'a2', name: 'Asset Middle', investedAmount: 2000, initialInvestedAmount: 2000, yieldRate: 100, creationDate: '2026-10-01', applyTax: false, incomeHistory: {} },
+        { id: 'a3', name: 'Asset Bottom', investedAmount: 3000, initialInvestedAmount: 3000, yieldRate: 100, creationDate: '2026-10-01', applyTax: false, incomeHistory: {} }
+      ],
+      wishlistSlots: [
+        { id: 'm-1', expenseName: 'Mobile First', price: 100, originalPrice: 100, type: 'expense' },
+        { id: 'm-2', expenseName: 'Mobile Second', price: 200, originalPrice: 200, type: 'expense' }
+      ],
+      recoverySlots: [],
+      milestone: { target: 10000 },
+      purchasedTotal: 0,
+      recoverySpentTotal: 0,
+      expenses: []
+    }));
 
+    render(<App />);
 
+    // Touch drag-and-drop reordering on mobile
+    const firstSlot = document.querySelector('[data-slot-id="m-1"]');
+    const secondSlot = document.querySelector('[data-slot-id="m-2"]');
+    const origElementFromPoint = document.elementFromPoint;
+    document.elementFromPoint = jest.fn(() => firstSlot);
 
+    fireEvent.touchStart(secondSlot);
+    fireEvent.touchMove(secondSlot, { touches: [{ clientX: 100, clientY: 120 }] });
+    fireEvent.touchEnd(secondSlot);
 
+    document.elementFromPoint = origElementFromPoint;
 
+    const savedDb = JSON.parse(window.localStorage.getItem('kyos-database'));
+    expect(savedDb.wishlistSlots.map((s) => s.id)).toEqual(['m-2', 'm-1']);
+
+    // Navigate to Investments on mobile (390px) and verify 1-column connected perimeter border-radius
+    const investmentsBtn = await screen.findByRole('button', { name: 'Investments' });
+    await userEvent.click(investmentsBtn);
+
+    const cards = document.querySelectorAll('.asset-card');
+    expect(cards.length).toBe(3);
+    expect(cards[0].style.borderRadius).toBe('10px 10px 0px 0px');
+    expect(cards[1].style.borderRadius).toBe('0px 0px 0px 0px');
+    expect(cards[2].style.borderRadius).toBe('0px 0px 10px 10px');
+  } finally {
+    window.innerWidth = originalInnerWidth;
+  }
+});
 

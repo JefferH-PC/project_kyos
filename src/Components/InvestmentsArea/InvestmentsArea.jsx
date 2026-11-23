@@ -45,22 +45,31 @@ const InvestmentsArea = ({
   onManualSync
 }) => {
   const assetsGridRef = useRef(null);
-  const [gridCols, setGridCols] = useState(2);
+  const [gridCols, setGridCols] = useState(() => (typeof window !== 'undefined' && window.innerWidth <= 600 ? 1 : 2));
 
   useEffect(() => {
     const el = assetsGridRef.current;
     if (!el) return;
 
     const updateCols = () => {
+      if (typeof window !== 'undefined' && window.innerWidth <= 600) {
+        setGridCols(1);
+        return;
+      }
       const computed = window.getComputedStyle(el).gridTemplateColumns;
-      if (computed && computed !== 'none') {
+      if (
+        computed &&
+        computed !== 'none' &&
+        !computed.includes('repeat') &&
+        !computed.includes('minmax')
+      ) {
         const tracks = computed.trim().split(/\s+/).filter(Boolean);
         if (tracks.length >= 1) {
           setGridCols(tracks.length);
           return;
         }
       }
-      const width = el.clientWidth || window.innerWidth;
+      const width = el.clientWidth || (typeof window !== 'undefined' ? Math.max(260, window.innerWidth - 64) : 540);
       setGridCols(Math.max(1, Math.floor((width + 6) / 266)));
     };
 

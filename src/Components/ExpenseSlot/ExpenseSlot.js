@@ -34,6 +34,9 @@ const ExpenseSlot = (props) => {
             onDragLeave={props.onDragLeave}
             onDrop={props.onDrop}
             onDragEnd={props.onDragEnd}
+            onTouchStart={props.onTouchStart}
+            onTouchMove={props.onTouchMove}
+            onTouchEnd={props.onTouchEnd}
             data-slot-id={props.slotId}
         >
             <div className='slot-info'>
