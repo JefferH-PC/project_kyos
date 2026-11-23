@@ -85,7 +85,22 @@
         height: auto;
         min-height: 128px;
         padding: 14px 16px;
-        gap: 6px;
+        gap: 8px;
         border-radius: 0;
+    }
+
+    .middle-milestone h2:nth-of-type(2),
+    .middle-milestone .milestone-target {
+        font-size: clamp(18px, 5.5vw, 26px);
+    }
+
+    .middle-milestone h2:nth-of-type(3),
+    .middle-milestone .milestone-badge {
+        font-size: clamp(11px, 3.2vw, 12.5px);
+        padding: 4px 8px;
+    }
+
+    .milestone-pct {
+        font-size: 12px;
     }
 }

@@ -236,6 +236,23 @@
 
     .total h3 {
         padding: 8px 10px;
-        font-size: 12px;
+        font-size: clamp(11px, 3.3vw, 12.5px);
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .time-area .buttons-action {
+        gap: 4px;
+    }
+
+    .time-area .buttons-action>div,
+    .time-area .buttons-action>button {
+        width: 30px;
+        height: 30px;
+    }
+
+    .time-area .buttons-action svg {
+        width: 30px;
+        height: 30px;
     }
 }

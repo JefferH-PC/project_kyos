@@ -164,6 +164,13 @@
     .header-actions {
         gap: 3px;
         flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .header-actions::-webkit-scrollbar {
+        display: none;
     }
 
     .header-actions button {
@@ -192,5 +199,53 @@
         min-width: 32px;
         height: 32px;
         padding: 4px 6px !important;
+    }
+}
+
+@media (max-width: 360px) {
+    .header {
+        gap: 4px;
+        margin: 4px 0 8px 0;
+    }
+
+    .logo h1 {
+        font-size: 20px;
+    }
+
+    .header-actions {
+        gap: 2px;
+    }
+
+    .header-actions button {
+        min-width: 28px;
+        height: 28px;
+        min-height: 28px;
+        padding: 3px 4px !important;
+    }
+
+    .action-icon-button {
+        min-width: 28px;
+        height: 28px;
+        padding: 2px 4px !important;
+    }
+
+    .action-icon-button svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .language-select {
+        height: 28px;
+        font-size: 11px;
+        padding: 0 16px 0 6px !important;
+        background-position: right 4px center;
+    }
+
+    .language-select.locale-en {
+        width: 62px;
+    }
+
+    .language-select.locale-pt {
+        width: 70px;
     }
 }

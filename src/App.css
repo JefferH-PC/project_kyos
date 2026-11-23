@@ -1875,8 +1875,8 @@ select,
 
 @media (max-width: 600px) {
     .mobile-tab-btn {
-        padding: 7px 6px;
-        font-size: 12px;
+        padding: 7px 4px;
+        font-size: clamp(11px, 3.2vw, 12.5px);
     }
 
     .section-buttons {
@@ -1900,8 +1900,8 @@ select,
     }
 
     .section-buttons .section-button h2 {
-        padding: 7px 6px;
-        font-size: 12px;
+        padding: 7px 4px;
+        font-size: clamp(10.5px, 3.1vw, 12px);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -1924,9 +1924,19 @@ select,
     .cdi-card {
         height: auto;
         min-height: 110px;
-        padding: 14px 16px;
+        padding: 12px 14px;
         gap: 6px;
         border-radius: 0;
+    }
+
+    .today-card h2,
+    .period-card h2 {
+        font-size: 13px;
+    }
+
+    .today-card h3,
+    .period-card h3 {
+        font-size: 12px;
     }
 
     .today-card strong {
@@ -1935,8 +1945,9 @@ select,
         flex-wrap: wrap;
     }
 
-    .today-card h3+strong {
-        font-size: 14px;
+    .today-card h3+strong,
+    .period-card h3+strong {
+        font-size: 13.5px;
     }
 
     .cdi-card strong {
@@ -1957,7 +1968,7 @@ select,
     .period-card {
         height: auto;
         min-height: 88px;
-        padding: 14px 16px;
+        padding: 12px 14px;
         gap: 4px;
         border-radius: 0;
     }
@@ -1972,11 +1983,8 @@ select,
 
     .period-card strong {
         font-size: clamp(18px, 4.8vw, 22px);
-        gap: 6px;
-    }
-
-    .period-card h3+strong {
-        font-size: 14px;
+        gap: 4px;
+        flex-wrap: wrap;
     }
 
     .balance-view {
@@ -2010,6 +2018,10 @@ select,
         border-radius: 0 0 8px 8px;
     }
 
+    .balance-year-grid .balance-card:only-child {
+        border-radius: 8px;
+    }
+
     .balance-card strong {
         font-size: clamp(20px, 5vw, 26px);
     }
@@ -2034,6 +2046,25 @@ select,
     .yearly-filter-pills {
         overflow-x: auto;
         max-width: 100%;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .yearly-filter-pills::-webkit-scrollbar {
+        display: none;
+    }
+
+    .direct-expense-field input,
+    .direct-expense-field select {
+        font-size: 16px;
+        padding: 8px 10px;
+    }
+
+    .direct-expense-actions .cancel-btn,
+    .direct-expense-actions .submit-btn {
+        min-height: 36px;
+        padding: 8px 14px;
+        font-size: 13px;
     }
 
     .expense-item-row {
@@ -2047,6 +2078,13 @@ select,
         justify-content: space-between;
     }
 
+    .expense-edit-btn,
+    .expense-delete-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 16px;
+    }
+
     .expense-inline-edit-form {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -2057,6 +2095,8 @@ select,
     .expense-inline-edit-form .expense-edit-select {
         width: 100%;
         min-width: 0;
+        font-size: 16px;
+        padding: 8px 10px;
     }
 
     .expense-inline-edit-form .expense-edit-input:nth-child(1) {
@@ -2085,7 +2125,8 @@ select,
     .expense-save-btn,
     .expense-cancel-btn {
         flex: 1;
-        padding: 7px 10px;
+        padding: 8px 12px;
+        font-size: 13px;
     }
 
     .investments-view {
@@ -2128,6 +2169,12 @@ select,
         font-size: 16px;
     }
 
+    .sync-incomes-btn,
+    .add-investment-btn {
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+
     .asset-form {
         padding: 12px;
         gap: 10px;
@@ -2137,6 +2184,27 @@ select,
     .asset-edit-label input {
         font-size: 16px;
         padding: 8px 10px;
+    }
+
+    .asset-actions {
+        gap: 3px;
+    }
+
+    .asset-actions .asset-tax-toggle-btn {
+        height: 32px;
+        padding: 0 10px;
+        font-size: 11.5px;
+    }
+
+    .edit-asset-button {
+        width: 32px;
+        height: 32px;
+    }
+
+    .asset-actions .remove-button,
+    .asset-actions .remove {
+        width: 32px;
+        height: 32px;
     }
 
     .assets-grid {
@@ -2185,11 +2253,66 @@ select,
     .direct-expense-grid .direct-expense-field:nth-child(4) select {
         border-radius: 0 0 6px 6px;
     }
+
+    .direct-expense-actions {
+        width: 100%;
+    }
+
+    .direct-expense-actions .cancel-btn,
+    .direct-expense-actions .submit-btn {
+        flex: 1;
+        text-align: center;
+        justify-content: center;
+    }
+
+    .expense-inline-edit-form {
+        grid-template-columns: 1fr;
+    }
+
+    .expense-inline-edit-form .expense-edit-input:nth-child(1) {
+        border-radius: 6px 6px 0 0;
+    }
+
+    .expense-inline-edit-form .expense-edit-input:nth-child(2),
+    .expense-inline-edit-form .expense-edit-input:nth-child(3) {
+        border-radius: 0;
+    }
+
+    .expense-inline-edit-form .expense-edit-select {
+        border-radius: 0 0 6px 6px;
+    }
+
+    .expense-edit-actions {
+        grid-column: 1;
+    }
+}
+
+@media (max-width: 400px) {
+    .assets-heading-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+
+    .sync-incomes-btn {
+        border-radius: 6px 6px 0 0;
+        justify-content: center;
+    }
+
+    .add-investment-btn {
+        border-radius: 0 0 6px 6px;
+        justify-content: center;
+    }
 }
 
 @media (max-width: 380px) {
     .middle-summary-side {
         grid-template-columns: 1fr;
+    }
+
+    .cdi-card {
+        min-height: 80px;
     }
 
     .app {

@@ -784,6 +784,7 @@
     .sim-quick-chip {
         text-align: center;
         padding: 7px 4px;
+        font-size: 11.5px;
     }
 
     .simulation-toolbar {
@@ -830,6 +831,19 @@
         width: 88px;
     }
 
+    .simulation-ipca-input {
+        font-size: 16px;
+        width: 72px;
+        padding: 6px 8px;
+    }
+
+    .sim-form-field input[type="text"],
+    .sim-form-field input[type="number"],
+    .sim-form-field input[type="date"] {
+        font-size: 16px;
+        padding: 8px 10px;
+    }
+
     .simulation-calendar-card,
     .simulation-results-card {
         padding: 14px;
@@ -863,7 +877,7 @@
     }
 
     .simulation-metric strong {
-        font-size: 16px;
+        font-size: clamp(14px, 4.5vw, 17px);
     }
 }
 
@@ -883,5 +897,31 @@
 
     .sim-form-fields .sim-form-field:nth-child(4) input {
         border-radius: 0 0 6px 6px;
+    }
+}
+
+@media (max-width: 380px) {
+    .simulation-metric-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .simulation-metric-grid .simulation-metric:nth-child(1) {
+        border-radius: 8px 8px 0 0;
+    }
+
+    .simulation-metric-grid .simulation-metric:nth-child(2),
+    .simulation-metric-grid .simulation-metric:nth-child(3) {
+        border-radius: 0;
+    }
+
+    .simulation-metric-grid .simulation-metric:last-child,
+    .simulation-metric.span-two {
+        border-radius: 0 0 8px 8px;
+        grid-column: span 1;
+    }
+
+    .sim-quick-chip {
+        padding: 6px 2px;
+        font-size: 11px;
     }
 }
